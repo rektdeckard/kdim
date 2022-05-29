@@ -86,6 +86,25 @@ describe("kdtree", () => {
       expect(tree.tree.point).not.toBeNull();
     });
 
+    it("can be constructed from typed arrays", () => {
+      const data = [
+        new Int8Array(4).fill(1),
+        new Int8Array(4).fill(2),
+        new Int8Array(4).fill(3),
+        new Int8Array(4).fill(4),
+        new Int8Array(4).fill(5),
+      ];
+
+      const tree = new KDTree(data, { clone: false });
+      const r1 = tree.nearestNeighbor(new Int8Array([2, 2, 3, 2]));
+      const r2 = tree.nearestNeighbor([2, 2, 3, 2]);
+
+      expect(Array.from(r1.point)).toStrictEqual([2, 2, 2, 2]);
+      expect(r1.distance).toBe(1);
+      expect(r1.point).toStrictEqual(data[1]);
+      expect(r1).toStrictEqual(r2);
+    });
+
     describe("options", () => {
       it("defaults to clone", () => {
         const data = [

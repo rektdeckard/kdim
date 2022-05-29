@@ -65,8 +65,8 @@ export class KDTree<K extends number> {
     if (!this._data.length) {
       this._dimensions = point.length;
     } else if (this._dimensions !== point.length) {
-      throw new Error(
-        `Point ${point} has ${point.length} dimensions, but should have ${this._dimensions}`
+      throw new TypeError(
+        `Point [${point}] has ${point.length} dimensions, but should have ${this._dimensions}`
       );
     }
 

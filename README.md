@@ -75,7 +75,7 @@ const accel: Vec<3> = [0, 0, "no"]; // Error: type 'string' is not assignable to
 
 ### KDTree
 
-A time-efficient data structure for searching higher-dimensional datasets. Inspired by Mike Pound's [Comupterphile Video](https://www.youtube.com/watch?v=BK5x7IUTIyU).
+A time-efficient data structure for searching higher-dimensional datasets. Inspired by Mike Pound's [Computerphile Video](https://www.youtube.com/watch?v=BK5x7IUTIyU).
 
 ```ts
 import { Vec, KDTree } from "kdim";
@@ -101,6 +101,42 @@ tree.has(testPoint); // false
 ```
 
 > Note: by default, input datasets are shallowly copied during tree construction, and retained within the data structure. If desired, the underlying dataset may be used without copying, using the option `copy: false`;
+
+### RingBuffer
+
+A fixed-capacity FIFO queue that overwrites earliest entries when its capacity is exceeded.
+
+```ts
+import { RingBuffer } from "kdim";
+
+// Initialized with capacity
+const buff = new RingBuffer<string>(10);
+
+buff.enqueue("age");
+buff.enqueue("quod");
+buff.enqueue("agis");
+
+buff.isFull; // false
+buff.isEmpty; // false
+
+buff.dequeue(); // "age"
+buff.peek(); // "quod"
+buff.drain(); // ["quod", "agis"]
+
+buff.isEmpty; // true
+
+// Initialized with data
+const buff2 = RingBuffer.from<number>([12, 24, 36, 48]);
+
+buff.capacity; // 4
+
+buff.enqueue(1);
+buff.peek(); // 1
+buff.peek(2); // 36
+buff.dequeue(); // 1
+buff.dequeue(); // 24
+buff.drain(); // [36, 48];
+```
 
 ---
 
