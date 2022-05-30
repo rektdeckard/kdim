@@ -1,6 +1,6 @@
 {
   "name": "kdim",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Utility data stuctures and types for JS",
   "author": "rektdeckard",
   "repository": "rektdeckard/kdim",
@@ -32,7 +32,7 @@
     "build": "npm run clean && tsc && npm run bundle:esm && npm run bundle:esm:min && npm run bundle:umd && npm run bundle:umd:min",
     "bundle:esm": "rollup dist/index.js --file dist/index.mjs --format esm",
     "bundle:esm:min": "terser --ecma 6 --compress --mangle --module -o dist/index.min.mjs -- dist/index.mjs",
-    "bundle:umd": "rollup dist/index.js --file dist/index.umd.js --format umd --name sayHello",
+    "bundle:umd": "rollup dist/index.js --file dist/index.umd.js --format umd --name kdim",
     "bundle:umd:min": "terser --ecma 6 --compress --mangle -o dist/index.umd.min.js -- dist/index.umd.js",
     "test": "jest",
     "watch": "jest --watchAll"
