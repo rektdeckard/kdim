@@ -1,6 +1,15 @@
 {
   "name": "kdim",
   "version": "0.1.0",
+  "description": "Utility data stuctures and types for JS",
+  "author": "rektdeckard",
+  "repository": "rektdeckard/kdim",
+  "keywords": [
+    "js",
+    "ts",
+    "node-js",
+    "data-structures"
+  ],
   "license": "MIT",
   "private": false,
   "main": "dist/index.js",
