@@ -153,4 +153,15 @@ describe("ringbuffer", () => {
       expect(buff.isEmpty).toBeFalsy();
     });
   });
+
+  describe("iterator", () => {
+    it("implements iterable interface", () => {
+      const buff = RingBuffer.from([1, 2, 3]);
+      expect(typeof buff[Symbol.iterator]).toBe("function");
+      expect(typeof buff[Symbol.iterator]().next).toBe("function");
+      expect(buff[Symbol.iterator]().next().value).toBe(1);
+      expect(buff[Symbol.iterator]().next().done).toBeFalsy();
+      expect([...buff]).toStrictEqual([1, 2, 3]);
+    });
+  });
 });

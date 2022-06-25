@@ -1,6 +1,6 @@
 type Constructor<T> = { new (capacity: number): RingBuffer<T> };
 
-export class RingBuffer<T> {
+export class RingBuffer<T> implements Iterable<T | null> {
   #data: (T | null)[];
   #capacity: number;
   #readIndex: number = 0;
@@ -45,6 +45,10 @@ export class RingBuffer<T> {
 
   toString(): string {
     return JSON.stringify({ data: this.#data, capacity: this.#capacity });
+  }
+
+  [Symbol.iterator]() {
+    return this.#data[Symbol.iterator]();
   }
 
   peek(index: number = 0): T | null {

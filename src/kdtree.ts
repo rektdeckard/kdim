@@ -18,7 +18,7 @@ type KDTreeOptions = {
   clone?: boolean;
 };
 
-export class KDTree<K extends number> {
+export class KDTree<K extends number> implements Iterable<Vec<K>> {
   private readonly _data: Vec<K>[];
   private _dimensions: number;
   private _tree: Node<Vec<K>> | null;
@@ -59,6 +59,10 @@ export class KDTree<K extends number> {
     node.right = this.partition(list.slice(index + 1), nextDimension, node);
 
     return node;
+  }
+
+  [Symbol.iterator]() {
+    return this._data[Symbol.iterator]();
   }
 
   insert(point: Vec<K>) {

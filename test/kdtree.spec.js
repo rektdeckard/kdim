@@ -301,6 +301,26 @@ describe("kdtree", () => {
       });
     });
   });
+
+  describe("iterator", () => {
+    it("implements iterable interface", () => {
+      const data = [
+        [0, 7, 15],
+        [1, 1, 0],
+        [6, 9, 420],
+        [8, 40, -12],
+        [31, 9, 33],
+      ];
+
+      const tree = new KDTree(data);
+
+      expect(typeof tree[Symbol.iterator]).toBe("function");
+      expect(typeof tree[Symbol.iterator]().next).toBe("function");
+      expect(tree[Symbol.iterator]().next().value).toStrictEqual(data[0]);
+      expect(tree[Symbol.iterator]().next().done).toBeFalsy();
+      expect([...tree]).toStrictEqual([...data]);
+    });
+  });
 });
 
 describe("instruments", () => {
