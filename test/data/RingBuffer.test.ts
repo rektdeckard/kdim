@@ -1,4 +1,5 @@
-const { RingBuffer } = require("../dist");
+import { describe, it, expect } from "vitest";
+import { RingBuffer } from "../../src";
 
 describe("ringbuffer", () => {
   describe("construct", () => {
@@ -17,10 +18,12 @@ describe("ringbuffer", () => {
     });
 
     it("throws without capacity", () => {
+      // @ts-expect-error
       expect(() => new RingBuffer()).toThrow();
     });
 
     it("throws without initial data", () => {
+      // @ts-expect-error
       expect(() => RingBuffer.from()).toThrow();
     });
   });
@@ -50,7 +53,7 @@ describe("ringbuffer", () => {
 
     it("enque overwrite", () => {
       const buff = new RingBuffer(10);
-      for (i = 0; i < 100; i++) {
+      for (let i = 0; i < 100; i++) {
         buff.enqueue(i);
       }
 
@@ -78,8 +81,8 @@ describe("ringbuffer", () => {
 
     it("enqueue/dequeue stress test", () => {
       const capacity = 10_000;
-      const buff = new RingBuffer(capacity);
-      for (i = 0; i < buff.capacity; ++i) {
+      const buff = new RingBuffer<number>(capacity);
+      for (let i = 0; i < buff.capacity; ++i) {
         buff.enqueue(i);
       }
       expect(buff.peek()).toBe(0);
@@ -87,20 +90,20 @@ describe("ringbuffer", () => {
       expect(buff.dequeue()).toBe(0);
       expect(buff.isFull).toBeFalsy();
 
-      for (i = 0; i < capacity / 2; ++i) {
+      for (let i = 0; i < capacity / 2; ++i) {
         buff.dequeue();
       }
       expect(buff.peek()).toBe(5001);
 
-      for (i = 0; i < 10; ++i) {
+      for (let i = 0; i < 10; ++i) {
         buff.enqueue(i + 0.5);
       }
-      for (i = 0; i < capacity / 2 - 1; ++i) {
+      for (let i = 0; i < capacity / 2 - 1; ++i) {
         buff.dequeue();
       }
 
-      const res = [];
-      for (i = 0; i < 10; ++i) {
+      const res: Array<number | null> = [];
+      for (let i = 0; i < 10; ++i) {
         res.push(buff.dequeue());
       }
       expect(res).toStrictEqual([

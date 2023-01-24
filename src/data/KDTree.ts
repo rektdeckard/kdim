@@ -1,4 +1,4 @@
-import { Vec } from "./types";
+import { Vec } from "../types";
 
 class Node<T> {
   parent: Node<T> | null;
@@ -19,30 +19,30 @@ type KDTreeOptions = {
 };
 
 export class KDTree<K extends number> implements Iterable<Vec<K>> {
-  private readonly _data: Vec<K>[];
-  private _dimensions: number;
-  private _tree: Node<Vec<K>> | null;
+  readonly #data: Vec<K>[];
+  #dimensions: number;
+  #tree: Node<Vec<K>> | null;
 
   constructor(data?: Vec<K>[], options: KDTreeOptions = { clone: true }) {
-    this._data = !data ? [] : options?.clone ? [...data] : data;
-    this._dimensions = data?.[0]?.length ?? 0;
-    this._tree = this.partition(this._data, 0, null);
+    this.#data = !data ? [] : options?.clone ? [...data] : data;
+    this.#dimensions = data?.[0]?.length ?? 0;
+    this.#tree = this.#partition(this.#data, 0, null);
   }
 
   get dimensions() {
-    return this._dimensions;
+    return this.#dimensions;
   }
 
   get tree() {
-    return this._tree;
+    return this.#tree;
   }
 
-  private median(list: Vec<K>[]): [Vec<K>, number] {
+  #median(list: Vec<K>[]): [Vec<K>, number] {
     const center = Math.floor(list.length / 2);
     return [list[center], center];
   }
 
-  private partition(
+  #partition(
     list: Vec<K>[],
     dimension: number,
     parent: Node<Vec<K>> | null
@@ -50,49 +50,51 @@ export class KDTree<K extends number> implements Iterable<Vec<K>> {
     if (list.length === 0) return null;
 
     list.sort((a, b) => a[dimension] - b[dimension]);
-    const [point, index] = this.median(list);
-    const nextDimension = (dimension + 1) % this._dimensions;
+    const [point, index] = this.#median(list);
+    const nextDimension = (dimension + 1) % this.#dimensions;
 
     const node = new Node<Vec<K>>(point);
     node.parent = parent;
-    node.left = this.partition(list.slice(0, index), nextDimension, node);
-    node.right = this.partition(list.slice(index + 1), nextDimension, node);
+    node.left = this.#partition(list.slice(0, index), nextDimension, node);
+    node.right = this.#partition(list.slice(index + 1), nextDimension, node);
 
     return node;
   }
 
   [Symbol.iterator]() {
-    return this._data[Symbol.iterator]();
+    return this.#data[Symbol.iterator]();
   }
 
   insert(point: Vec<K>) {
-    if (!this._data.length) {
-      this._dimensions = point.length;
-    } else if (this._dimensions !== point.length) {
+    if (!this.#data.length) {
+      this.#dimensions = point.length;
+    } else if (this.#dimensions !== point.length) {
       throw new TypeError(
-        `Point [${point}] has ${point.length} dimensions, but should have ${this._dimensions}`
+        `Point [${point}] has ${point.length} dimensions, but should have ${
+          this.#dimensions
+        }`
       );
     }
 
-    this._data.push(point);
-    this._tree = this.partition(this._data, 0, null);
+    this.#data.push(point);
+    this.#tree = this.#partition(this.#data, 0, null);
   }
 
-  remove(point: Vec<K>) {
-    if (!this._data.length) return;
-    if (point.length !== this._dimensions) return;
+  remove(point: Vec<K>): Vec<K> | null | void {
+    if (!this.#data.length) return;
+    if (point.length !== this.#dimensions) return;
 
     const result = this.nearestNeighbor(point);
     if (result.distance === 0) {
-      const i = this._data.findIndex((p) => p === result.point);
-      this._data.splice(i, 1);
-      this._tree = this.partition(this._data, 0, null);
+      const i = this.#data.findIndex((p) => p === result.point);
+      this.#data.splice(i, 1);
+      this.#tree = this.#partition(this.#data, 0, null);
       return result.point;
     }
   }
 
   has(point: Vec<K>): boolean {
-    if (point.length !== this._dimensions) return false;
+    if (point.length !== this.#dimensions) return false;
     return this.nearestNeighbor(point).distance === 0;
   }
 
@@ -127,7 +129,7 @@ export class KDTree<K extends number> implements Iterable<Vec<K>> {
       let nextBranch;
       let otherBranch;
       if (
-        point[depth % this._dimensions] <= node.point[depth % this.dimensions]
+        point[depth % this.#dimensions] <= node.point[depth % this.dimensions]
       ) {
         nextBranch = node.left;
         otherBranch = node.right;
@@ -141,7 +143,7 @@ export class KDTree<K extends number> implements Iterable<Vec<K>> {
 
       const dsq = sqdist(point, best?.point);
       const dd =
-        point[depth % this._dimensions] - node.point[depth % this._dimensions];
+        point[depth % this.#dimensions] - node.point[depth % this.#dimensions];
 
       if (dsq >= dd ** 2) {
         temp = nearestNeighborImpl(otherBranch, depth + 1);
@@ -151,7 +153,7 @@ export class KDTree<K extends number> implements Iterable<Vec<K>> {
       return best;
     };
 
-    const nearest = nearestNeighborImpl(this._tree, 0);
+    const nearest = nearestNeighborImpl(this.#tree, 0);
 
     return {
       point: nearest?.point ?? null,
