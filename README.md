@@ -24,6 +24,162 @@ npm install --save kdim
 
 ---
 
+## Numerics
+
+### Wrapping
+
+A wrapping integer class, allowing a value to be constrained to an arbitrary range, and wrapping around the range when arithmetic operations cause it to overflow or underflow.
+
+```ts
+import { Wrapping } from "kdim";
+
+const u16 = new Wrapping({ max: 0xffff }, 1); // default min = 0
+u16.add(0xfffd); // (0xFFFE)
+u16.add(1);      // (0xFFFF)
+u16.add(1);      // (0x0000)
+u16.add(1);      // (0x0001)
+```
+
+Wrapping integers can have arbitrary `min` and `max` values (inclusive), and can be initialized with a starting value. Arithmetic operations can be performed with any numeric type, using the bounds of the reciever, and can be chained:
+
+```ts
+import { Wrapping } from "kdim";
+
+const wk = new Wrapping({ min: 1, max: 7 }); // default value = min
+const yr = new Wrapping({ min: 1, max: 365 }, 24);
+
+wk.add(yr); // (4)
+
+yr.add(wk)  // (28)
+  .sub(3)   // (25)
+  .sub(30); // (361)
+```
+
+> **NOTE:** constructor throws a `RangeError` when `min >= max` or any of `min`, `max`, or `initial` have a fracitonal component, as will attempting to `add()` or `sub()` a number with a fractional component.
+
+They can also be cloned from other Wrapping values, or other `Bounded` values like [Saturating](#saturating), copying their properties:
+
+```ts
+import { Wrapping, Saturating } from "kdim";
+
+const vuMeter = new Saturating({ min: -20, max: 3 }, -3);
+const clip = Wrapping.from(vuMeter);
+```
+
+### Saturating
+
+A saturating (or clamping) integer class allowing a value to be constrained to an arbitrary range, and clamping it to the bounds when arithmetic operations would cause it to overflow or underflow.
+
+```ts
+import { Saturating } from "kdim";
+
+const level = new Saturating({ min: 1, max: 99 });
+level.add(50); // (51)
+level.add(30); // (81)
+level.add(30); // (99)
+```
+
+As with [Wrapping](#wrapping), Saturating types support arithmetic operations with any numeric type, using the receiver.
+
+```ts
+import { Saturating, Wrapping } from "kdim";
+
+const s = new Saturating({ min: -1, max: 10 }, 1);
+const w = new Wrapping({ max: 7 });
+s.add(7); // (8)
+w.add(5); // (5)
+s.add(w); // (10)
+```
+
+> **NOTE:** constructor throws a `RangeError` when `min >= max` or any of `min`, `max`, or `initial` have a fracitonal component, as will attempting to `add()`, `sub()`, `mul()`, or `div()` a number with a fractional component or attempting to `div(0)`.
+
+[Wrapping](#wrapping) and [Saturating](#saturating) values may also be used with mathematical operators for convenience, though they will be cast to a primitive in doing so, and will not be modified:
+
+```ts
+import { Saturating } from "kdim";
+
+const s = new Saturating({ max: 50 }, 40);
+const primitiveSum = s + 20; // 60
+s                            // Still (40)
+s.add(20);                   // 50
+```
+
+<details>
+  <summary>Class Signatures</summary>
+  <p>
+
+```ts
+abstract class Bounded {
+  abstract get value(): number;
+  abstract get min(): number;
+  abstract get max(): number;
+}
+
+type BoundedOptions = {
+  max: number;
+  min?: number;
+};
+
+declare class Wrapping implements Bounded, Number {
+  constructor({ max, min }: BoundedOptions, value?: number);
+
+  static from(bounded: Bounded): Wrapping;
+
+  add<N extends Number>(n: N): this;
+  sub<N extends Number>(n: N): this;
+
+  get value(): number;
+  get min(): number;
+  get max(): number;
+
+  valueOf(): number;
+  toFixed(fractionDigits?: number | undefined): string;
+  toExponential(fractionDigits?: number | undefined): string;
+  toPrecision(precision?: number | undefined): string;
+  toString(radix?: number | undefined): string;
+  toLocaleString(locales?: unknown, options?: unknown): string;
+  toLocaleString(
+    locales?: Intl.LocalesArgument,
+    options?: Intl.NumberFormatOptions | undefined
+  ): string;
+
+  [Symbol.toPrimitive](hint: string): string | number;
+  get [Symbol.toStringTag](): string;
+}
+
+declare class Saturating implements Number {
+  constructor({ max, min }: BoundedOptions, value?: number);
+
+  static from(bounded: Bounded): Saturating;
+
+  add<N extends Number>(n: N): this;
+  sub<N extends Number>(n: N): this;
+  mul<N extends Number>(n: N): this;
+  div<N extends Number>(n: N): this;
+
+  get value(): number;
+  get min(): number;
+  get max(): number;
+
+  valueOf(): number;
+  toFixed(fractionDigits?: number | undefined): string;
+  toExponential(fractionDigits?: number | undefined): string;
+  toPrecision(precision?: number | undefined): string;
+  toString(radix?: number | undefined): string;
+  toLocaleString(locales?: unknown, options?: unknown): string;
+  toLocaleString(
+    locales?: Intl.LocalesArgument,
+    options?: Intl.NumberFormatOptions | undefined
+  ): string;
+
+  [Symbol.toPrimitive](hint: string): string | number;
+  get [Symbol.toStringTag](): string;
+}
+```
+
+  </p>
+</details>
+
 ## Utility Types
 
 ### Tuple
@@ -91,7 +247,8 @@ const testPoint: Vec<5> = [1, 0, 1, 1, 1];
 
 tree.has(testPoint); // false
 
-const { point, distance } = tree.nearestNeighbor(testPoint); // { point: [1, 1, 1, 1, 1], distance: 1 }
+const { point, distance } = tree.nearestNeighbor(testPoint);
+// { point: [1, 1, 1, 1, 1], distance: 1 }
 
 tree.insert(testPoint);
 tree.has(testPoint); // true
@@ -126,7 +283,7 @@ buff.drain(); // ["quod", "agis"]
 buff.isEmpty; // true
 
 // Initialized with data
-const buff2 = RingBuffer.from<number>([12, 24, 36, 48]);
+const buff2 = RingBuffer.from([12, 24, 36, 48]);
 
 buff.capacity; // 4
 
