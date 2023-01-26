@@ -1,10 +1,6 @@
 import { assertValidRange, castInteger } from "./assertions";
 import { uncheckedClamp } from "./transforms";
-
-export type SaturatingOptions = {
-  max: number;
-  min?: number;
-};
+import { Bounded, BoundedOptions } from "./types";
 
 /**
  * A saturating (or clamping) integer class implementing {@link Number},
@@ -27,7 +23,7 @@ export class Saturating implements Number {
   #min: number;
   #value: number;
 
-  constructor({ max, min = 0 }: SaturatingOptions, value?: number) {
+  constructor({ max, min = 0 }: BoundedOptions, value?: number) {
     if (
       !Number.isSafeInteger(min) ||
       !Number.isSafeInteger(max) ||
@@ -43,10 +39,10 @@ export class Saturating implements Number {
     this.#value = value ?? min;
   }
 
-  static from(wrapping: Saturating) {
+  static from(bounded: Bounded) {
     return new Saturating(
-      { max: wrapping.max, min: wrapping.min },
-      wrapping.value
+      { max: bounded.max, min: bounded.min },
+      bounded.value
     );
   }
 

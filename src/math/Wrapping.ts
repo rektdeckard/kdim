@@ -1,9 +1,5 @@
 import { assertValidRange, castInteger } from "./assertions";
-
-export type WrappingOptions = {
-  max: number;
-  min?: number;
-};
+import { Bounded, BoundedOptions } from "./types";
 
 /**
  * A wrapping integer class implementing {@link Number}, allowing a value
@@ -20,12 +16,12 @@ export type WrappingOptions = {
  * @throws {@link RangeError} when range or value is invalid, or when
  * arguments to arithmetic methods are non-integers.
  */
-export class Wrapping implements Number {
+export class Wrapping implements Bounded, Number {
   #max: number;
   #min: number;
   #value: number;
 
-  constructor({ max, min = 0 }: WrappingOptions, value?: number) {
+  constructor({ max, min = 0 }: BoundedOptions, value?: number) {
     if (
       !Number.isSafeInteger(min) ||
       !Number.isSafeInteger(max) ||
@@ -41,11 +37,8 @@ export class Wrapping implements Number {
     this.#value = value ?? min;
   }
 
-  static from(wrapping: Wrapping) {
-    return new Wrapping(
-      { max: wrapping.max, min: wrapping.min },
-      wrapping.value
-    );
+  static from(bounded: Bounded) {
+    return new Wrapping({ max: bounded.max, min: bounded.min }, bounded.value);
   }
 
   add<N extends Number>(n: N) {
