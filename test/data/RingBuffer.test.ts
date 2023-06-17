@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { RingBuffer } from "../../src";
 
-describe("ringbuffer", () => {
+describe("RingBuffer", () => {
   describe("construct", () => {
     it("can be constructed with capacity", () => {
       const buff = new RingBuffer(10);

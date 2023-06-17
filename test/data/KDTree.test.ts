@@ -34,7 +34,7 @@ function linearSearch(data, point) {
   return { point: nearest, distance: Math.sqrt(distance) };
 }
 
-describe("kdtree", () => {
+describe("KDTree", () => {
   describe("construct", () => {
     it("can be constructed without dataset", () => {
       const tree = new KDTree();
