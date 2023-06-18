@@ -1,58 +1,62 @@
 export type NodeKey = string | number | boolean;
 
-class BSTNode<D> {
-  key: NodeKey;
-  data: D;
-  left?: BSTNode<D>;
-  right?: BSTNode<D>;
+class BSTNode<K extends NodeKey, D> {
+  key: K;
+  value: D;
+  left?: BSTNode<K, D>;
+  right?: BSTNode<K, D>;
 
-  constructor(key: NodeKey, data: D) {
+  constructor(key: K, data: D) {
     this.key = key;
-    this.data = data;
+    this.value = data;
   }
 }
 
-export class BST<K extends NodeKey, D> implements Iterable<D> {
-  #root: BSTNode<D> | null = null;
+export class BST<K extends NodeKey, V> implements Iterable<[key: K, data: V]> {
+  #root: BSTNode<K, V> | null = null;
+  // #comparator: (a: K | V, b: K | V) => number = (a, b) =>
+  //   a === b ? 0 : a > b ? 1 : -1;
 
   constructor() {}
 
-  search(key: K) {
-    function findImpl(subtree: BSTNode<D> | null | undefined): D | null {
+  search(key: K): BSTNode<K, V> | null {
+    function searchImpl(
+      subtree: BSTNode<K, V> | null | undefined
+    ): BSTNode<K, V> | null {
       if (subtree?.key === undefined) return null;
-      if (subtree.key === key) return subtree.data;
+      if (subtree.key === key) return subtree;
 
       if (key < subtree.key) {
-        return findImpl(subtree.left);
+        return searchImpl(subtree.left);
       } else {
-        return findImpl(subtree.right);
+        return searchImpl(subtree.right);
       }
     }
 
-    return findImpl(this.#root);
+    return searchImpl(this.#root);
   }
 
-  insert(key: K, data: D): boolean {
+  insert(key: K, value: V): boolean {
     if (!this.#root) {
-      this.#root = new BSTNode(key, data);
+      this.#root = new BSTNode(key, value);
       return false;
     }
 
-    function insertImpl(subtree: BSTNode<D>): boolean {
+    function insertImpl(subtree: BSTNode<K, V>): boolean {
       if (subtree.key === key) {
-        subtree.data = data;
+        subtree.value = value;
         return true;
       }
 
       if (key < subtree.key) {
         if (!subtree.left) {
-          subtree.left = new BSTNode(key, data);
+          subtree.left = new BSTNode(key, value);
           return false;
         }
         return insertImpl(subtree.left);
       } else {
         if (!subtree.right) {
-          subtree.right = new BSTNode(key, data);
+          subtree.right = new BSTNode(key, value);
           return false;
         }
         return insertImpl(subtree.right);
@@ -66,13 +70,21 @@ export class BST<K extends NodeKey, D> implements Iterable<D> {
     return false;
   }
 
-  inOrder(): D[] {
-    const arr: D[] = [];
+  max(): [key: K, value: V] | null {
+    return null;
+  }
 
-    function inOrderImpl(subtree: BSTNode<D> | null | undefined) {
+  min(): [key: K, value: V] | null {
+    return null;
+  }
+
+  inOrder(): [key: K, value: V][] {
+    const arr: [key: K, value: V][] = [];
+
+    function inOrderImpl(subtree: BSTNode<K, V> | null | undefined) {
       if (!subtree) return;
       inOrderImpl(subtree.left);
-      arr.push(subtree.data);
+      arr.push([subtree.key, subtree.value]);
       inOrderImpl(subtree.right);
     }
 
@@ -81,12 +93,12 @@ export class BST<K extends NodeKey, D> implements Iterable<D> {
     return arr;
   }
 
-  preOrder(): D[] {
-    const arr: D[] = [];
+  preOrder(): [key: K, value: V][] {
+    const arr: [key: K, value: V][] = [];
 
-    function preOrderImpl(subtree: BSTNode<D> | null | undefined) {
+    function preOrderImpl(subtree: BSTNode<K, V> | null | undefined) {
       if (!subtree) return;
-      arr.push(subtree.data);
+      arr.push([subtree.key, subtree.value]);
       preOrderImpl(subtree.left);
       preOrderImpl(subtree.right);
     }
@@ -96,14 +108,14 @@ export class BST<K extends NodeKey, D> implements Iterable<D> {
     return arr;
   }
 
-  postOrder(): D[] {
-    const arr: D[] = [];
+  postOrder(): [key: K, value: V][] {
+    const arr: [key: K, value: V][] = [];
 
-    function postOrderImpl(subtree: BSTNode<D> | null | undefined) {
+    function postOrderImpl(subtree: BSTNode<K, V> | null | undefined) {
       if (!subtree) return;
       postOrderImpl(subtree.left);
       postOrderImpl(subtree.right);
-      arr.push(subtree.data);
+      arr.push([subtree.key, subtree.value]);
     }
 
     postOrderImpl(this.#root);

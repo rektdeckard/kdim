@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { inspect } from "util";
 import { BST } from "../../src";
 
 describe("BST", () => {
@@ -28,8 +27,8 @@ describe("BST", () => {
       tree.insert(7, "right");
       tree.insert(10, "right-right");
 
-      expect(tree.search(0)).toBe("root");
-      expect(tree.search(10)).toBe("right-right");
+      expect(tree.search(0)!.value).toBe("root");
+      expect(tree.search(10)!.value).toBe("right-right");
       expect(tree.search(42)).toBeNull();
     });
   });
@@ -52,19 +51,54 @@ describe("BST", () => {
     tree.insert(8, "eight");
 
     it("can sort inOrder", () => {
-      expect(tree.inOrder()).toStrictEqual(["four", "five", "eight", "ten"]);
+      expect(tree.inOrder()).toStrictEqual([
+        [4, "four"],
+        [5, "five"],
+        [8, "eight"],
+        [10, "ten"],
+      ]);
     });
 
     it("can sort preOrder", () => {
-      expect(tree.preOrder()).toStrictEqual(["ten", "five", "four", "eight"]);
+      expect(tree.preOrder()).toStrictEqual([
+        [10, "ten"],
+        [5, "five"],
+        [4, "four"],
+        [8, "eight"],
+      ]);
     });
 
     it("can sort postOrder", () => {
-      expect(tree.postOrder()).toStrictEqual(["four", "eight", "five", "ten"]);
+      expect(tree.postOrder()).toStrictEqual([
+        [4, "four"],
+        [8, "eight"],
+        [5, "five"],
+        [10, "ten"],
+      ]);
     });
 
     it("is iterable", () => {
       expect([...tree]).toStrictEqual(tree.inOrder());
+    });
+  });
+
+  describe("stress test", () => {
+    it("can insert many", () => {
+      const size = 2 ** 14;
+      const keyspace = 2 ** 16;
+      const keys = new Set<number>();
+      const tree = new BST<number, number>();
+
+      for (let i = 0; i < size; ++i) {
+        let key: number;
+        do {
+          key = Math.floor(Math.random() * keyspace);
+        } while (keys.has(key));
+        keys.add(key);
+        tree.insert(key, i);
+      }
+
+      expect(tree.inOrder().length).toEqual(size);
     });
   });
 });
