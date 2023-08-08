@@ -8,3 +8,9 @@ type _TupleOf<T, K extends number, R extends unknown[]> = R["length"] extends K
   : _TupleOf<T, K, [T, ...R]>;
 
 export type Vec<K extends number> = Tuple<number, K>;
+
+export type MatrixLike<
+  M extends number,
+  N extends number,
+  D extends Number = number
+> = Tuple<Tuple<D, N>, M>;
