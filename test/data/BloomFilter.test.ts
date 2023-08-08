@@ -27,7 +27,7 @@ describe("BloomFilter", () => {
     const missrate =
       misses.reduce((acc, curr) => acc + Number(curr), 0) / misses.length;
 
-    console.log({ hitrate, missrate });
+    // console.log({ hitrate, missrate });
 
     expect(hitrate).toBe(1);
     expect(missrate).toBeLessThan(0.03);

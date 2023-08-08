@@ -18,7 +18,7 @@ export async function objectHash<T>(
     throw new Error("Object argument required");
   }
 
-  const { algorithm, ...hashOptions } = { ...DEFAULT_OPTIONS, ...options };
+  const { algorithm } = { ...DEFAULT_OPTIONS, ...options };
 
   if (!LEGAL_ALGORITHMS.has(algorithm!.toUpperCase())) {
     throw new Error(`Invalid algorithm ${algorithm}`);
@@ -32,7 +32,7 @@ export async function objectHash<T>(
     return Array.from(
       new Uint8Array(
         await require("crypto").webcrypto.subtle.digest(
-          "SHA-1",
+          algorithm,
           new TextEncoder().encode(stream.read())
         )
       )
@@ -344,7 +344,7 @@ export function typeHasher(
   } as const;
 }
 
-class PassThrough extends WritableStream {
+class PassThrough {
   buf: string = "";
 
   write(b: string) {

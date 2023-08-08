@@ -8,6 +8,12 @@ describe("Probability", () => {
       expect(distribution.sample()).toEqual({ value: 42 });
     });
 
+    it("can take events", () => {
+      const distribution = new Probability({ value: 23 });
+      expect(distribution.take()).toStrictEqual({ value: 23 });
+      expect(distribution.take).toThrow();
+    });
+
     it("can be constructed with multiple events", () => {
       type V = "top" | "middle" | "bottom";
       const e1: ProbabilityEvent<V> = { value: "top" };

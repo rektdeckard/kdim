@@ -20,7 +20,7 @@ export class BloomFilter<T = any> {
   #hashFunctions: Array<HashFunction<T>>;
 
   constructor({
-    size = 1_000_000,
+    size = 16 ** 5,
     hashFunctions = DEFAULT_HASH_FUNCTIONS,
   }: BloomFilterOptions<T> = {}) {
     this.#size = size;
@@ -35,7 +35,7 @@ export class BloomFilter<T = any> {
   async add(element: T) {
     const hashes = await this.#hash(element);
     for (const hash of hashes) {
-      const idx = parseInt(hash, 16) % this.#size;
+      const idx = parseInt(hash.substring(0, 8), 16) % this.#size;
       this.#bitField[idx] = true;
     }
   }
@@ -43,7 +43,7 @@ export class BloomFilter<T = any> {
   async test(element: T) {
     const hashes = await this.#hash(element);
     for (const hash of hashes) {
-      const idx = parseInt(hash, 16) % this.#size;
+      const idx = parseInt(hash.substring(0, 8), 16) % this.#size;
       if (this.#bitField[idx]) {
         return true;
       }
