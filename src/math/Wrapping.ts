@@ -13,7 +13,7 @@ import { Bounded, BoundedOptions } from "./types";
  * u16.add(1);      // 0x0000
  * u16.add(1);      // 0x0001
  *
- * @throws {@link RangeError} when range or value is invalid, or when
+ * @throws a {@link RangeError} when range or value is invalid, or when
  * arguments to arithmetic methods are non-integers.
  */
 export class Wrapping implements Bounded, Number {

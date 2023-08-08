@@ -14,9 +14,9 @@ import { Bounded, BoundedOptions } from "./types";
  * level.add(30); // 81
  * level.add(30); // 99
  *
- * @throws {@link RangeError} when range or value is invalid, or when
+ * @throws a {@link RangeError} when range or value is invalid, or when
  * arguments to arithmetic methods are non-integers.
- * @throws {@link Error} when attemping to `div()` by zero.
+ * @throws an {@link Error} when attemping to `div()` by zero.
  */
 export class Saturating implements Number {
   #max: number;

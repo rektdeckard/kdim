@@ -5,7 +5,7 @@
  * @param min the lower bound of the range (inclusive)
  * @param max the upper bound of the range (inclusive)
  * @param value the optional value
- * @throws {@link RangeError} when range or value is invalid
+ * @throws a {@link RangeError} when range or value is invalid
  */
 export function assertValidRange(min: number, max: number, value?: number) {
   if (min > max) throw new RangeError("Minimum must be less than maximum");
