@@ -1,5 +1,5 @@
 import { assertValidRange, castInteger } from "./assertions";
-import { Bounded, BoundedOptions } from "./types";
+import { Add, Sub, Eq, Bounded, BoundedOptions } from "./types";
 
 /**
  * A wrapping integer class implementing {@link Number}, allowing a value
@@ -16,7 +16,9 @@ import { Bounded, BoundedOptions } from "./types";
  * @throws a {@link RangeError} when range or value is invalid, or when
  * arguments to arithmetic methods are non-integers.
  */
-export class Wrapping implements Bounded, Number {
+export class Wrapping
+  implements Bounded, Number, Add<Number>, Sub<Number>, Eq<Number>
+{
   #max: number;
   #min: number;
   #value: number;
@@ -110,6 +112,10 @@ export class Wrapping implements Bounded, Number {
 
   //   // TODO
   // }
+
+  eq(other: Number): boolean {
+    return this.#value === other.valueOf();
+  }
 
   get value() {
     return this.#value;

@@ -1,5 +1,7 @@
 export * from "./assertions";
+export * from "./complex";
 export * from "./matrix";
+export * from "./numeric";
 export * from "./probability";
 export * from "./saturating";
 export * from "./transforms";

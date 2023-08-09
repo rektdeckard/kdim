@@ -1,16 +1,5 @@
 export type CompareFunction<V> = (a: V, b: V) => number;
 
-export const lexicalCompare = <V>(a: V, b: V) => (a === b ? 0 : a > b ? 1 : -1);
-
-export const reverseLexicalCompare = <V>(a: V, b: V) =>
-  lexicalCompare(a, b) * -1;
-
-export const numericCompare = <V extends Number>(a: V, b: V) =>
-  Number(a) - Number(b);
-
-export const reverseNumericCompare = <V extends Number>(a: V, b: V) =>
-  numericCompare(a, b) * -1;
-
 export class BSTNode<V> {
   value: V;
   left?: BSTNode<V> | null;
@@ -30,7 +19,23 @@ export class Comparator<V> {
   #compareFn: CompareFunction<V>;
 
   constructor(compareFn?: CompareFunction<V>) {
-    this.#compareFn = compareFn ?? lexicalCompare;
+    this.#compareFn = compareFn ?? Comparator.lexicalCompare;
+  }
+
+  static lexicalCompare<V>(a: V, b: V) {
+    return a === b ? 0 : a > b ? 1 : -1;
+  }
+
+  static reverseLexicalCompare<V>(a: V, b: V) {
+    return Comparator.lexicalCompare(a, b) * -1;
+  }
+
+  static numericCompare<V extends Number>(a: V, b: V) {
+    return Number(a) - Number(b);
+  }
+
+  static reverseNumericCompare<V extends Number>(a: V, b: V) {
+    return Comparator.numericCompare(a, b) * -1;
   }
 
   #val(valueOrNode: V | BSTNode<V>): V {

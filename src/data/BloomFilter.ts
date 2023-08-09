@@ -2,13 +2,6 @@ import { objectHash } from "../math/hash";
 
 type HashFunction<T> = (data: T) => Promise<string> | string;
 
-const DEFAULT_HASH_FUNCTIONS = [
-  <T>(data: T) => objectHash(data, { algorithm: "SHA-1" }),
-  <T>(data: T) => objectHash(data, { algorithm: "SHA-256" }),
-  <T>(data: T) => objectHash(data, { algorithm: "SHA-384" }),
-  <T>(data: T) => objectHash(data, { algorithm: "SHA-512" }),
-];
-
 export type BloomFilterOptions<T> = {
   size?: number;
   hashFunctions?: Array<HashFunction<T>>;
@@ -19,9 +12,16 @@ export class BloomFilter<T = any> {
   #bitField: Array<boolean>;
   #hashFunctions: Array<HashFunction<T>>;
 
+  static DEFAULT_HASH_FUNCTIONS = [
+    <T>(data: T) => objectHash(data, { algorithm: "SHA-1" }),
+    <T>(data: T) => objectHash(data, { algorithm: "SHA-256" }),
+    <T>(data: T) => objectHash(data, { algorithm: "SHA-384" }),
+    <T>(data: T) => objectHash(data, { algorithm: "SHA-512" }),
+  ];
+
   constructor({
     size = 16 ** 5,
-    hashFunctions = DEFAULT_HASH_FUNCTIONS,
+    hashFunctions = BloomFilter.DEFAULT_HASH_FUNCTIONS,
   }: BloomFilterOptions<T> = {}) {
     this.#size = size;
     this.#bitField = new Array(size);

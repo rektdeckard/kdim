@@ -2,10 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   BST,
   BSTNode,
+  Comparator,
   CompareFunction,
-  numericCompare,
-  reverseNumericCompare,
-  reverseLexicalCompare,
   Saturating,
 } from "../../src";
 
@@ -218,7 +216,7 @@ describe("BST", () => {
 
     describe("alternate comparators", () => {
       it("reverseLexical comparator", () => {
-        const tree = new BST<string>(reverseLexicalCompare);
+        const tree = new BST<string>(Comparator.reverseLexicalCompare);
         tree.insert("y");
         tree.insert("z");
         tree.insert("b");
@@ -229,7 +227,7 @@ describe("BST", () => {
       });
 
       it("numeric comparator", () => {
-        const tree = new BST<Saturating>(numericCompare);
+        const tree = new BST<Saturating>(Comparator.numericCompare);
         tree.insert(new Saturating({ max: 15 }, 5));
         tree.insert(new Saturating({ max: 15 }, 1));
         tree.insert(new Saturating({ max: 15 }, 8));
@@ -244,7 +242,7 @@ describe("BST", () => {
       });
 
       it("reverseNumeric comparator", () => {
-        const tree = new BST<Saturating>(reverseNumericCompare);
+        const tree = new BST<Saturating>(Comparator.reverseNumericCompare);
         tree.insert(new Saturating({ max: 15 }, 5));
         tree.insert(new Saturating({ max: 15 }, 1));
         tree.insert(new Saturating({ max: 15 }, 8));

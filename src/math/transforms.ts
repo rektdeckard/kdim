@@ -15,7 +15,7 @@ export function uncheckedClamp(
  * @param max the upper bound of the range (inclusive)
  * @param value the value to clamp
  * @returns the constrained value
- * @throws {@link RangeError} when range is invalid
+ * @throws a {@link RangeError} when range is invalid
  */
 export function clamp(min: number, max: number, value: number): number {
   assertValidRange(min, max);
@@ -30,7 +30,7 @@ export function clamp(min: number, max: number, value: number): number {
  * @param value a number between 0 and 1 (inclusive) representing a point in
  * the range
  * @returns the interpolated value
- * @throws {@link RangeError} when the value is outside of [0, 1]
+ * @throws a {@link RangeError} when the value is outside of [0, 1]
  */
 export function lerp(start: number, end: number, value: number): number {
   if (0 > value || value > 1)

@@ -1,6 +1,6 @@
 import { assertValidRange, castInteger } from "./assertions";
 import { uncheckedClamp } from "./transforms";
-import { Bounded, BoundedOptions } from "./types";
+import { Add, Sub, Mul, Div, Eq, Bounded, BoundedOptions } from "./types";
 
 /**
  * A saturating (or clamping) integer class implementing {@link Number},
@@ -18,7 +18,16 @@ import { Bounded, BoundedOptions } from "./types";
  * arguments to arithmetic methods are non-integers.
  * @throws an {@link Error} when attemping to `div()` by zero.
  */
-export class Saturating implements Number {
+export class Saturating
+  implements
+    Number,
+    Bounded,
+    Add<Number>,
+    Sub<Number>,
+    Mul<Number>,
+    Div<Number>,
+    Eq<Number>
+{
   #max: number;
   #min: number;
   #value: number;
@@ -85,6 +94,10 @@ export class Saturating implements Number {
       Math.trunc(this.#value / divisor)
     );
     return this;
+  }
+
+  eq(other: Number): boolean {
+    return this.#value === other.valueOf();
   }
 
   get value() {
