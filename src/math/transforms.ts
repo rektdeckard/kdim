@@ -1,4 +1,5 @@
 import { assertValidRange } from "./assertions";
+import { isConstructor } from "../helper";
 
 export function uncheckedClamp(
   min: number,
@@ -37,4 +38,43 @@ export function lerp(start: number, end: number, value: number): number {
     throw new RangeError("Value must be between 0 and 1 inclusive");
 
   return start + (end - start) * value;
+}
+
+export function range<N = number>(
+  where: number | { from?: number; to: number; step?: number },
+  ctor?:
+    | { new (n: number, ...rest: any[]): N }
+    | ((n: number, ...rest: any[]) => N)
+): N[] {
+  let {
+    from = 0,
+    to = 0,
+    step = 1,
+  } = typeof where === "object" ? where : { to: where };
+
+  if (step <= 0) {
+    throw new Error(
+      "step size must be positive; its sign is inferred from the range"
+    );
+  }
+
+  if (from > to) {
+    step *= -1;
+  }
+
+  const values: N[] = [];
+  for (let i = from; from < to ? i <= to : i >= to; i += step) {
+    if (!ctor) {
+      values.push(i as unknown as N);
+      continue;
+    }
+
+    if (isConstructor<N, [number, ...any]>(ctor)) {
+      values.push(new ctor(i));
+    } else {
+      values.push((ctor as (n: number) => N)(i));
+    }
+  }
+
+  return values;
 }

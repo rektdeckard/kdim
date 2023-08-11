@@ -1,4 +1,4 @@
-import { MatrixLike, Vec } from "../types";
+import { MatrixLike, Tuple } from "../types";
 
 export type MatrixOperand<M extends number, N extends number> =
   | Matrix<M, N>
@@ -30,7 +30,7 @@ export type MTXOptions = {
  * Implements {@link Iterable} over {@link Vec}
  */
 export class Matrix<M extends number, N extends number>
-  implements Iterable<Vec<N>>
+  implements Iterable<Tuple<number, N>>
 {
   #data: MatrixLike<M, N>;
 
@@ -38,12 +38,12 @@ export class Matrix<M extends number, N extends number>
     this.#data = data;
   }
 
-  get rows() {
-    return this.#data.length;
+  get rows(): M {
+    return this.#data.length as M;
   }
 
-  get cols() {
-    return this.#data[0].length;
+  get cols(): N {
+    return this.#data[0].length as N;
   }
 
   get size() {
@@ -220,7 +220,7 @@ export class Matrix<M extends number, N extends number>
   }
 
   isSquare(): boolean {
-    return this.rows === this.cols;
+    return (this.rows as number) === this.cols;
   }
 
   at(i: number, j: number) {
@@ -229,7 +229,7 @@ export class Matrix<M extends number, N extends number>
 
   clone(): Matrix<M, N> {
     const data = this.#data.map((row) => [...row]) as MatrixLike<M, N>;
-    return new Matrix(data);
+    return new Matrix<M, N>(data);
   }
 
   submatrix<M extends number, N extends number>(
@@ -351,7 +351,7 @@ export class Matrix<M extends number, N extends number>
       }
     }
 
-    if (!Matrix.identity(this.rows).eq(this.mul(im), tolerance)) {
+    if (!(this as any).mul(im).eq(Matrix.identity(this.rows), tolerance)) {
       throw new Error(`matrix inversion failed!`);
     }
 
@@ -374,7 +374,7 @@ export class Matrix<M extends number, N extends number>
     return (this.#data as number[][]).flat();
   }
 
-  add(m: MatrixOperand<M, N>) {
+  add(m: MatrixOperand<M, N>): Matrix<M, N> {
     if (m instanceof Matrix) {
       // c is Matrix
       if (this.cols !== m.cols || this.rows !== m.rows) {
@@ -383,9 +383,7 @@ export class Matrix<M extends number, N extends number>
         );
       }
 
-      const data = new Array(this.rows)
-        .fill(null)
-        .map(() => new Array(m.cols)) as MatrixLike<M, N>;
+      const data = new Array(this.rows).fill(null).map(() => new Array(m.cols));
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
@@ -393,7 +391,8 @@ export class Matrix<M extends number, N extends number>
         }
       }
 
-      return new Matrix<M, N>(data);
+      // @ts-ignore
+      return new Matrix(data);
     }
 
     if (Matrix.isMatrixLike(m)) {
@@ -406,7 +405,7 @@ export class Matrix<M extends number, N extends number>
 
       const data = new Array(this.rows)
         .fill(null)
-        .map(() => new Array(this.cols)) as MatrixLike<M, N>;
+        .map(() => new Array(this.cols));
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
@@ -414,13 +413,14 @@ export class Matrix<M extends number, N extends number>
         }
       }
 
-      return new Matrix<M, N>(data);
+      // @ts-ignore
+      return new Matrix(data);
     } else {
       throw new TypeError(`invalid argument ${m}`);
     }
   }
 
-  sub(m: MatrixOperand<M, N>) {
+  sub(m: MatrixOperand<M, N>): Matrix<M, N> {
     if (m instanceof Matrix) {
       // c is Matrix
       if (this.cols !== m.cols || this.rows !== m.rows) {
@@ -429,9 +429,7 @@ export class Matrix<M extends number, N extends number>
         );
       }
 
-      const data = new Array(this.rows)
-        .fill(null)
-        .map(() => new Array(m.cols)) as MatrixLike<M, N>;
+      const data = new Array(this.rows).fill(null).map(() => new Array(m.cols));
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
@@ -439,7 +437,8 @@ export class Matrix<M extends number, N extends number>
         }
       }
 
-      return new Matrix<M, N>(data);
+      // @ts-ignore
+      return new Matrix(data);
     }
 
     if (Matrix.isMatrixLike(m)) {
@@ -452,7 +451,7 @@ export class Matrix<M extends number, N extends number>
 
       const data = new Array(this.rows)
         .fill(null)
-        .map(() => new Array(this.cols)) as MatrixLike<M, N>;
+        .map(() => new Array(this.cols));
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
@@ -460,7 +459,8 @@ export class Matrix<M extends number, N extends number>
         }
       }
 
-      return new Matrix<M, N>(data);
+      // @ts-ignore
+      return new Matrix(data);
     } else {
       throw new TypeError(`invalid argument ${m}`);
     }
@@ -471,7 +471,7 @@ export class Matrix<M extends number, N extends number>
   ): MatrixResult<M, N, I> {
     if (m instanceof Matrix) {
       // c is Matrix
-      if (this.cols !== m.rows) {
+      if ((this.cols as number) !== m.rows) {
         throw new RangeError(
           `cannot multiply receiver [${this.rows}x${this.cols}] by argument [${m.rows}x${m.cols}]`
         );
@@ -491,7 +491,7 @@ export class Matrix<M extends number, N extends number>
       }
 
       // @ts-ignore
-      return new Matrix(data) as MatrixResult<M, N, I>;
+      return new Matrix(data);
     }
 
     if (Matrix.isMatrixLike(m)) {
@@ -504,7 +504,7 @@ export class Matrix<M extends number, N extends number>
 
       const data = new Array(this.rows)
         .fill(null)
-        .map(() => new Array(m[0].length)) as MatrixLike<M, N>;
+        .map(() => new Array(m[0].length));
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < m[0].length; j++) {
@@ -515,7 +515,8 @@ export class Matrix<M extends number, N extends number>
         }
       }
 
-      return new Matrix(data) as MatrixResult<M, N, I>;
+      // @ts-ignore
+      return new Matrix(data);
     } else if (Array.isArray(m)) {
       // c is malformed array
       throw new RangeError(
@@ -523,12 +524,13 @@ export class Matrix<M extends number, N extends number>
       );
     } else {
       // c is scalar
+      // @ts-ignore
       return new Matrix<M, N>(
         this.#data.map((i) => i.map((j) => j * (m as number))) as MatrixLike<
           M,
           N
         >
-      ) as MatrixResult<M, N, I>;
+      );
     }
   }
 
@@ -544,14 +546,14 @@ export class Matrix<M extends number, N extends number>
     }
 
     if (k === 0) {
-      return Matrix.identity<M>(this.cols as M) as Matrix<M, M>;
+      return Matrix.identity<M>(this.rows);
     } else {
-      let acc: Matrix<M, N> = this;
+      let acc = this as any;
       for (let i = k - 1; i > 0; i--) {
-        acc = acc.mul(this) as Matrix<M, N>;
+        acc = acc.mul(this);
       }
 
-      return acc as unknown as Matrix<M, M>;
+      return acc;
     }
   }
 

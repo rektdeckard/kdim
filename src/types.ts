@@ -12,5 +12,5 @@ export type Vec<K extends number> =
   | Readonly<Tuple<number, K>>;
 
 export type MatrixLike<M extends number, N extends number> =
-  | Tuple<Vec<N>, M>
-  | Readonly<Tuple<Vec<N>, M>>;
+  | Tuple<Tuple<number, N>, M>
+  | Readonly<Tuple<Tuple<number, N>, M>>;
