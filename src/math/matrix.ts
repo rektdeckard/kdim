@@ -1,21 +1,27 @@
 import { MatrixLike, Vec } from "../types";
 
-type Input<M extends number, N extends number> =
+export type MatrixOperand<M extends number, N extends number> =
   | Matrix<M, N>
   | MatrixLike<M, N>
   | number[][];
 
-type Return<
+type MatrixResult<
   M extends number,
   N extends number,
-  I extends Input<number, number> | number
+  I extends MatrixOperand<number, number> | number
 > = I extends number
   ? Matrix<M, N>
-  : I extends Input<infer O, infer P>
+  : I extends MatrixOperand<infer O, infer P>
   ? N extends O
     ? Matrix<M, P>
     : never
   : never;
+
+export type MTXOptions = {
+  format?: "coordinate" | "array";
+  field?: "real" | "complex" | "integer" | "pattern";
+  symmetry?: "general" | "symmetric" | "skew-symmetric" | "hermitian";
+};
 
 /**
  * A concrete Matrix class for simple linear algebra, currently only supporting
@@ -26,7 +32,7 @@ type Return<
 export class Matrix<M extends number, N extends number>
   implements Iterable<Vec<N>>
 {
-  readonly #data: MatrixLike<M, N>;
+  #data: MatrixLike<M, N>;
 
   constructor(data: MatrixLike<M, N>) {
     this.#data = data;
@@ -44,22 +50,8 @@ export class Matrix<M extends number, N extends number>
     return this.rows * this.cols;
   }
 
-  get data(): Readonly<MatrixLike<M, N>> {
+  get data(): MatrixLike<M, N> {
     return this.#data;
-  }
-
-  static isMatrixLike<M extends number, N extends number>(
-    arg: unknown,
-    ...dimensions: [m: M, n: N] | []
-  ): arg is MatrixLike<M, N> {
-    const [m, n] = dimensions;
-
-    return (
-      Array.isArray(arg) &&
-      Array.isArray(arg[0]) &&
-      typeof arg[0][0]?.valueOf() === "number" &&
-      ((!m && !n) || (arg.length === m && arg[0].length === n))
-    );
   }
 
   static zero<N extends number>(n: N): Matrix<N, N> {
@@ -98,8 +90,133 @@ export class Matrix<M extends number, N extends number>
     return new Matrix<M, N>(data);
   }
 
-  [Symbol.iterator]() {
-    return this.#data[Symbol.iterator]();
+  static fromMTX<M extends number, N extends number>(
+    data: string,
+    options: MTXOptions = {}
+  ): Matrix<M, N> {
+    // Parse headers
+    const [header, ...lines] = data.split(/\n/);
+    const [mm, ob, format, field, symmetry] = header
+      .split(/\s+/)
+      .map((i) => i.toLowerCase());
+
+    if (mm !== "%%matrixmarket") throw new Error(`unrecognized header '${mm}'`);
+    if (ob !== "matrix") throw new Error(`unrecognized object '${ob}'`);
+
+    // Validate variant selection
+    if (!["coordinate", "array"].includes(format))
+      throw new Error(`unrecognized format '${format}'`);
+    if (format === "array" && field === "pattern")
+      throw new Error(
+        `format 'array' is incompatible with symmetry type 'pattern'`
+      );
+    if (options.format && format !== options.format)
+      throw new Error(
+        `specified format '${options.format}' does not match data format '${format}'`
+      );
+
+    if (!["real", "complex", "integer", "pattern"].includes(field))
+      throw new Error(`unrecognized field type '${field}'`);
+    if (
+      (symmetry === "hermitian" && field !== "complex") ||
+      (field === "pattern" && !["general", "symmetric"].includes(symmetry))
+    )
+      throw new Error(
+        `symmetry type '${symmetry}' is incompatible with field type '${field}'`
+      );
+    if (options.field && field !== options.field)
+      throw new Error(
+        `specified field type '${options.field}' does not match data field type '${field}'`
+      );
+
+    if (
+      !["general", "symmetric", "skew-symmetric", "hermitian"].includes(
+        symmetry
+      )
+    )
+      throw new Error(`unrecognized symmetry type '${symmetry}'`);
+    if (
+      symmetry !== "general" ||
+      (options.symmetry && symmetry !== options.symmetry)
+    )
+      throw new Error("type");
+
+    // Skip leading comments
+    while (lines[0].startsWith("%")) {
+      lines.shift();
+    }
+
+    // Parse dimensions
+    const [rows, columns, _entries] = lines
+      .shift()!
+      .split(/\s/)
+      .map((v) => parseInt(v));
+
+    if (rows !== columns && symmetry !== "general")
+      throw new Error(
+        `symmetry type '${symmetry}' is unsupported for non-square matrices`
+      );
+
+    const matrix = Matrix.withSize(rows as M, columns as N);
+
+    // Parse data
+    for (let n = 0, o = 0; n < lines.length; n++) {
+      const line = lines[n];
+      if (line.startsWith("%")) continue;
+      if (!line.trim()) continue;
+
+      let [i, j, v1, v2] = line.split(/\s+/).map(Number);
+      if (format === "array") {
+        v1 = i;
+        v2 = j;
+        [i, j] = [(o % rows) + 1, Math.floor(o / rows) + 1];
+        o++;
+      }
+
+      if (!Number.isInteger(i) || !Number.isInteger(j))
+        throw new Error(`bad matrix coordinate ${i},${j}\n${line}`);
+
+      if (Number.isNaN(v1)) throw new Error("bad value");
+      if (Number.isNaN(v2)) throw new Error("bad value");
+
+      let value = v1;
+      switch (field) {
+        case "integer": {
+          if (!Number.isInteger(v1))
+            throw new Error(`non-integer value '${v1}'`);
+          break;
+        }
+        case "complex": {
+          if (Number.isNaN(v2)) {
+            throw new Error(`invalid imaginary component '${v2}'`);
+          }
+          throw new Error(`TODO`);
+          break;
+        }
+        case "pattern": {
+          throw new Error(`TODO`);
+          break;
+        }
+      }
+
+      (matrix.#data[i - 1][j - 1] as number) = value;
+    }
+
+    return matrix;
+  }
+
+  static isMatrixLike<M extends number, N extends number>(
+    arg: unknown,
+    ...dimensions: [m: M, n: N] | []
+  ): arg is MatrixLike<M, N> {
+    const [m, n] = dimensions;
+
+    return (
+      Array.isArray(arg) &&
+      Array.isArray(arg[0]) &&
+      typeof arg[0][0]?.valueOf() === "number" &&
+      ((!m && !n) || (arg.length === m && arg[0].length === n))
+    );
   }
 
   isSquare(): boolean {
@@ -110,8 +227,52 @@ export class Matrix<M extends number, N extends number>
     return this.#data.at(i)?.at(j);
   }
 
+  clone(): Matrix<M, N> {
+    const data = this.#data.map((row) => [...row]) as MatrixLike<M, N>;
+    return new Matrix(data);
+  }
+
+  submatrix<M extends number, N extends number>(
+    removeRows: number[],
+    removeCols: number[]
+  ) {
+    const data = this.#data.reduce<number[][]>((data, row, i) => {
+      if (!removeRows.includes(i)) {
+        const newRow = row.reduce<number[]>((curr, col, j) => {
+          if (!removeCols.includes(j)) {
+            curr.push(col);
+          }
+          return curr;
+        }, []);
+        data.push(newRow);
+      }
+      return data;
+    }, []) as MatrixLike<M, N>;
+
+    return new Matrix<M, N>(data);
+  }
+
+  trace(): number {
+    if (!this.isSquare()) {
+      throw new Error(
+        `cannot find trace of non-square matrix [${this.rows}x${this.cols}]`
+      );
+    }
+
+    let total = 0;
+    for (let i = 0; i < this.rows; i++) {
+      total += this.data[i][i];
+    }
+
+    return total;
+  }
+
   determinant(): number | undefined {
-    if (!this.isSquare()) return;
+    if (!this.isSquare()) {
+      throw new Error(
+        `cannot find determinant of non-square matrix [${this.rows}x${this.cols}]`
+      );
+    }
 
     if (this.size === 1) {
       return this.at(0, 0)!;
@@ -141,13 +302,60 @@ export class Matrix<M extends number, N extends number>
       );
     }
 
-    return;
+    let total = 0;
+    for (let i = 0; i < this.rows; i++) {
+      const sub = this.submatrix([0], [i]);
+      const sign = (-1) ** (i % 2);
+      const subdeterminant = sub.determinant();
+
+      if (subdeterminant === undefined) {
+        throw new Error(`failed to find subdeterminant`);
+      }
+
+      total += this.at(0, i)! * sign * subdeterminant;
+    }
+
+    return total;
   }
 
-  inverse(): Matrix<N, M> | undefined {
-    if (!this.isSquare()) return;
+  inverse(tolerance: number = 5): Matrix<M, M> | undefined {
+    if (!this.isSquare()) {
+      throw new Error(
+        `cannot invert non-square matrix [${this.rows}x${this.cols}]`
+      );
+    }
 
-    return;
+    if (!this.determinant()) {
+      throw new Error(`cannot invert singular matrix`);
+    }
+
+    const am = this.clone();
+    const im = Matrix.identity<M>(am.rows as M);
+
+    for (let fd = 0; fd < am.rows; fd++) {
+      const fdScaler = 1.0 / am.at(fd, fd)!;
+
+      for (let j = 0; j < am.cols; j++) {
+        (am.#data[fd][j] as number) *= fdScaler;
+        (im.#data[fd][j] as number) *= fdScaler;
+      }
+
+      for (let i = 0; i < am.rows; i++) {
+        if (i === fd) continue;
+
+        const rowScaler = am.at(i, fd)!;
+        for (let j = 0; j < am.cols; j++) {
+          (am.#data[i][j] as number) = am.at(i, j)! - rowScaler * am.at(fd, j)!;
+          (im.#data[i][j] as number) = im.at(i, j)! - rowScaler * im.at(fd, j)!;
+        }
+      }
+    }
+
+    if (!Matrix.identity(this.rows).eq(this.mul(im), tolerance)) {
+      throw new Error(`matrix inversion failed!`);
+    }
+
+    return im;
   }
 
   transpose(): Matrix<N, M> {
@@ -155,14 +363,18 @@ export class Matrix<M extends number, N extends number>
 
     for (let j = 0; j < this.cols; j++) {
       for (let i = 0; i < this.rows; i++) {
-        (m.data[j][i] as number) = this.#data[i][j];
+        (m.#data[j][i] as number) = this.#data[i][j];
       }
     }
 
     return m;
   }
 
-  add(m: Input<M, N>) {
+  vectorize(): number[] {
+    return (this.#data as number[][]).flat();
+  }
+
+  add(m: MatrixOperand<M, N>) {
     if (m instanceof Matrix) {
       // c is Matrix
       if (this.cols !== m.cols || this.rows !== m.rows) {
@@ -208,7 +420,7 @@ export class Matrix<M extends number, N extends number>
     }
   }
 
-  sub(m: Input<M, N>) {
+  sub(m: MatrixOperand<M, N>) {
     if (m instanceof Matrix) {
       // c is Matrix
       if (this.cols !== m.cols || this.rows !== m.rows) {
@@ -254,7 +466,9 @@ export class Matrix<M extends number, N extends number>
     }
   }
 
-  mul<I extends Input<number, number> | number>(m: I): Return<M, N, I> {
+  mul<I extends MatrixOperand<number, number> | number>(
+    m: I
+  ): MatrixResult<M, N, I> {
     if (m instanceof Matrix) {
       // c is Matrix
       if (this.cols !== m.rows) {
@@ -277,7 +491,7 @@ export class Matrix<M extends number, N extends number>
       }
 
       // @ts-ignore
-      return new Matrix(data) as Return<M, N, I>;
+      return new Matrix(data) as MatrixResult<M, N, I>;
     }
 
     if (Matrix.isMatrixLike(m)) {
@@ -301,7 +515,7 @@ export class Matrix<M extends number, N extends number>
         }
       }
 
-      return new Matrix(data) as Return<M, N, I>;
+      return new Matrix(data) as MatrixResult<M, N, I>;
     } else if (Array.isArray(m)) {
       // c is malformed array
       throw new RangeError(
@@ -314,7 +528,7 @@ export class Matrix<M extends number, N extends number>
           M,
           N
         >
-      ) as Return<M, N, I>;
+      ) as MatrixResult<M, N, I>;
     }
   }
 
@@ -341,24 +555,35 @@ export class Matrix<M extends number, N extends number>
     }
   }
 
-  eq(other: Input<M, N>): boolean {
+  eq(other: MatrixOperand<M, N>, tolerance: number = 5): boolean {
+    function closeEnough(a: number, b: number): boolean {
+      if (!tolerance) return a === b;
+      return Math.abs(a - b) < 1 / 10 ** tolerance;
+    }
+
     if (other instanceof Matrix) {
       // o is Matrix
       if (!Matrix.isMatrixLike(other.data, this.rows, this.cols)) return false;
       // @ts-ignore
       return other.data.every((row, i) =>
-        row.every((col, j) => col === this.at(i, j))
+        row.every((col, j) => closeEnough(col, this.at(i, j)!))
       );
     }
 
     if (Matrix.isMatrixLike(other, this.rows, this.cols)) {
       // o is MatrixLike
       // Hack to access array methods on underlying tuples
-      return (other as number[][]).every((row, i) =>
-        row.every((col, j) => col === this.at(i, j))
+      // @ts-ignore
+      return other.every((row, i) =>
+        // @ts-ignore
+        row.every((col, j) => closeEnough(col, this.at(i, j)!))
       );
     }
 
     return false;
+  }
+
+  [Symbol.iterator]() {
+    return this.#data[Symbol.iterator]();
   }
 }

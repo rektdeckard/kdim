@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import fs from "node:fs";
 import { Matrix, MatrixLike, Saturating } from "../../src";
 
 describe("Matrix", () => {
@@ -17,7 +18,7 @@ describe("Matrix", () => {
     });
 
     it("can be constructed with exotic number types", () => {
-      const m = new Matrix<3, 3>([
+      const m = new Matrix([
         [
           new Saturating({ max: 7 }, 2).valueOf(),
           new Saturating({ max: 15 }, 2).valueOf(),
@@ -297,8 +298,6 @@ describe("Matrix", () => {
     it("considers sparse, identical matrices equal", () => {
       const a = Matrix.identity(5);
       const b = Matrix.identity(5);
-
-      const x = a.mul(b);
       const c = Matrix.zero(5);
       const d = new Matrix<5, 5>([
         [5, 5, 5, 5, 5],
@@ -342,9 +341,11 @@ describe("Matrix", () => {
   });
 
   describe("determinant", () => {
-    it("is undefined for non-square matrices", () => {
+    it("throws for non-square matrices", () => {
       const m = Matrix.withSize(3, 6);
-      expect(m.determinant()).toBeUndefined();
+      expect(() => m.determinant()).toThrowError(
+        "cannot find determinant of non-square matrix [3x6]"
+      );
     });
 
     it("is trivial for 1 x 1 matrices", () => {
@@ -371,9 +372,26 @@ describe("Matrix", () => {
       expect(m.determinant()).toBe(54);
     });
 
-    // it("is computed for n x n matrices", () => {
-    //   expect(false).toBe(true);
-    // });
+    it("is computed for n x n matrices", () => {
+      const m = new Matrix([
+        [12, 20, 3, 7],
+        [9, -20, -4, 8],
+        [69, 69, 420, 420],
+        [1, 2, 89, -89],
+      ]);
+
+      expect(m.determinant()).toBe(29469066);
+
+      const n = new Matrix([
+        [12, 20, 3, 7, 3],
+        [9, -20, -4, 8, 4],
+        [69, 69, 420, 420, 5],
+        [1, 2, 89, -89, 6],
+        [3, 4, 5, 6, 7],
+      ]);
+
+      expect(n.determinant()).toBe(187510379);
+    });
 
     it("is 1 for identity matrices", () => {
       const two = Matrix.identity(2);
@@ -383,7 +401,89 @@ describe("Matrix", () => {
       expect(three.determinant()).toBe(1);
 
       const ten = Matrix.identity(10);
-      //   expect(ten.determinant()).toBe(1);
+      expect(ten.determinant()).toBe(1);
+    });
+  });
+
+  describe("inverse", () => {
+    it("can invert a simple matrix", () => {
+      const m = new Matrix<3, 3>([
+        [2, 0, 0],
+        [0, 3, 0],
+        [0, 0, -7],
+      ]);
+
+      expect(m.inverse()!.data).toStrictEqual([
+        [1 / 2, 0, 0],
+        [0, 1 / 3, 0],
+        [-0, -0, -1 / 7],
+      ]);
+    });
+
+    it("throws when inverting a non-square matrix", () => {
+      const m = new Matrix<2, 1>([[7], [2]]);
+      expect(() => m.inverse()).toThrowError(
+        "cannot invert non-square matrix [2x1]"
+      );
+    });
+  });
+
+  describe("vectorize", () => {
+    it("returns the flattened matrix", () => {
+      const m = new Matrix([
+        [1, 2, 3, 4, 5, 6],
+        [3, 6, 8, 12, 15, 18],
+      ]);
+
+      expect(m.vectorize()).toStrictEqual([
+        1, 2, 3, 4, 5, 6, 3, 6, 8, 12, 15, 18,
+      ]);
+    });
+  });
+
+  describe("trace", () => {
+    it("returns the trace of a simple matrix", () => {
+      const m = new Matrix<3, 3>([
+        [1, 0, 3],
+        [11, 5, 2],
+        [6, 12, -5],
+      ]);
+
+      expect(m.trace()).toBe(1);
+    });
+
+    it("is the same of a transposed matrix", () => {
+      const m = new Matrix([
+        [1, 2, 4, 8],
+        [3, 6, 9, 10],
+        [-10, 10, -5, 0],
+        [41, 42, 43, 44],
+      ]);
+
+      expect(m.trace()).toBe(46);
+      expect(m.trace()).toBe(m.transpose().trace());
+    });
+
+    it("adheres to transitivity rules", () => {
+      const a = new Matrix<3, 3>([
+        [-9, 4, 1],
+        [3, -3, 0],
+        [5, 1, 2],
+      ]);
+
+      const b = new Matrix<3, 3>([
+        [8, -5, 1],
+        [2, 0, -1],
+        [3, 5, 6],
+      ]);
+
+      const atb = a.transpose().mul(b).trace();
+      const abt = a.mul(b.transpose()).trace();
+      const bta = b.transpose().mul(a).trace();
+      const bat = b.mul(a.transpose()).trace();
+
+      expect(atb === abt && abt === bta && bta === bat).toBe(true);
+      expect(a.mul(b).trace()).toBe(b.mul(a).trace());
     });
   });
 
@@ -428,19 +528,17 @@ describe("Matrix", () => {
 
       // What is x^2 - y^2?
 
-      expect(
-        new Matrix([
-          [-3, -3],
-          [5, -6],
-        ])
-          .pow(2)
-          .sub(
-            new Matrix([
-              [1, 3],
-              [6, -6],
-            ]).pow(2)
-          ).data
-      ).toStrictEqual([
+      const x = new Matrix([
+        [-3, -3],
+        [5, -6],
+      ]);
+
+      const y = new Matrix([
+        [1, 3],
+        [6, -6],
+      ]);
+
+      expect(x.pow(2).sub(y.pow(2)).data).toStrictEqual([
         [-25, 42],
         [-15, -33],
       ]);
@@ -464,6 +562,63 @@ describe("Matrix", () => {
         [16, 0],
         [-180, 196],
       ]);
+    });
+  });
+
+  describe("parse", () => {
+    describe("fromMTX", () => {
+      it("can parse spec 1.1.1", () => {
+        const data = fs
+          .readFileSync("./test/fixtures/matrix/spec-1.1.1.mtx")
+          .toString();
+        const m = Matrix.fromMTX(data);
+
+        expect(m.rows).toBe(5);
+        expect(m.cols).toBe(5);
+
+        expect(
+          m.eq([
+            [1.0, 0, 0, 6, 0],
+            [0, 10.5, 0, 0, 0],
+            [0, 0, 0.015, 0, 0],
+            [0, 250.5, 0, -280, 33.32],
+            [0, 0, 0, 0, 12],
+          ])
+        ).toBe(true);
+      });
+
+      it("can parse spec 1.2.3", () => {
+        const data = fs
+          .readFileSync("./test/fixtures/matrix/spec-1.2.3.mtx")
+          .toString();
+        const m = Matrix.fromMTX(data, { format: "array" });
+
+        expect(m.rows).toBe(4);
+        expect(m.cols).toBe(3);
+
+        expect(
+          m.eq([
+            [1, 5, 9],
+            [2, 6, 10],
+            [3, 7, 11],
+            [4, 8, 12],
+          ])
+        ).toBe(true);
+      });
+
+      it("can parse and return coordinate real general .mtx", () => {
+        const data = fs
+          .readFileSync("./test/fixtures/matrix/mcca.mtx")
+          .toString();
+
+        const m = Matrix.fromMTX<180, 180>(data, {
+          format: "coordinate",
+          field: "real",
+        });
+
+        expect(m.rows).toBe(180);
+        expect(m.cols).toBe(180);
+      });
     });
   });
 });
