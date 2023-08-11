@@ -274,7 +274,16 @@ export class BST<V> implements Iterable<V> {
     return arr;
   }
 
-  [Symbol.iterator]() {
-    return this.asOrdered()[Symbol.iterator]();
+  *[Symbol.iterator]() {
+    function* inOrderImpl(
+      subtree: BSTNode<V> | null | undefined
+    ): IterableIterator<V> {
+      if (!subtree) return;
+      yield* inOrderImpl(subtree.left);
+      yield subtree.value;
+      yield* inOrderImpl(subtree.right);
+    }
+
+    yield* inOrderImpl(this.#root);
   }
 }
