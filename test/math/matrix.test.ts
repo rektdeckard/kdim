@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
-import { Matrix, MatrixLike, Saturating } from "../../src";
+import { Matrix, MatrixLike, Saturating, Tuple } from "../../src";
 
 describe("Matrix", () => {
   describe("new Matrix", () => {
@@ -40,6 +40,54 @@ describe("Matrix", () => {
       expect(m.rows).toBe(3);
       expect(m.cols).toBe(3);
       expect(m.size).toBe(9);
+    });
+  });
+
+  describe("at", () => {
+    const m = new Matrix<3, 3>([
+      [1, 4, 7],
+      [2, 5, 8],
+      [3, 6, 9],
+    ]);
+
+    it("can get the value at the specified coordinates", () => {
+      expect(m.at(1, 1)).toBe(5);
+    });
+
+    it("returns undefined for coordinates outside the matrix", () => {
+      expect(m.at(5, 5)).toBeUndefined();
+    });
+  });
+
+  describe("row", () => {
+    const m = new Matrix<3, 3>([
+      [1, 4, 7],
+      [2, 5, 8],
+      [3, 6, 9],
+    ]);
+
+    it("can get the specified row", () => {
+      expect(m.row(2)).toStrictEqual([3, 6, 9]);
+    });
+
+    it("returns undefined for rows outside the matrix", () => {
+      expect(m.row(5)).toBeUndefined();
+    });
+  });
+
+  describe("col", () => {
+    const m = new Matrix<3, 3>([
+      [1, 4, 7],
+      [2, 5, 8],
+      [3, 6, 9],
+    ]);
+
+    it("can get the specified column", () => {
+      expect(m.col(2)).toStrictEqual([7, 8, 9]);
+    });
+
+    it("returns undefined for columns outside the matrix", () => {
+      expect(m.col(5)).toBeUndefined();
     });
   });
 
@@ -190,19 +238,19 @@ describe("Matrix", () => {
       ]);
 
       expect(() => a.mul(b)).toThrowError(
-        "cannot multiply receiver [5x1] by argument [2x2]"
+        "Cannot multiply receiver [5x1] by argument [2x2]"
       );
 
       expect(() => b.mul(a)).toThrowError(
-        "cannot multiply receiver [2x2] by argument [5x1]"
+        "Cannot multiply receiver [2x2] by argument [5x1]"
       );
 
       expect(() => a.mul([[]])).toThrowError(
-        "cannot multiply receiver [5x1] by argument [1x?]"
+        "Cannot multiply receiver [5x1] by argument [1x?]"
       );
 
       expect(() => a.mul([])).toThrowError(
-        "cannot multiply receiver [5x1] by argument [0x?]"
+        "Cannot multiply receiver [5x1] by argument [0x?]"
       );
     });
   });
@@ -215,7 +263,7 @@ describe("Matrix", () => {
 
     it("throws with negative exponent", () => {
       expect(() => m.pow(-1)).toThrowError(
-        "negative exponentiation is not permitted. If matrix is invertible, first invert then use positive exponentiation."
+        "Negative exponentiation is not permitted. If matrix is invertible, first invert then use positive exponentiation."
       );
     });
 
@@ -257,7 +305,7 @@ describe("Matrix", () => {
     });
 
     it("throws with invalid size", () => {
-      expect(() => Matrix.zero(-1)).toThrowError("invalid size -1");
+      expect(() => Matrix.zero(-1)).toThrowError("Invalid matrix size [-1x-1]");
     });
   });
 
@@ -282,7 +330,9 @@ describe("Matrix", () => {
     });
 
     it("throws with invalid size", () => {
-      expect(() => Matrix.identity(-1)).toThrowError("invalid size -1");
+      expect(() => Matrix.identity(-1)).toThrowError(
+        "Invalid matrix size [-1x-1]"
+      );
     });
   });
 
@@ -291,6 +341,32 @@ describe("Matrix", () => {
       const m = Matrix.withSize(7, 11);
       expect(m.rows).toBe(7);
       expect(m.cols).toBe(11);
+    });
+
+    it("constructs a matrix with the fill value", () => {
+      const m = Matrix.withSize(4, 3, 10);
+      expect(m.rows).toBe(4);
+      expect(m.cols).toBe(3);
+      expect(m.data.flat().every((el) => el === 10)).toBe(true);
+    });
+  });
+
+  describe("fromDiagonal", () => {
+    it("constructs a matrix with a given diagonal", () => {
+      const diag: Tuple<number, 4> = [1, 4, 8, 16];
+      const m = Matrix.fromDiagonal(diag);
+
+      expect(m.isSquare()).toBe(true);
+
+      for (let i = 0; i < m.rows; i++) {
+        for (let j = 0; j < m.cols; j++) {
+          if (i === j) {
+            expect(m.at(i, j)).toBe(diag.at(i));
+          } else {
+            expect(m.at(i, j)).toBe(0);
+          }
+        }
+      }
     });
   });
 
@@ -344,7 +420,7 @@ describe("Matrix", () => {
     it("throws for non-square matrices", () => {
       const m = Matrix.withSize(3, 6);
       expect(() => m.determinant()).toThrowError(
-        "cannot find determinant of non-square matrix [3x6]"
+        "Cannot find determinant of non-square matrix [3x6]"
       );
     });
 
@@ -423,7 +499,7 @@ describe("Matrix", () => {
     it("throws when inverting a non-square matrix", () => {
       const m = new Matrix<2, 1>([[7], [2]]);
       expect(() => m.inverse()).toThrowError(
-        "cannot invert non-square matrix [2x1]"
+        "Cannot invert non-square matrix [2x1]"
       );
     });
   });

@@ -25,7 +25,7 @@ export type MTXOptions = {
 
 /**
  * A concrete Matrix class for simple linear algebra, currently only supporting
- * simple numbers, but with plans to add supoprt for complex numbers.
+ * simple numbers, but with plans to add support for complex numbers.
  *
  * Implements {@link Iterable} over {@link Vec}
  */
@@ -56,7 +56,7 @@ export class Matrix<M extends number, N extends number>
 
   static zero<N extends number>(n: N): Matrix<N, N> {
     if (n <= 0) {
-      throw new RangeError(`invalid size ${n}`);
+      throw new RangeError(`Invalid matrix size [${n}x${n}]`);
     }
 
     const data = new Array(n)
@@ -68,7 +68,7 @@ export class Matrix<M extends number, N extends number>
 
   static identity<N extends number>(n: N): Matrix<N, N> {
     if (n <= 0) {
-      throw new RangeError(`invalid size ${n}`);
+      throw new RangeError(`Invalid matrix size [${n}x${n}]`);
     }
 
     const m = Matrix.zero(n);
@@ -80,14 +80,36 @@ export class Matrix<M extends number, N extends number>
   }
 
   static withSize<M extends number, N extends number>(
-    m: M,
-    n: N
+    rows: M,
+    cols: N,
+    fillValue: number = 0
   ): Matrix<M, N> {
-    const data = new Array(m)
+    if (rows <= 0 || cols <= 0) {
+      throw new RangeError(`Invalid size [${rows} x ${cols}]`);
+    }
+
+    const data = new Array(rows)
       .fill(null)
-      .map(() => new Array(n).fill(0)) as MatrixLike<M, N>;
+      .map(() => new Array(cols).fill(fillValue)) as MatrixLike<M, N>;
 
     return new Matrix<M, N>(data);
+  }
+
+  static fromDiagonal<N extends number>(
+    diagonal: Tuple<number, N> | number[]
+  ): Matrix<N, N> {
+    const d = diagonal.length as N;
+
+    if (d <= 0) {
+      throw new RangeError(`Invalid size [${d} x ${d}]`);
+    }
+
+    const m = Matrix.zero(d);
+    for (let i = 0; i < d; i++) {
+      (m.#data[i][i] as number) = diagonal[i];
+    }
+
+    return m;
   }
 
   static fromMTX<M extends number, N extends number>(
@@ -100,33 +122,33 @@ export class Matrix<M extends number, N extends number>
       .split(/\s+/)
       .map((i) => i.toLowerCase());
 
-    if (mm !== "%%matrixmarket") throw new Error(`unrecognized header '${mm}'`);
-    if (ob !== "matrix") throw new Error(`unrecognized object '${ob}'`);
+    if (mm !== "%%matrixmarket") throw new Error(`Unrecognized header '${mm}'`);
+    if (ob !== "matrix") throw new Error(`Unrecognized object '${ob}'`);
 
     // Validate variant selection
     if (!["coordinate", "array"].includes(format))
-      throw new Error(`unrecognized format '${format}'`);
+      throw new Error(`Unrecognized format '${format}'`);
     if (format === "array" && field === "pattern")
       throw new Error(
-        `format 'array' is incompatible with symmetry type 'pattern'`
+        `Format 'array' is incompatible with symmetry type 'pattern'`
       );
     if (options.format && format !== options.format)
       throw new Error(
-        `specified format '${options.format}' does not match data format '${format}'`
+        `Specified format '${options.format}' does not match data format '${format}'`
       );
 
     if (!["real", "complex", "integer", "pattern"].includes(field))
-      throw new Error(`unrecognized field type '${field}'`);
+      throw new Error(`Unrecognized field type '${field}'`);
     if (
       (symmetry === "hermitian" && field !== "complex") ||
       (field === "pattern" && !["general", "symmetric"].includes(symmetry))
     )
       throw new Error(
-        `symmetry type '${symmetry}' is incompatible with field type '${field}'`
+        `Symmetry type '${symmetry}' is incompatible with field type '${field}'`
       );
     if (options.field && field !== options.field)
       throw new Error(
-        `specified field type '${options.field}' does not match data field type '${field}'`
+        `Specified field type '${options.field}' does not match data field type '${field}'`
       );
 
     if (
@@ -134,12 +156,12 @@ export class Matrix<M extends number, N extends number>
         symmetry
       )
     )
-      throw new Error(`unrecognized symmetry type '${symmetry}'`);
+      throw new Error(`Unrecognized symmetry type '${symmetry}'`);
     if (
       symmetry !== "general" ||
       (options.symmetry && symmetry !== options.symmetry)
     )
-      throw new Error("type");
+      throw new Error("Type");
 
     // Skip leading comments
     while (lines[0].startsWith("%")) {
@@ -154,7 +176,7 @@ export class Matrix<M extends number, N extends number>
 
     if (rows !== columns && symmetry !== "general")
       throw new Error(
-        `symmetry type '${symmetry}' is unsupported for non-square matrices`
+        `Symmetry type '${symmetry}' is unsupported for non-square matrices`
       );
 
     const matrix = Matrix.withSize(rows as M, columns as N);
@@ -174,21 +196,21 @@ export class Matrix<M extends number, N extends number>
       }
 
       if (!Number.isInteger(i) || !Number.isInteger(j))
-        throw new Error(`bad matrix coordinate ${i},${j}\n${line}`);
+        throw new Error(`Bad matrix coordinate ${i},${j}\n${line}`);
 
-      if (Number.isNaN(v1)) throw new Error("bad value");
-      if (Number.isNaN(v2)) throw new Error("bad value");
+      if (Number.isNaN(v1)) throw new Error(`Bad value '${v1}`);
+      if (Number.isNaN(v2)) throw new Error(`Bad value ${v2}`);
 
       let value = v1;
       switch (field) {
         case "integer": {
           if (!Number.isInteger(v1))
-            throw new Error(`non-integer value '${v1}'`);
+            throw new Error(`Non-integer value '${v1}'`);
           break;
         }
         case "complex": {
           if (Number.isNaN(v2)) {
-            throw new Error(`invalid imaginary component '${v2}'`);
+            throw new Error(`Invalid imaginary component '${v2}'`);
           }
           throw new Error(`TODO`);
           break;
@@ -227,6 +249,15 @@ export class Matrix<M extends number, N extends number>
     return this.#data.at(i)?.at(j);
   }
 
+  row(i: number) {
+    return this.data.at(i);
+  }
+
+  col(j: number) {
+    if (j >= this.cols) return undefined;
+    return this.data.map((row) => row.at(j)!) as Tuple<number, M>;
+  }
+
   clone(): Matrix<M, N> {
     const data = this.#data.map((row) => [...row]) as MatrixLike<M, N>;
     return new Matrix<M, N>(data);
@@ -255,7 +286,7 @@ export class Matrix<M extends number, N extends number>
   trace(): number {
     if (!this.isSquare()) {
       throw new Error(
-        `cannot find trace of non-square matrix [${this.rows}x${this.cols}]`
+        `Cannot find trace of non-square matrix [${this.rows}x${this.cols}]`
       );
     }
 
@@ -270,7 +301,7 @@ export class Matrix<M extends number, N extends number>
   determinant(): number | undefined {
     if (!this.isSquare()) {
       throw new Error(
-        `cannot find determinant of non-square matrix [${this.rows}x${this.cols}]`
+        `Cannot find determinant of non-square matrix [${this.rows}x${this.cols}]`
       );
     }
 
@@ -309,7 +340,7 @@ export class Matrix<M extends number, N extends number>
       const subdeterminant = sub.determinant();
 
       if (subdeterminant === undefined) {
-        throw new Error(`failed to find subdeterminant`);
+        throw new Error(`Failed to find subdeterminant`);
       }
 
       total += this.at(0, i)! * sign * subdeterminant;
@@ -321,12 +352,12 @@ export class Matrix<M extends number, N extends number>
   inverse(tolerance: number = 5): Matrix<M, M> | undefined {
     if (!this.isSquare()) {
       throw new Error(
-        `cannot invert non-square matrix [${this.rows}x${this.cols}]`
+        `Cannot invert non-square matrix [${this.rows}x${this.cols}]`
       );
     }
 
     if (!this.determinant()) {
-      throw new Error(`cannot invert singular matrix`);
+      throw new Error(`Cannot invert singular matrix`);
     }
 
     const am = this.clone();
@@ -352,7 +383,7 @@ export class Matrix<M extends number, N extends number>
     }
 
     if (!(this as any).mul(im).eq(Matrix.identity(this.rows), tolerance)) {
-      throw new Error(`matrix inversion failed!`);
+      throw new Error(`Matrix inversion failed!`);
     }
 
     return im;
@@ -374,20 +405,22 @@ export class Matrix<M extends number, N extends number>
     return (this.#data as number[][]).flat();
   }
 
-  add(m: MatrixOperand<M, N>): Matrix<M, N> {
-    if (m instanceof Matrix) {
+  add(other: MatrixOperand<M, N>): Matrix<M, N> {
+    if (other instanceof Matrix) {
       // c is Matrix
-      if (this.cols !== m.cols || this.rows !== m.rows) {
+      if (this.cols !== other.cols || this.rows !== other.rows) {
         throw new RangeError(
-          `cannot add receiver [${this.rows}x${this.cols}] to argument [${m.rows}x${m.cols}]`
+          `Cannot add receiver [${this.rows}x${this.cols}] to argument [${other.rows}x${other.cols}]`
         );
       }
 
-      const data = new Array(this.rows).fill(null).map(() => new Array(m.cols));
+      const data = new Array(this.rows)
+        .fill(null)
+        .map(() => new Array(other.cols));
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
-          (data[i][j] as number) = this.at(i, j)! + m.at(i, j)!;
+          (data[i][j] as number) = this.at(i, j)! + other.at(i, j)!;
         }
       }
 
@@ -395,11 +428,11 @@ export class Matrix<M extends number, N extends number>
       return new Matrix(data);
     }
 
-    if (Matrix.isMatrixLike(m)) {
+    if (Matrix.isMatrixLike(other)) {
       // c is MatrixLike
-      if (this.rows !== m.length || this.cols !== m[0].length) {
+      if (this.rows !== other.length || this.cols !== other[0].length) {
         throw new RangeError(
-          `cannot add receiver [${this.rows}x${this.cols}] to argument [${m.length}x${m[0].length}]`
+          `Cannot add receiver [${this.rows}x${this.cols}] to argument [${other.length}x${other[0].length}]`
         );
       }
 
@@ -409,31 +442,33 @@ export class Matrix<M extends number, N extends number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
-          (data[i][j] as number) = this.at(i, j)! + m[i][j];
+          (data[i][j] as number) = this.at(i, j)! + other[i][j];
         }
       }
 
       // @ts-ignore
       return new Matrix(data);
     } else {
-      throw new TypeError(`invalid argument ${m}`);
+      throw new TypeError(`Invalid argument ${other}`);
     }
   }
 
-  sub(m: MatrixOperand<M, N>): Matrix<M, N> {
-    if (m instanceof Matrix) {
+  sub(other: MatrixOperand<M, N>): Matrix<M, N> {
+    if (other instanceof Matrix) {
       // c is Matrix
-      if (this.cols !== m.cols || this.rows !== m.rows) {
+      if (this.cols !== other.cols || this.rows !== other.rows) {
         throw new RangeError(
-          `cannot subtract from receiver [${this.rows}x${this.cols}] argument [${m.rows}x${m.cols}]`
+          `Cannot subtract from receiver [${this.rows}x${this.cols}] argument [${other.rows}x${other.cols}]`
         );
       }
 
-      const data = new Array(this.rows).fill(null).map(() => new Array(m.cols));
+      const data = new Array(this.rows)
+        .fill(null)
+        .map(() => new Array(other.cols));
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
-          (data[i][j] as number) = this.at(i, j)! - m.at(i, j)!;
+          (data[i][j] as number) = this.at(i, j)! - other.at(i, j)!;
         }
       }
 
@@ -441,11 +476,11 @@ export class Matrix<M extends number, N extends number>
       return new Matrix(data);
     }
 
-    if (Matrix.isMatrixLike(m)) {
+    if (Matrix.isMatrixLike(other)) {
       // c is MatrixLike
-      if (this.rows !== m.length || this.cols !== m[0].length) {
+      if (this.rows !== other.length || this.cols !== other[0].length) {
         throw new RangeError(
-          `cannot subtract from receiver [${this.rows}x${this.cols}] argument [${m.length}x${m[0].length}]`
+          `Cannot subtract from receiver [${this.rows}x${this.cols}] argument [${other.length}x${other[0].length}]`
         );
       }
 
@@ -455,36 +490,36 @@ export class Matrix<M extends number, N extends number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
-          (data[i][j] as number) = this.at(i, j)! - m[i][j];
+          (data[i][j] as number) = this.at(i, j)! - other[i][j];
         }
       }
 
       // @ts-ignore
       return new Matrix(data);
     } else {
-      throw new TypeError(`invalid argument ${m}`);
+      throw new TypeError(`Invalid argument ${other}`);
     }
   }
 
   mul<I extends MatrixOperand<number, number> | number>(
-    m: I
+    other: I
   ): MatrixResult<M, N, I> {
-    if (m instanceof Matrix) {
+    if (other instanceof Matrix) {
       // c is Matrix
-      if ((this.cols as number) !== m.rows) {
+      if ((this.cols as number) !== other.rows) {
         throw new RangeError(
-          `cannot multiply receiver [${this.rows}x${this.cols}] by argument [${m.rows}x${m.cols}]`
+          `Cannot multiply receiver [${this.rows}x${this.cols}] by argument [${other.rows}x${other.cols}]`
         );
       }
 
       const data = new Array(this.rows)
         .fill(null)
-        .map(() => new Array(m.cols)) as MatrixLike<M, number>;
+        .map(() => new Array(other.cols)) as MatrixLike<M, number>;
 
       for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < m.cols; j++) {
+        for (let j = 0; j < other.cols; j++) {
           (data[i][j] as number) = this.#data[i].reduce((acc, curr, n) => {
-            const it = curr * m.at(n, j)!;
+            const it = curr * other.at(n, j)!;
             return acc + it;
           }, 0);
         }
@@ -494,22 +529,22 @@ export class Matrix<M extends number, N extends number>
       return new Matrix(data);
     }
 
-    if (Matrix.isMatrixLike(m)) {
+    if (Matrix.isMatrixLike(other)) {
       // c is MatrixLike
-      if (this.cols !== m.length || m[0].length <= 0) {
+      if (this.cols !== other.length || other[0].length <= 0) {
         throw new RangeError(
-          `cannot multiply receiver [${this.rows}x${this.cols}] by argument [${m.length}x${m[0].length}]`
+          `Cannot multiply receiver [${this.rows}x${this.cols}] by argument [${other.length}x${other[0].length}]`
         );
       }
 
       const data = new Array(this.rows)
         .fill(null)
-        .map(() => new Array(m[0].length));
+        .map(() => new Array(other[0].length));
 
       for (let i = 0; i < this.rows; i++) {
-        for (let j = 0; j < m[0].length; j++) {
+        for (let j = 0; j < other[0].length; j++) {
           (data[i][j] as number) = this.#data[i].reduce((acc, curr, n) => {
-            const it = curr * m[n][j];
+            const it = curr * other[n][j];
             return acc + it;
           }, 0);
         }
@@ -517,19 +552,18 @@ export class Matrix<M extends number, N extends number>
 
       // @ts-ignore
       return new Matrix(data);
-    } else if (Array.isArray(m)) {
+    } else if (Array.isArray(other)) {
       // c is malformed array
       throw new RangeError(
-        `cannot multiply receiver [${this.rows}x${this.cols}] by argument [${m.length}x?]`
+        `Cannot multiply receiver [${this.rows}x${this.cols}] by argument [${other.length}x?]`
       );
     } else {
       // c is scalar
       // @ts-ignore
       return new Matrix<M, N>(
-        this.#data.map((i) => i.map((j) => j * (m as number))) as MatrixLike<
-          M,
-          N
-        >
+        this.#data.map((i) =>
+          i.map((j) => j * (other as number))
+        ) as MatrixLike<M, N>
       );
     }
   }
@@ -537,12 +571,12 @@ export class Matrix<M extends number, N extends number>
   pow(k: number): Matrix<M, M> {
     if (k < 0) {
       throw new RangeError(
-        "negative exponentiation is not permitted. If matrix is invertible, first invert then use positive exponentiation."
+        "Negative exponentiation is not permitted. If matrix is invertible, first invert then use positive exponentiation."
       );
     }
 
     if (!this.isSquare()) {
-      throw new Error("exponentiation is only defined for square matricies");
+      throw new Error("Exponentiation is only defined for square matricies");
     }
 
     if (k === 0) {
