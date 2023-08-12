@@ -1,4 +1,4 @@
-export type CompareFunction<V> = (a: V, b: V) => number;
+import { Comparator, CompareFunction } from "./Comparator";
 
 export class BSTNode<V> {
   value: V;
@@ -13,51 +13,6 @@ export class BSTNode<V> {
 
   asBST(): BST<V> {
     return BST.fromNode(this);
-  }
-}
-export class Comparator<V> {
-  #compareFn: CompareFunction<V>;
-
-  constructor(compareFn?: CompareFunction<V>) {
-    this.#compareFn = compareFn ?? Comparator.lexicalCompare;
-  }
-
-  static lexicalCompare<V>(a: V, b: V) {
-    return a === b ? 0 : a > b ? 1 : -1;
-  }
-
-  static reverseLexicalCompare<V>(a: V, b: V) {
-    return Comparator.lexicalCompare(a, b) * -1;
-  }
-
-  static numericCompare<V extends Number>(a: V, b: V) {
-    return Number(a) - Number(b);
-  }
-
-  static reverseNumericCompare<V extends Number>(a: V, b: V) {
-    return Comparator.numericCompare(a, b) * -1;
-  }
-
-  #val(valueOrNode: V | BSTNode<V>): V {
-    return valueOrNode instanceof BSTNode ? valueOrNode.value : valueOrNode;
-  }
-
-  eq(a: V | BSTNode<V>, b: V | BSTNode<V>): boolean {
-    const valA = this.#val(a);
-    const valB = this.#val(b);
-    return this.#compareFn(valA, valB) === 0;
-  }
-
-  gt(a: V | BSTNode<V>, b: V | BSTNode<V>): boolean {
-    const valA = this.#val(a);
-    const valB = this.#val(b);
-    return this.#compareFn(valA, valB) < 0;
-  }
-
-  lt(a: V | BSTNode<V>, b: V | BSTNode<V>): boolean {
-    const valA = this.#val(a);
-    const valB = this.#val(b);
-    return this.#compareFn(valA, valB) > 0;
   }
 }
 
@@ -80,9 +35,9 @@ export class BST<V> implements Iterable<V> {
       subtree: BSTNode<V> | null | undefined
     ): BSTNode<V> | null => {
       if (!subtree) return null;
-      if (this.#comparator.eq(subtree, value)) return subtree;
+      if (this.#comparator.eq(subtree.value, value)) return subtree;
 
-      if (this.#comparator.lt(subtree, value)) {
+      if (this.#comparator.lt(subtree.value, value)) {
         return searchImpl(subtree.left);
       } else {
         return searchImpl(subtree.right);
@@ -99,12 +54,12 @@ export class BST<V> implements Iterable<V> {
     }
 
     const insertImpl = (subtree: BSTNode<V>): boolean => {
-      if (this.#comparator.eq(subtree, value)) {
+      if (this.#comparator.eq(subtree.value, value)) {
         subtree.value = value;
         return true;
       }
 
-      if (this.#comparator.lt(subtree, value)) {
+      if (this.#comparator.lt(subtree.value, value)) {
         if (!subtree.left) {
           subtree.left = new BSTNode(value, subtree);
           return false;

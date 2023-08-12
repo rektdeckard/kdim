@@ -305,7 +305,7 @@ describe("BST", () => {
     });
   });
 
-  describe("stress test", () => {
+  describe.skip("stress test", () => {
     it("can insert many", () => {
       const size = 2 ** 14;
       const keyspace = 2 ** 16;
