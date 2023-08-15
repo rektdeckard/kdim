@@ -139,5 +139,34 @@ describe("Comparator", () => {
         fooComparator.lte({ bar: 1, baz: "yes" }, { bar: -1, baz: "yes" })
       ).toBe(true);
     });
+
+    it("can work with multiple types", () => {
+      type A = { id: number; tag: string };
+      type B = { id: number; foo: string };
+
+      // A
+      const abComp = new Comparator<A | B>((first, second) => {
+        if (first.id === second.id) {
+          const firstStr = (first as A).tag || (first as B).foo;
+          const secondStr = (second as A).tag || (second as B).foo;
+          return Comparator.lexicalCompare(firstStr, secondStr);
+        } else {
+          return first.id - second.id;
+        }
+      });
+
+      expect(abComp.eq({ id: 1, tag: "cool" }, { id: 1, foo: "bad" })).toBe(
+        false
+      );
+      expect(abComp.eq({ id: 1, tag: "cool" }, { id: 1, foo: "cool" })).toBe(
+        true
+      );
+      expect(abComp.gt({ id: 1, tag: "cool" }, { id: 1, tag: "neat" })).toBe(
+        true
+      );
+      expect(abComp.lte({ id: 5, tag: "ok" }, { id: 99, tag: "neat" })).toBe(
+        false
+      );
+    });
   });
 });

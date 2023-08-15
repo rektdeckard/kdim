@@ -34,18 +34,18 @@ export function clamp(min: number, max: number, value: number): number {
 /**
  * Interpolate a value over a given range.
  *
- * @param start The beginning of the range
- * @param end The end of the range
+ * @param from The beginning of the range
+ * @param to The end of the range
  * @param value A number between 0 and 1 (inclusive) representing a point in
  * the range
  * @returns The interpolated value
  * @throws a {@link RangeError} when the value is outside of [0, 1]
  */
-export function lerp(start: number, end: number, value: number): number {
+export function lerp(from: number, to: number, value: number): number {
   if (0 > value || value > 1)
     throw new RangeError("Value must be between 0 and 1 inclusive");
 
-  return start + (end - start) * value;
+  return from + (to - from) * value;
 }
 
 /**
@@ -95,7 +95,7 @@ export class Range {
    * @param where A number or configuration object. When `where` is a number, range is
    * inferred to be [0, `where`], with a step size of 1, or -1 if `where < 0`. When
    * `where` is an object, it contains a `to` property, and optional `from` and `step`
-   * properties, all nubmers. If `step` is provided it must be positive, as the step
+   * properties, all numbers. If `step` is provided it must be positive, as the step
    * sign is inferred by the range direction.
    * @param factory An optional factory or constructor to be called with each value in
    * the range to produce values. When omitted, the values in the range will be the numbers
@@ -141,7 +141,7 @@ export class Range {
    * @param where A number or configuration object. When `where` is a number, range is
    * inferred to be [0, `where`], with a step size of 1, or -1 if `where < 0`. When
    * `where` is an object, it contains a `to` property, and optional `from` and `step`
-   * properties, all nubmers. If `step` is provided it must be positive, as the step
+   * properties, all numbers. If `step` is provided it must be positive, as the step
    * sign is inferred by the range direction.
    * @param factory An optional factory or constructor to be called with each value in
    * the range to produce values. When omitted, the values in the range will be the numbers
