@@ -10,6 +10,33 @@ A collection of interesting data structures and utility types for messing around
 [![GitHub watchers](https://img.shields.io/github/watchers/rektdeckard/kdim?style=flat-square&label=Watch)](https://github.com/rektdeckard/kdim)
 [![Follow on GitHub](https://img.shields.io/github/followers/rektdeckard?style=flat-square&label=Follow)](https://github.com/rektdeckard)
 
+## Contents
+
+- [Installation](#installation)
+- [Numerics](#numerics)
+  - [ComplexNumber](#complexnumber)
+  - [Wrapping](#wrapping)
+  - [Saturating](#saturating)
+- [Types](#utility-types)
+  - [Tuple](#tuple)
+  - [Vec](#vec)
+- [Data Structures](#data-structures)
+  - [Matrix](#matrix)
+  - [Binary Search Tree](#bst)
+  - [K-dimensional Tree](#kdtree)
+  - [Bloom Filter](#bloomfilter)
+  - [Ring Buffer](#ringbuffer)
+- [Transforms](#transforms)
+  - [clamp](#clamp)
+  - [lerp](#lerp)
+- [Utilities](#utilities)
+  - [Range](#range)
+  - [Comparator](#comparator)
+  - [objectHash](#objecthash)
+- [Assertions](#assertions)
+  - [castInteger](#castinteger)
+  - [assertValidRange](#assertvalidrange)
+
 ## Installation
 
 ```bash
