@@ -1,0 +1,25 @@
+name: CI
+
+on: [push]
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16, 18]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: node@${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+      - name: Execute Unit Tests and Coverage
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+          yarn test
+          yarn coverage
