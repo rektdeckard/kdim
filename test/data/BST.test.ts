@@ -1,11 +1,6 @@
 import { describe, it, expect } from "vitest";
-import {
-  BST,
-  BSTNode,
-  Comparator,
-  CompareFunction,
-  Saturating,
-} from "../../src";
+import { BST, BSTNode, Comparator, CompareFunction } from "../../src/data";
+import { Saturating } from "../../src/math/saturating";
 
 function mermaid<V>(node: BSTNode<V>): string {
   let markup = `\

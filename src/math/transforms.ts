@@ -1,5 +1,6 @@
 import { assertValidRange } from "./assertions";
-import { isConstructor, Constructor, Factory } from "../helper";
+import { isConstructor } from "../helper";
+import type { Constructor, Factory } from "../helper";
 
 /**
  * Constrain a value to within a given range, if not already within range.

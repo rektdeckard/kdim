@@ -1,4 +1,4 @@
-import { Vec } from "../types";
+import type { Vec } from "../types";
 
 class Node<T> {
   parent: Node<T> | null;

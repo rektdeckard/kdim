@@ -1,0 +1,32 @@
+name: CI
+
+on: [push]
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16, 18]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use node@${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Execute unit tests
+        run: yarn test
+
+      - name: Execute coverage
+        run: yarn coverage
+
+      - name: Build
+        run: yarn build

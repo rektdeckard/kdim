@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ComplexNumber, Saturating } from "../../src";
+import { ComplexNumber, Saturating } from "../../src/math";
 
 describe("ComplexNumber", () => {
   describe("new ComplexNumber()", () => {

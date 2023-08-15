@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Probability, ProbabilityEvent, Range } from "../../src";
+import { Probability, ProbabilityEvent, Range } from "../../src/math";
 
 function countSamples<T>(
   samples: Array<ProbabilityEvent<T>>,

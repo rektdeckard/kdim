@@ -1,4 +1,4 @@
-import { MatrixLike, Tuple } from "../types";
+import type { MatrixLike, Tuple } from "../types";
 
 export type MatrixOperand<M extends number, N extends number> =
   | Matrix<M, N>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { RingBuffer } from "../../src";
+import { RingBuffer } from "../../src/data/RingBuffer";
 
 describe("RingBuffer", () => {
   describe("construct", () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Comparator, CompareFunction } from "../../src";
+import { Comparator, CompareFunction } from "../../src/data/Comparator";
 
 describe("Comparator", () => {
   describe("new Comparator", () => {
