@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { KDTree } from "../../src";
+import { KDTree } from "../../src/data/KDTree";
 
 function generateField(count, dimensions, range = [0, 1]) {
   const [min, max] = range;

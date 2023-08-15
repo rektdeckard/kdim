@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { BloomFilter } from "../../src";
+import { BloomFilter } from "../../src/data/BloomFilter";
 
 describe("BloomFilter", () => {
   it("can be added to", async () => {

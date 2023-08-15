@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
-import { Matrix, MatrixLike, Saturating, Tuple } from "../../src";
+import { Matrix, Saturating } from "../../src/math";
+import { MatrixLike, Tuple } from "../../src/types";
 
 describe("Matrix", () => {
   describe("new Matrix", () => {

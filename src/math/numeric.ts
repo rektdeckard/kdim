@@ -1,4 +1,4 @@
-import { Add, Sub, Mul, Div, Pow, Eq } from "./types";
+import type { Add, Sub, Mul, Div, Pow, Eq } from "./types";
 
 export class SimpleNumber
   implements

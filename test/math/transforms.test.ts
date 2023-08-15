@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { clamp, lerp, Range, ComplexNumber } from "../../src";
+import { clamp, lerp, Range, ComplexNumber } from "../../src/math";
 
 describe("clamp()", () => {
   it("clamps value in simple range", () => {
