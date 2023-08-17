@@ -432,7 +432,10 @@ class BST<V> implements Iterable<V> {
   search(value: V): BSTNode<V> | null;
   insert(value: V): boolean;
   has(value: V): boolean;
+  delete(valueOrNode: V | BSTNode<V>): boolean;
   max(node?: BSTNode<V>): BSTNode<V> | null;
+  min(node?: BSTNode<V>): BSTNode<V> | null;
+  successor(node: BSTNode<V>): BSTNode<V> | null;
   predecessor(node: BSTNode<V>): BSTNode<V> | null;
 
   asOrdered(): V[];
