@@ -14,6 +14,7 @@ A collection of interesting helpers, data structures, and utility types for mess
 
 - [Installation](#installation)
 - [Numerics](#numerics)
+  - [Constants](#constants)
   - [ComplexNumber](#complexnumber)
   - [Wrapping](#wrapping)
   - [Saturating](#saturating)
@@ -31,6 +32,7 @@ A collection of interesting helpers, data structures, and utility types for mess
   - [lerp](#lerp)
 - [Utilities](#utilities)
   - [Range](#range)
+  - [Random](#random)
   - [Comparator](#comparator)
   - [objectHash](#objecthash)
 - [Assertions](#assertions)
@@ -44,6 +46,25 @@ npm install --save kdim
 ```
 
 ## Numerics
+
+### Constants
+
+<details>
+  <summary>Exported Constants</summary>
+
+```ts
+const U8_MAX = (1 << 8) - 1;
+const U16_MAX = (1 << 16) - 1;
+const U32_MAX = -1 >>> 0;
+const I8_MAX = (1 << 7) - 1;
+const I8_MIN = -I8_MAX - 1;
+const I16_MAX = (1 << 15) - 1;
+const I16_MIN = -I16_MAX - 1;
+const I32_MAX = (U32_MAX + 1) / 2 - 1;
+const I32_MIN = -I32_MAX - 1;
+```
+
+</details>
 
 ### ComplexNumber
 
@@ -904,13 +925,76 @@ const complexes = Array.from(deferred); // Only now are values produced
 
 > Note: Generators over infinite ranges _will_ lock up resources and crash the process if you attempt to convert them to an Array via `Array.from(gen)`, `[...gen]`, or other means.
 
+### Random
+
+Produce random values of common numeric and other types (E.G. `u8`, `integer`, `bool`), sample and shuffle `Array`s and `Set`s of values, and determine characteristics of those sets.
+
+<details>
+  <summary>Class Signature</summary>
+
+```ts
+class Random {
+  static bool(): boolean;
+  static natural(max?: number): number;
+  static counting(max?: number): number;
+  static integer({ min?: number; max?: number }): number;
+  static float({ min?: number; max?: number }): number;
+  static dice(sides: number): number;
+  static u8(): number;
+  static u16(): number;
+  static u32(): number;
+  static i8(): number;
+  static i16(): number;
+  static i32(): number;
+
+  static sample<T>(options: T[] | Set<T>): T | undefined;
+  static take<T>(options: T[] | Set<T>): T | undefined;
+  static permute<T>(array: T[]): void;
+  static permutation<T>(array: T[]): T[];
+  static permutationsOf(set: number | Array<unknown> | Set<unknown>): number;
+  static derange<T>(array: T[]): void;
+  static derangement<T>(array: T[]): T[];
+  static derangementsOf(set: number | Array<unknown> | Set<unknown>): number;
+}
+
+```
+
+</details>
+
+```ts
+import { Random } from "kdim";
+
+// Generate values
+const trueOrFalse = Random.bool();
+const volume = Random.integer({ max: 11 });
+const attackRoll = Random.dice(20);
+
+// Sample lists and sets
+const adjectives = ["harder", "better", "faster", "stronger"];
+const doIt = Random.sample(adjectives);
+
+const cookieJar = new Set(["chocolate chip", "oatmeal", "macadamia"]);
+const eaten = Random.take(cookieJar); // "macadamia" maybe?
+cookieJar.has(eaten); // false
+
+// Shuffle lists
+const code = [13, 17, 29, 42];
+const shuf = Random.permutation(code); // [29, 17, 13, 42] maybe?
+
+const friends = ["alice", "bob", "carlos", "dan", "erin"];
+const secretSantas = Random.derangement(friends); // Shuffled with no fixed points
+Random.derangementsOf(friends); // 44: ways to match 5 people for secret santa
+```
+
+> Note: Generators that take numeric arguments will throw if range is invalid (E.G. `min > max`), values are invalid (decimal number passed to integer generator), or other
+
 ### Comparator
 
 A class used to determine ordering and equality of values of arbitrary types. A `Comparator` implements custom equality (`eq`) and ordering (`gt`, `gte`, `lt`, `lte`) for values based on the provided `CompareFunction`. If no function is provided, it defaults to the same lexical comparison used by `Array.prototype.sort`.
 
 <details>
-  <summary>Class Signature</summary>
-  <p>
+<summary>Class Signature</summary>
+<p>
 
 ```ts
 type CompareFunction<V> = (a: V, b: V) => number;
@@ -1049,6 +1133,81 @@ const errF = castInteger(f); // Error: Values must be safe integers
 ```
 
 > Note: throws a RangeError if `n` has a fractional part, is not in safe integer range, or cannot be coerced from/to a number via `Number(n)` and `n.valueOf()`.
+
+### assertInteger
+
+Assert that number(s) have no fractional part and are within the safe integer range.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function assertInteger(...numbers: number[]): void;
+```
+
+  </p>
+</details>
+
+```ts
+import { assertInteger } from "kdim";
+
+assertInteger(-300); // ok
+assertInteger(1, 2, 10); // ok
+assertInteger(7.89); // Error: Arguments must be integers
+```
+
+> Note: throws a RangeError if any `number` has a fractional part, or is not in safe integer range.
+
+### assertNatural
+
+Assert that number(s) have no fractional part and are zero or greater.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function assertNatural(...numbers: number[]): void;
+```
+
+  </p>
+</details>
+
+```ts
+import { assertNatural } from "kdim";
+
+assertNatural(300); // ok
+assertNatural(1, 2, 10); // ok
+assertNatural(-1); // Error: Arguments must be natural numbers
+```
+
+> Note: throws a RangeError if any `number` has a fractional part, or is not zero or greater.
+
+### assertCounting
+
+Assert that number(s) have no fractional part and are greater than zero.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function assertCounting(...numbers: number[]): void;
+```
+
+  </p>
+</details>
+
+```ts
+import { assertCounting } from "kdim";
+
+assertCounting(300); // ok
+assertCounting(1, 2, 10); // ok
+assertCounting(0); // Error: Arguments must be counting numbers
+```
+
+> Note: throws a RangeError if any `number` has a fractional part, or is not greater than zero.
 
 ### assertValidRange
 

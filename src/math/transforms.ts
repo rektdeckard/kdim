@@ -1,4 +1,4 @@
-import { assertValidRange } from "./assertions";
+import { assertNatural, assertValidRange } from "./assertions";
 import { isConstructor } from "../helper";
 import type { Constructor, Factory } from "../helper";
 
@@ -47,6 +47,27 @@ export function lerp(from: number, to: number, value: number): number {
     throw new RangeError("Value must be between 0 and 1 inclusive");
 
   return from + (to - from) * value;
+}
+
+/**
+ * Returns the factorial of a number
+ *
+ * @param n a counting number
+ * @returns n!
+ * @throws a {@link RangeError} when n is not a counting number
+ */
+export function factorial(n: number): number {
+  assertNatural(n);
+  if (n <= 2) return n;
+
+  let t = n;
+  let i = n;
+  while (i > 1) {
+    i--;
+    t = t * i;
+  }
+
+  return t;
 }
 
 /**

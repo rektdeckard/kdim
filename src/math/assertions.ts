@@ -15,6 +15,41 @@ export function assertValidRange(min: number, max: number, value?: number) {
 }
 
 /**
+ * Assert that the arguments are all integers.
+ *
+ * @param numbers a list of numbers
+ * @throws a {@link RangeError} when any number has a fractional part
+ */
+export function assertInteger(...numbers: number[]) {
+  if (numbers.some((n) => !Number.isInteger(n)))
+    throw new RangeError("Arguments must be integers");
+}
+
+/**
+ * Assert that the arguments are all natural numbers.
+ *
+ * @param numbers a list of numbers
+ * @throws a {@link RangeError} when any number is below zero or has a
+ * fractional part
+ */
+export function assertNatural(...numbers: number[]) {
+  if (numbers.some((n) => n < 0 || !Number.isInteger(n)))
+    throw new RangeError("Arguments must be natural numbers");
+}
+
+/**
+ * Assert that the arguments are all natural numbers.
+ *
+ * @param numbers a list of numbers
+ * @throws a {@link RangeError} when any number is below 1 or has a
+ * fractional part
+ */
+export function assertCounting(...numbers: number[]) {
+  if (numbers.some((n) => n < 1 || !Number.isInteger(n)))
+    throw new RangeError("Arguments must be counting numbers");
+}
+
+/**
  * Assert that the argument is or is assignable to an integral {@link Number}
  * type, and downcast it to a primitive.
  *
