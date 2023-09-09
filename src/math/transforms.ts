@@ -92,6 +92,10 @@ export class Range {
       step = 1,
     } = typeof where === "object" ? where : { to: where };
 
+    if (from === to) {
+      throw new Error("Range must be nonzero in size");
+    }
+
     if (step <= 0) {
       throw new Error(
         "Step size must be positive, as its sign is inferred from the range"

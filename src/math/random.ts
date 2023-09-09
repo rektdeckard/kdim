@@ -130,11 +130,12 @@ export class Random {
    * @param array array an array of values
    */
   static permutation<T>(array: T[]): T[] {
-    const p = new Array<T>(array.length);
-    for (let i = 0; i <= array.length - 2; i++) {
+    const p = [...array];
+    for (let i = 0; i <= array.length - 1; i++) {
       const j = i + Random.integer({ max: array.length - i - 1 });
-      p[i] = array[j];
-      p[j] = array[i];
+      const temp = p[i];
+      p[i] = p[j];
+      p[j] = temp;
     }
 
     return p;

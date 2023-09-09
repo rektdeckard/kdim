@@ -253,7 +253,7 @@ describe("Random", () => {
       const clone = [...items];
       Random.permute(clone);
       expect(clone.length).toBe(items.length);
-      expect(clone.every((e) => items.includes(e))).toBe(true);
+      expect(items.every((e) => clone.includes(e))).toBe(true);
     });
   });
 
@@ -262,7 +262,7 @@ describe("Random", () => {
       const digits = Range.of(9);
       const p = Random.permutation(digits);
       expect(p.length).toBe(digits.length);
-      expect(p.every((e) => digits.includes(e))).toBe(true);
+      expect(digits.every((e) => p.includes(e))).toBe(true);
     });
   });
 
@@ -282,7 +282,7 @@ describe("Random", () => {
       const der = [...arr];
       Random.derange(der);
       expect(der.length).toBe(arr.length);
-      expect(der.every((el) => arr.includes(el))).toBe(true);
+      expect(arr.every((el) => der.includes(el))).toBe(true);
       expect(der).not.toStrictEqual(arr);
     });
   });
@@ -292,7 +292,7 @@ describe("Random", () => {
       const arr = [1, 3, 6, 30];
       const der = Random.derangement(arr);
       expect(der.length).toBe(arr.length);
-      expect(der.every((el) => arr.includes(el))).toBe(true);
+      expect(arr.every((el) => der.includes(el))).toBe(true);
       expect(der).not.toStrictEqual(arr);
     });
 
@@ -300,7 +300,7 @@ describe("Random", () => {
       const arr = Range.of(40);
       const der = Random.derangement(arr);
       expect(der.length).toBe(arr.length);
-      expect(der.every((el) => arr.includes(el))).toBe(true);
+      expect(arr.every((el) => der.includes(el))).toBe(true);
       expect(der).not.toStrictEqual(arr);
     });
   });
