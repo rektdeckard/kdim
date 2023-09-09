@@ -1,6 +1,6 @@
 # kdim
 
-A collection of interesting data structures and utility types for messing around with mathematical things in Node/JS/TS. No guarantees are made here as to the speed, efficiency, or correctness of tools providied!
+A collection of interesting helpers, data structures, and utility types for messing around with mathematical things in Node/JS/TS. No guarantees are made here as to the speed, efficiency, or correctness of tools provided!
 
 [![NPM](https://img.shields.io/npm/v/kdim.svg?style=flat-square)](https://www.npmjs.com/package/kdim)
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/kdim?style=flat-square)

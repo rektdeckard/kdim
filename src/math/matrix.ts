@@ -8,7 +8,7 @@ export type MatrixOperand<M extends number, N extends number> =
 type MatrixResult<
   M extends number,
   N extends number,
-  I extends MatrixOperand<number, number> | number
+  I extends MatrixOperand<number, number> | number,
 > = I extends number
   ? Matrix<M, N>
   : I extends MatrixOperand<infer O, infer P>

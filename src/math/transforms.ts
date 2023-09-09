@@ -164,7 +164,6 @@ export class Range {
    *   if (n < -3) break;
    *   console.log(n);
    * }
-   *
    * // 0
    * // -1
    * // -2
