@@ -13,6 +13,7 @@ import {
   I32_MIN,
 } from "./constants";
 import { factorial, lerp } from "./transforms";
+import { BoundedOptions } from "./types";
 
 export class Random {
   constructor(..._: never) {
@@ -60,7 +61,7 @@ export class Random {
   }
 
   static integer(
-    { min = 0, max = U32_MAX }: { min?: number; max?: number } = {
+    { min = 0, max = U32_MAX }: Partial<BoundedOptions> = {
       max: U32_MAX,
     }
   ) {
@@ -70,7 +71,7 @@ export class Random {
   }
 
   static float(
-    { min = 0, max = U32_MAX }: { min?: number; max?: number } = {
+    { min = 0, max = U32_MAX }: Partial<BoundedOptions> = {
       max: U32_MAX,
     }
   ) {
