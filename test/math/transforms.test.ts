@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { clamp, lerp, Range, ComplexNumber } from "../../src/math";
+import { clamp, lerp, factorial, Range, ComplexNumber } from "../../src/math";
 
 describe("clamp()", () => {
   it("clamps value in simple range", () => {
@@ -46,7 +46,27 @@ describe("lerp()", () => {
   });
 });
 
-describe("range", () => {
+describe("factorial()", () => {
+  it("returns simple short-path factorials", () => {
+    expect(factorial(1)).toBe(1);
+    expect(factorial(2)).toBe(2);
+  });
+
+  it("returns larger factorials", () => {
+    expect(factorial(7)).toBe(5040);
+    expect(factorial(18)).toBe(6402373705728000);
+  });
+
+  it("throws with fractional numbers", () => {
+    expect(() => factorial(5.69)).toThrowError();
+  });
+
+  it("throws with non-counting numbers", () => {
+    expect(() => factorial(-1)).toThrowError();
+  });
+});
+
+describe("Range", () => {
   describe("simple range", () => {
     it("constructs a simple range", () => {
       const r = Range.of(5);
