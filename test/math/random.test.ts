@@ -200,14 +200,50 @@ describe("Random", () => {
   describe("sample", () => {
     it("selects an element from an array", () => {
       const items = ["green", "eggs", "and", "ham"];
-      const selection = Random.sample(items);
+      const selection = Random.sample(items)!;
       expect(items.includes(selection)).toBe(true);
     });
 
     it("selects an element from a set", () => {
       const items = new Set(["green", "eggs", "and", "ham"]);
-      const selection = Random.sample(items);
+      const selection = Random.sample(items)!;
       expect(items.has(selection)).toBe(true);
+    });
+  });
+
+  describe("take", () => {
+    it("takes an element from an array", () => {
+      const colors = ["red", "orange", "yellow", "green", "blue", "violet"];
+      const it = Random.take(colors);
+      expect(it).toBeDefined();
+      expect(colors).not.toContain(it);
+    });
+
+    it("takes an element from a set", () => {
+      const colors = new Set([
+        "red",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "violet",
+      ]);
+      const it = Random.take(colors);
+      expect(it).toBeDefined();
+      expect(colors).not.toContain(it);
+    });
+
+    it("returns undefined when empty", () => {
+      const nums = [7, 42];
+      const numset = new Set(nums);
+
+      Random.take(nums);
+      expect(Random.take(nums)).toBeDefined();
+      expect(Random.take(nums)).toBeUndefined();
+
+      Random.take(numset);
+      expect(Random.take(numset)).toBeDefined();
+      expect(Random.take(numset)).toBeUndefined();
     });
   });
 

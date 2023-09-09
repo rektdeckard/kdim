@@ -83,10 +83,28 @@ export class Random {
     return Random.integer({ min: 1, max: sides });
   }
 
-  static sample<T>(options: T[] | Set<T>) {
+  static sample<T>(options: T[] | Set<T>): T | undefined {
     const flat = options instanceof Set ? [...options] : options;
+    if (flat.length === 0) return;
+
     const index = Random.natural(flat.length - 1);
     return flat[index];
+  }
+
+  static take<T>(options: T[] | Set<T>): T | undefined {
+    const flat = options instanceof Set ? [...options] : options;
+    if (flat.length === 0) return;
+
+    const index = Random.natural(flat.length - 1);
+    const it = flat[index];
+
+    if (options instanceof Set) {
+      options.delete(it);
+    } else {
+      options.splice(index, 1);
+    }
+
+    return it;
   }
 
   /**
