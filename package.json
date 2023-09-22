@@ -1,6 +1,6 @@
 {
   "name": "kdim",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Utility data stuctures, math, and types for JS",
   "author": {
     "name": "Tobias Fried",
@@ -23,7 +23,8 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.umd.js"
+      "require": "./dist/index.umd.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "types": "dist/index.d.ts",
