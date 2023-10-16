@@ -371,6 +371,73 @@ describe("Matrix", () => {
     });
   });
 
+  describe("isOrthogonal", () => {
+    it("correctly identifies an orthogonal matrix", () => {
+      expect(Matrix.identity(2).isOrthogonal()).toBe(true);
+
+      expect(
+        new Matrix([
+          [1, 0],
+          [0, -1],
+        ]).isOrthogonal()
+      ).toBe(true);
+
+      expect(
+        new Matrix([
+          [Math.cos(30), -Math.sin(30)],
+          [Math.sin(30), Math.cos(30)],
+        ]).isOrthogonal()
+      ).toBe(true);
+
+      expect(
+        new Matrix<4, 4>([
+          [0, 0, 0, 1],
+          [0, 0, 1, 0],
+          [1, 0, 0, 0],
+          [0, 1, 0, 0],
+        ]).isOrthogonal()
+      ).toBe(true);
+    });
+  });
+
+  describe("submatrix", () => {
+    it("can constuct a submatrix by removing columns and rows", () => {
+      const m = new Matrix<4, 3>([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+        [10, 11, 12],
+      ]);
+
+      expect(
+        m.submatrix<2, 2>({ removeCols: [1], removeRows: [2, 3] }).data
+      ).toStrictEqual([
+        [1, 3],
+        [4, 6],
+      ]);
+    });
+
+    it("can constuct a submatrix by splitting", () => {
+      const m = new Matrix<4, 3>([
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+        [10, 11, 12],
+      ]);
+
+      expect(m.submatrix({ xywh: [1, 1] }).data).toStrictEqual([
+        [5, 6],
+        [8, 9],
+        [11, 12],
+      ]);
+
+      expect(m.submatrix({ xywh: [0, 0, 2, 2] }).data).toStrictEqual([
+        [1, 2],
+        [4, 5],
+      ]);
+    });
+  });
+
   describe("eq", () => {
     it("considers sparse, identical matrices equal", () => {
       const a = Matrix.identity(5);
@@ -482,6 +549,34 @@ describe("Matrix", () => {
     });
   });
 
+  describe("augment", () => {
+    it("can augment matrices with same row count", () => {
+      const a = new Matrix<2, 2>([
+        [-1, 3 / 2],
+        [1, -1],
+      ]);
+
+      const i = Matrix.identity(2);
+      const aug = a.augment(i);
+
+      expect(aug.data).toStrictEqual([
+        [-1, 3 / 2, 1, 0],
+        [1, -1, 0, 1],
+      ]);
+    });
+
+    it("throws with incorrect size augmentation", () => {
+      const a = new Matrix<2, 2>([
+        [-1, 3 / 2],
+        [1, -1],
+      ]);
+
+      const i = Matrix.identity(3);
+      // @ts-ignore
+      expect(() => a.augment(i)).toThrowError();
+    });
+  });
+
   describe("inverse", () => {
     it("can invert a simple matrix", () => {
       const m = new Matrix<3, 3>([
@@ -502,6 +597,34 @@ describe("Matrix", () => {
       expect(() => m.inverse()).toThrowError(
         "Cannot invert non-square matrix [2x1]"
       );
+    });
+
+    it("inverts a random matrix", () => {
+      // TODO: need infinite precision floats or fractions to handle this correctly
+
+      // const a = new Matrix<3, 3>([
+      //   [2, -1, 0],
+      //   [-1, 2, -1],
+      //   [0, -1, 2],
+      // ]);
+
+      // expect(a.inverse()?.data).toStrictEqual([
+      //   [3 / 4, 1 / 2, 1 / 4],
+      //   [1 / 2, 1, 1 / 2],
+      //   [1 / 4, 1 / 2, 3 / 4],
+      // ]);
+
+      const m = new Matrix<3, 3>([
+        [-3, 2, -1],
+        [6, -6, 7],
+        [3, -4, 4],
+      ]);
+
+      expect(m.inverse()?.data).toStrictEqual([
+        [-1 / 3, 1 / 3, -2 / 3],
+        [1 / 4, 3 / 4, -5 / 4],
+        [1 / 2, 1 / 2, -1 / 2],
+      ]);
     });
   });
 
@@ -583,6 +706,8 @@ describe("Matrix", () => {
 
       const v4 = [1, 2, 3];
       expect(Matrix.isMatrixLike(v4)).toBe(false);
+
+      expect(Matrix.isMatrixLike(Matrix.identity(5))).toBe(true);
     });
 
     it("can validate specific sizes", () => {
@@ -696,6 +821,34 @@ describe("Matrix", () => {
         expect(m.rows).toBe(180);
         expect(m.cols).toBe(180);
       });
+    });
+  });
+
+  describe("dot product", () => {
+    it("multiplies two column vetors", () => {
+      const x = new Matrix<3, 1>([[1], [3], [-5]]);
+      const y = new Matrix<3, 1>([[4], [-2], [-1]]);
+
+      expect(x.transpose().mul(y).vectorize()[0]).toBe(3);
+    });
+
+    it("performs dot", () => {
+      const x = new Matrix<3, 1>([[1], [3], [-5]]);
+      const y = new Matrix<3, 1>([[4], [-2], [-1]]);
+
+      expect(x.dot(y)).toBe(3);
+      expect(x.dot([[3], [3], [3]])).toBe(-3);
+    });
+
+    it("throws with incorrect dot product operands", () => {
+      const x = new Matrix<1, 3>([[1, 3, -5]]);
+      // @ts-ignore
+      expect(() => x.dot(x)).toThrowError();
+
+      // @ts-ignore
+      expect(() => x.dot(5)).toThrowError();
+
+      expect(() => x.dot(Matrix.identity(1))).toThrowError();
     });
   });
 });

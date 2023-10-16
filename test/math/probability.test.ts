@@ -74,7 +74,7 @@ describe("Probability", () => {
       expect(variance(counts["Snake"], n * 0.125, n)).toBeLessThan(0.15);
       expect(variance(counts["Chinchilla"], n * 0.125, n)).toBeLessThan(0.15);
 
-      console.log(mermaid("Pets", samples, (it) => it));
+      // console.log(mermaid("Pets", samples, (it) => it));
     });
   });
 });

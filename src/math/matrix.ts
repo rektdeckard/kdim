@@ -231,6 +231,12 @@ export class Matrix<M extends number, N extends number>
     arg: unknown,
     ...dimensions: [m: M, n: N] | []
   ): arg is MatrixLike<M, N> {
+    if (arg instanceof Matrix)
+      return (
+        !dimensions.length ||
+        (arg.rows === dimensions[0] && arg.cols === dimensions[1])
+      );
+
     const [m, n] = dimensions;
 
     return (
@@ -243,6 +249,11 @@ export class Matrix<M extends number, N extends number>
 
   isSquare(): boolean {
     return (this.rows as number) === this.cols;
+  }
+
+  isOrthogonal(): boolean {
+    if (!this.isSquare()) return false;
+    return this.transpose().mul(this).eq(Matrix.identity(this.cols));
   }
 
   at(i: number, j: number) {
@@ -263,24 +274,43 @@ export class Matrix<M extends number, N extends number>
     return new Matrix<M, N>(data);
   }
 
-  submatrix<M extends number, N extends number>(
-    removeRows: number[],
-    removeCols: number[]
-  ) {
-    const data = this.#data.reduce<number[][]>((data, row, i) => {
-      if (!removeRows.includes(i)) {
-        const newRow = row.reduce<number[]>((curr, col, j) => {
-          if (!removeCols.includes(j)) {
-            curr.push(col);
-          }
-          return curr;
-        }, []);
-        data.push(newRow);
+  submatrix<M extends number, N extends number>({
+    removeRows,
+    removeCols,
+    xywh,
+  }:
+    | {
+        removeRows: number[];
+        removeCols: number[];
+        xywh?: never;
       }
-      return data;
-    }, []) as MatrixLike<M, N>;
+    | {
+        xywh: [number, number] | [number, number, number, number];
+        removeRows?: never;
+        removeCols?: never;
+      }) {
+    if (!!xywh) {
+      const [x, y, w, h] = xywh;
+      const data = this.#data
+        .slice(y, h ? h + y : h)
+        .map((r) => r.slice(x, w ? w + x : w)) as MatrixLike<M, N>;
+      return new Matrix<M, N>(data);
+    } else {
+      const data = this.#data.reduce<number[][]>((data, row, i) => {
+        if (!removeRows.includes(i)) {
+          const newRow = row.reduce<number[]>((curr, col, j) => {
+            if (!removeCols.includes(j)) {
+              curr.push(col);
+            }
+            return curr;
+          }, []);
+          data.push(newRow);
+        }
+        return data;
+      }, []) as MatrixLike<M, N>;
 
-    return new Matrix<M, N>(data);
+      return new Matrix<M, N>(data);
+    }
   }
 
   trace(): number {
@@ -309,6 +339,8 @@ export class Matrix<M extends number, N extends number>
       return this.at(0, 0)!;
     }
 
+    // FIXME: this code is slow -- better algo?
+
     if (this.rows === 2 && this.cols === 2) {
       // 2 x 2 fast path
       return this.at(0, 0)! * this.at(1, 1)! - this.at(1, 0)! * this.at(0, 1)!;
@@ -335,7 +367,7 @@ export class Matrix<M extends number, N extends number>
 
     let total = 0;
     for (let i = 0; i < this.rows; i++) {
-      const sub = this.submatrix([0], [i]);
+      const sub = this.submatrix({ removeRows: [0], removeCols: [i] });
       const sign = (-1) ** (i % 2);
       const subdeterminant = sub.determinant();
 
@@ -349,6 +381,30 @@ export class Matrix<M extends number, N extends number>
     return total;
   }
 
+  augment<O extends number, P extends number>(
+    other: MatrixOperand<M, O>
+  ): Matrix<M, P> {
+    const otherMatrix =
+      other instanceof Matrix
+        ? other
+        : Matrix.isMatrixLike(other)
+        ? new Matrix<M, O>(other as MatrixLike<M, O>)
+        : null;
+
+    if (!otherMatrix) {
+      throw new Error("Argument is not matrix-like.");
+    }
+
+    if (otherMatrix.rows !== this.rows) {
+      throw new Error(
+        `Cannot augment matrix [${this.rows}x${this.cols}] by [${otherMatrix.rows}x${otherMatrix.cols}]`
+      );
+    }
+
+    const newData = this.#data.map((row, i) => row.concat(otherMatrix.row(i)!));
+    return new Matrix(newData as MatrixLike<M, P>);
+  }
+
   inverse(tolerance: number = 5): Matrix<M, M> | undefined {
     if (!this.isSquare()) {
       throw new Error(
@@ -360,33 +416,81 @@ export class Matrix<M extends number, N extends number>
       throw new Error(`Cannot invert singular matrix`);
     }
 
-    const am = this.clone();
-    const im = Matrix.identity<M>(am.rows as M);
+    // Gauss-Jordan elimination:
+    // https://en.wikipedia.org/wiki/Gaussian_elimination#Finding_the_inverse_of_a_matrix
+    const aug = this.augment(Matrix.identity(this.rows)).data as number[][];
 
-    for (let fd = 0; fd < am.rows; fd++) {
-      const fdScaler = 1.0 / am.at(fd, fd)!;
+    // Convert to Reduced Row Echelon Form
+    aug.forEach((pivotRow, i) => {
+      // Get pivot point
+      const pivot = pivotRow[i];
+      if (pivot === 0) return;
 
-      for (let j = 0; j < am.cols; j++) {
-        (am.#data[fd][j] as number) *= fdScaler;
-        (im.#data[fd][j] as number) *= fdScaler;
-      }
+      // Reduce leading zeros of other rows
+      aug.forEach((row, j) => {
+        if (j === i) return;
+        if (row[i] === 0) return;
 
-      for (let i = 0; i < am.rows; i++) {
-        if (i === fd) continue;
+        // Find factor
+        const factor = -1 * (row[i] / pivot);
 
-        const rowScaler = am.at(i, fd)!;
-        for (let j = 0; j < am.cols; j++) {
-          (am.#data[i][j] as number) = am.at(i, j)! - rowScaler * am.at(fd, j)!;
-          (im.#data[i][j] as number) = im.at(i, j)! - rowScaler * im.at(fd, j)!;
-        }
-      }
+        // Distribute
+        aug[j] = row.map((value, idx) => value + factor * pivotRow[idx]);
+      });
+    });
+
+    // Reduce coefficients
+    aug.forEach((row, i) => {
+      if (row[i] === 1) return;
+      const recip = row[i] === 0 ? 1 : 1 / row[i];
+      aug[i] = row.map((value) => value * recip);
+    });
+
+    // Extract result matrix
+    const possibleInverse = new Matrix<M, N>(aug as MatrixLike<M, N>).submatrix<
+      M,
+      M
+    >({ xywh: [this.cols, 0, this.cols, this.rows] });
+
+    // Check inverse
+    if (this.mul(possibleInverse).eq(Matrix.identity(this.rows), tolerance)) {
+      return possibleInverse;
+    } else {
+      return;
     }
 
-    if (!(this as any).mul(im).eq(Matrix.identity(this.rows), tolerance)) {
-      throw new Error(`Matrix inversion failed!`);
-    }
+    // {
+    //   // DEPRECATED: old method
+    //   const am = this.clone();
+    //   const im = Matrix.identity<M>(am.rows as M);
 
-    return im;
+    //   for (let fd = 0; fd < am.rows; fd++) {
+    //     let fdScaler = 1.0 / am.at(fd, fd)!;
+
+    //     for (let j = 0; j < am.cols; j++) {
+    //       (am.#data[fd][j] as number) *= fdScaler;
+    //       (im.#data[fd][j] as number) *= fdScaler;
+    //     }
+
+    //     for (let i = 0; i < am.rows; i++) {
+    //       if (i === fd) continue;
+
+    //       const rowScaler = am.at(i, fd)!;
+    //       for (let j = 0; j < am.cols; j++) {
+    //         (am.#data[i][j] as number) =
+    //           am.at(i, j)! - rowScaler * am.at(fd, j)!;
+    //         (im.#data[i][j] as number) =
+    //           im.at(i, j)! - rowScaler * im.at(fd, j)!;
+    //       }
+    //     }
+    //   }
+
+    //   if (!(this as any).mul(im).eq(Matrix.identity(this.rows), tolerance)) {
+    //     throw new Error(`Matrix inversion failed!`);
+    //   }
+
+    //   return im;
+    // }
   }
 
   transpose(): Matrix<N, M> {
@@ -426,9 +530,7 @@ export class Matrix<M extends number, N extends number>
 
       // @ts-ignore
       return new Matrix(data);
-    }
-
-    if (Matrix.isMatrixLike(other)) {
+    } else if (Matrix.isMatrixLike(other)) {
       // c is MatrixLike
       if (this.rows !== other.length || this.cols !== other[0].length) {
         throw new RangeError(
@@ -474,9 +576,7 @@ export class Matrix<M extends number, N extends number>
 
       // @ts-ignore
       return new Matrix(data);
-    }
-
-    if (Matrix.isMatrixLike(other)) {
+    } else if (Matrix.isMatrixLike(other)) {
       // c is MatrixLike
       if (this.rows !== other.length || this.cols !== other[0].length) {
         throw new RangeError(
@@ -527,9 +627,7 @@ export class Matrix<M extends number, N extends number>
 
       // @ts-ignore
       return new Matrix(data);
-    }
-
-    if (Matrix.isMatrixLike(other)) {
+    } else if (Matrix.isMatrixLike(other)) {
       // c is MatrixLike
       if (this.cols !== other.length || other[0].length <= 0) {
         throw new RangeError(
@@ -604,9 +702,7 @@ export class Matrix<M extends number, N extends number>
       return other.data.every((row, i) =>
         row.every((col, j) => closeEnough(col, this.at(i, j)!))
       );
-    }
-
-    if (Matrix.isMatrixLike(other, this.rows, this.cols)) {
+    } else if (Matrix.isMatrixLike(other, this.rows, this.cols)) {
       // o is MatrixLike
       // Hack to access array methods on underlying tuples
       // @ts-ignore
@@ -617,6 +713,16 @@ export class Matrix<M extends number, N extends number>
     }
 
     return false;
+  }
+
+  dot(other: MatrixOperand<M, 1>): number {
+    if (this.cols !== 1 || !Matrix.isMatrixLike(other)) {
+      throw new Error(
+        `Cannot compute dot product of non column-vector matrices.`
+      );
+    }
+
+    return (this.transpose() as Matrix<1, M>).mul(other).at(0, 0)!;
   }
 
   [Symbol.iterator]() {
