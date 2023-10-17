@@ -22,11 +22,11 @@ export class Saturating
   implements
     Number,
     Bounded,
-    Add<Number>,
-    Sub<Number>,
-    Mul<Number>,
-    Div<Number>,
-    Eq<Number>
+    Add<[Number], Saturating>,
+    Sub<[Number], Saturating>,
+    Mul<[Number], Saturating>,
+    Div<[Number], Saturating>,
+    Eq<[Number]>
 {
   #max: number;
   #min: number;

@@ -1,25 +1,49 @@
-export interface Add<In, Out = In> {
-  add(addend: In): Out;
+export interface Add<In extends any[], Out = In[0]> {
+  add(...addend: In): Out;
 }
 
-export interface Sub<In, Out = In> {
-  sub(subtrahend: In): Out;
+export interface Sub<In extends any[], Out = In[0]> {
+  sub(...subtrahend: In): Out;
 }
 
-export interface Mul<In, Out = In> {
-  mul(multiplicand: In): Out;
+export interface Mul<In extends any[], Out = In[0]> {
+  mul(...multiplicand: In): Out;
 }
 
-export interface Div<In, Out = In> {
-  div(divisor: In): Out;
+export interface Div<In extends any[], Out = In[0]> {
+  div(...divisor: In): Out;
 }
 
-export interface Pow<In, Out = In> {
-  pow(exponent: In): Out;
+export interface Pow<In extends any[], Out = In[0]> {
+  pow(...exponent: In): Out;
 }
 
-export interface Eq<Other> {
-  eq(other: Other): boolean;
+export interface Mod<In extends any[], Out = In[0]> {
+  mod(...modulus: In): Out;
+}
+
+export interface Abs<Out> {
+  abs(): Out;
+}
+
+export interface Eq<Other extends any[]> {
+  eq(...other: Other): boolean;
+}
+
+export interface Gt<Other extends any[]> {
+  gt(...other: Other): boolean;
+}
+
+export interface Gte<Other extends any[]> {
+  gte(...other: Other): boolean;
+}
+
+export interface Lt<Other extends any[]> {
+  lt(...other: Other): boolean;
+}
+
+export interface Lte<Other extends any[]> {
+  lte(...other: Other): boolean;
 }
 
 export abstract class Bounded {

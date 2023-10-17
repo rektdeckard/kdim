@@ -3,12 +3,12 @@ import type { Add, Sub, Mul, Div, Pow, Eq } from "./types";
 export class SimpleNumber
   implements
     Number,
-    Add<SimpleNumber>,
-    Sub<SimpleNumber>,
-    Mul<SimpleNumber>,
-    Div<SimpleNumber>,
-    Pow<SimpleNumber>,
-    Eq<Number>
+    Add<[SimpleNumber]>,
+    Sub<[SimpleNumber]>,
+    Mul<[SimpleNumber]>,
+    Div<[SimpleNumber]>,
+    Pow<[SimpleNumber]>,
+    Eq<[Number]>
 {
   #value: number;
 

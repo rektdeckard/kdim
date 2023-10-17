@@ -17,7 +17,12 @@ import { Add, Sub, Eq, Bounded, BoundedOptions } from "./types";
  * arguments to arithmetic methods are non-integers.
  */
 export class Wrapping
-  implements Bounded, Number, Add<Number>, Sub<Number>, Eq<Number>
+  implements
+    Bounded,
+    Number,
+    Add<[Number], Wrapping>,
+    Sub<[Number], Wrapping>,
+    Eq<[Number]>
 {
   #max: number;
   #min: number;

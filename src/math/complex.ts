@@ -3,12 +3,12 @@ import type { Add, Sub, Mul, Div, Pow, Eq } from "./types";
 export class ComplexNumber
   implements
     Number,
-    Add<ComplexNumber | Number, ComplexNumber>,
-    Sub<ComplexNumber | Number, ComplexNumber>,
-    Mul<ComplexNumber | Number, ComplexNumber>,
-    Div<ComplexNumber | Number, ComplexNumber>,
-    Pow<Number, ComplexNumber>,
-    Eq<ComplexNumber | Number>
+    Add<[ComplexNumber | Number], ComplexNumber>,
+    Sub<[ComplexNumber | Number], ComplexNumber>,
+    Mul<[ComplexNumber | Number], ComplexNumber>,
+    Div<[ComplexNumber | Number], ComplexNumber>,
+    Pow<[Number], ComplexNumber>,
+    Eq<[ComplexNumber | Number]>
 {
   #r: number;
   #i: number;
@@ -70,8 +70,8 @@ export class ComplexNumber
     return acc;
   }
 
-  eq(other: Number | ComplexNumber): boolean {
-    const o = ComplexNumber.from(other);
+  eq(...other: [Number | ComplexNumber]): boolean {
+    const o = ComplexNumber.from(...other);
     return this.real === o.real && this.imaginary === o.imaginary;
   }
 

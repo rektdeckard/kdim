@@ -20,7 +20,7 @@ export function assertValidRange(min: number, max: number, value?: number) {
  * @param numbers a list of numbers
  * @throws a {@link RangeError} when any number has a fractional part
  */
-export function assertInteger(...numbers: number[]) {
+export function assertInteger(...numbers: any[]) {
   if (numbers.some((n) => !Number.isInteger(n)))
     throw new RangeError("Arguments must be integers");
 }
@@ -32,7 +32,7 @@ export function assertInteger(...numbers: number[]) {
  * @throws a {@link RangeError} when any number is below zero or has a
  * fractional part
  */
-export function assertNatural(...numbers: number[]) {
+export function assertNatural(...numbers: any[]) {
   if (numbers.some((n) => n < 0 || !Number.isInteger(n)))
     throw new RangeError("Arguments must be natural numbers");
 }
@@ -44,7 +44,7 @@ export function assertNatural(...numbers: number[]) {
  * @throws a {@link RangeError} when any number is below 1 or has a
  * fractional part
  */
-export function assertCounting(...numbers: number[]) {
+export function assertCounting(...numbers: any[]) {
   if (numbers.some((n) => n < 1 || !Number.isInteger(n)))
     throw new RangeError("Arguments must be counting numbers");
 }
