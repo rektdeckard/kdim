@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { clamp, lerp, factorial, Range, ComplexNumber } from "../../src/math";
+import { clamp, lerp, factorial, Range, Complex } from "../../src/math";
 
 describe("clamp()", () => {
   it("clamps value in simple range", () => {
@@ -113,18 +113,18 @@ describe("Range", () => {
   });
 
   describe("complex constructor", () => {
-    it("constructs a range of ComplexNumbers", () => {
-      const r = Range.of(3, ComplexNumber);
+    it("constructs a range of Complex numberss", () => {
+      const r = Range.of(3, Complex);
 
-      expect(r[1].eq(new ComplexNumber(1))).toBe(true);
-      expect(r[2].eq(new ComplexNumber(2))).toBe(true);
+      expect(r[1].eq(new Complex(1))).toBe(true);
+      expect(r[2].eq(new Complex(2))).toBe(true);
       expect(r.map(Number)).toStrictEqual([0, 1, 2, 3]);
     });
 
-    it("constructs a descending range of ComplexNumbers with steps", () => {
-      const r = Range.of({ from: 25, to: 10, step: 2.5 }, ComplexNumber);
-      expect(r[1].eq(new ComplexNumber(22.5))).toBe(true);
-      expect(r[4].eq(new ComplexNumber(15))).toBe(true);
+    it("constructs a descending range of Complex numbers with steps", () => {
+      const r = Range.of({ from: 25, to: 10, step: 2.5 }, Complex);
+      expect(r[1].eq(new Complex(22.5))).toBe(true);
+      expect(r[4].eq(new Complex(15))).toBe(true);
       expect(r.map(Number)).toStrictEqual([25, 22.5, 20, 17.5, 15, 12.5, 10]);
     });
   });
@@ -196,7 +196,7 @@ describe("Range", () => {
     });
 
     it("can use a complex constructor", () => {
-      const gen = Range.lazy(5, ComplexNumber);
+      const gen = Range.lazy(5, Complex);
       expect([...gen].every((c, i) => c.eq(i))).toBe(true);
     });
   });

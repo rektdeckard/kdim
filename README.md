@@ -15,8 +15,8 @@ A collection of interesting helpers, data structures, and utility types for mess
 - [Installation](#installation)
 - [Numerics](#numerics)
   - [Constants](#constants)
-  - [ComplexNumber](#complexnumber)
-  - [RationalNumber](#rationalnumber)
+  - [Complex Number](#complex)
+  - [Rational Number](#rational)
   - [Wrapping](#wrapping)
   - [Saturating](#saturating)
 - [Types](#utility-types)
@@ -73,7 +73,7 @@ const I32_MIN = -I32_MAX - 1;
 
 </details>
 
-### ComplexNumber
+### Complex
 
 A numeric type with real and imaginary components. An instance of the class is immutable, so arithmetic operations on it will always produce a new instance.
 
@@ -82,21 +82,21 @@ A numeric type with real and imaginary components. An instance of the class is i
   <p>
 
 ```ts
-class ComplexNumber implements Number {
+class Complex implements Number {
   constructor(real?: number, imaginary?: number);
 
   get real(): number;
   get imaginary(): number;
 
-  static from<N extends ComplexNumber | Number>(init: N): ComplexNumber;
+  static from<N extends Complex | Number>(init: N): Complex;
 
-  add(addend: Number | ComplexNumber): ComplexNumber;
-  sub(subtrahend: Number | ComplexNumber): ComplexNumber;
-  mul(multiplicand: Number | ComplexNumber): ComplexNumber;
-  div(divisor: Number | ComplexNumber): ComplexNumber;
-  pow(exponent: Number): ComplexNumber;
-  eq(other: Number | ComplexNumber): boolean;
-  conjugate(): ComplexNumber;
+  add(addend: Number | Complex): Complex;
+  sub(subtrahend: Number | Complex): Complex;
+  mul(multiplicand: Number | Complex): Complex;
+  div(divisor: Number | Complex): Complex;
+  pow(exponent: Number): Complex;
+  eq(other: Number | Complex): boolean;
+  conjugate(): Complex;
 
   valueOf(): number;
   toFixed(fractionDigits?: number | undefined): string;
@@ -122,22 +122,22 @@ class ComplexNumber implements Number {
 </details>
 
 ```ts
-import { ComplexNumber } from "kdim";
+import { Complex } from "kdim";
 
-const a = new ComplexNumber(-3, 5); // -3 + 5i
+const a = new Complex(-3, 5); // -3 + 5i
 a.real; // -3
 a.imaginary; // 5
 
-const b = new ComplexNumber(7, -1); // 7 - i
+const b = new Complex(7, -1); // 7 - i
 a.add(b); // 4 + 4i
 a.mul(b); // -16 + 38i
 b.pow(2); // 48 - 14i
 
-const c = ComplexNumber.from(b); // 7 - i
+const c = Complex.from(b); // 7 - i
 b.eq(c); // true
 ```
 
-### RationalNumber
+### Rational
 
 A rational number class for fraction arithmetic without loss of precision. Operations are only guaranteed where numerator and denominator are within `Number.MIN_SAFE_INTEGER` and `Number.MAX_SAFE_INTEGER`.
 
@@ -146,23 +146,23 @@ A rational number class for fraction arithmetic without loss of precision. Opera
   <p>
 
 ```ts
-class RationalNumber implements Number {
+class Rational implements Number {
   constructor(numerator: number, denominator: number = 1);
 
   get numerator(): number;
   get denominator(): number;
 
-  static from(...input: RationalLike | [fraction: string]): RationalNumber;
-  static parse(fraction: string): RationalNumber;
+  static from(...input: RationalLike | [fraction: string]): Rational;
+  static parse(fraction: string): Rational;
 
-  recip(): RationalNumber;
-  add(...addend: RationalLike): RationalNumber;
-  sub(...subtrahend: RationalLike): RationalNumber;
-  mul(...multiplicand: RationalLike): RationalNumber;
-  div(...divisor: RationalLike): RationalNumber;
-  pow(exponent: number): RationalNumber;
-  mod(modulus: number): RationalNumber;
-  abs(): RationalNumber;
+  recip(): Rational;
+  add(...addend: RationalLike): Rational;
+  sub(...subtrahend: RationalLike): Rational;
+  mul(...multiplicand: RationalLike): Rational;
+  div(...divisor: RationalLike): Rational;
+  pow(exponent: number): Rational;
+  mod(modulus: number): Rational;
+  abs(): Rational;
   eq(...other: RationalLike): boolean;
   gt(...other: RationalLike): boolean;
   gte(...other: RationalLike): boolean;
@@ -186,7 +186,7 @@ type RationalFormatOptions = {
 };
 
 type RationalLike =
-  | [rational: RationalNumber]
+  | [rational: Rational]
   | [numerator: number]
   | [numerator: number, denominator: number];
 ```
@@ -195,10 +195,10 @@ type RationalLike =
 </details>
 
 ```ts
-import { RationalNumber } from "kdim";
+import { Rational } from "kdim";
 
-const a = new RationalNumber(5, 31); // construct from numerator, denominator
-const b = RationalNumber.parse("3 / 9"); // parse from string (spaces are not required)
+const a = new Rational(5, 31); // construct from numerator, denominator
+const b = Rational.parse("3 / 9"); // parse from string (spaces are not required)
 
 const result = a
   .add(b) // rationals as arguments
@@ -206,18 +206,18 @@ const result = a
   .div(5, 4) // implicit rational arguments
   .toFraction(); // "116/155"
 
-RationalNumber.parse("16 / 24").eq("2 / 3"); // true
+Rational.parse("16 / 24").eq("2 / 3"); // true
 ```
 
-RationalNumbers are immutable, so arithmetic methods always produce new values. They will always simplify to their most reduced form upon construction.
+Rationals are immutable, so arithmetic methods always produce new values. They will always simplify to their most reduced form upon construction.
 
-Serializing a RationalNumber by calling the `toFraction` allows to specify whether it should be in `mixed` number or irrational format (the default), as well as whether the unicode `FRACTION SLASH` (`\u2044`) character should be used instead of a typical forward slash (`/`), which produces small fractions on some platforms, E.G. `3⁄4`.
+Serializing a Rational by calling the `toFraction` allows to specify whether it should be in `mixed` number or irrational format (the default), as well as whether the unicode `FRACTION SLASH` (`\u2044`) character should be used instead of a typical forward slash (`/`), which produces small fractions on some platforms, E.G. `3⁄4`.
 
 ```ts
-import { RationalNumber } from "kdim";
+import { Rational } from "kdim";
 
-RationalNumber.from("3/4").toFraction({ format: "nospace" }); // "3/4"
-RationalNumber.from("3/4").toFraction({ format: "unicode" }); // "3⁄4"
+Rational.from("3/4").toFraction({ format: "nospace" }); // "3/4"
+Rational.from("3/4").toFraction({ format: "unicode" }); // "3⁄4"
 ```
 
 ### Wrapping
@@ -970,7 +970,7 @@ for (const i of gen) {
 gen.next(); // 100
 
 // Using a lazy range to defer producing values until needed
-const deferred = Range.lazy({ to: 20 }, (n) => new ComplexNumber(-n, n - 5));
+const deferred = Range.lazy({ to: 20 }, (n) => new Complex(-n, n - 5));
 // Some time later...
 const complexes = Array.from(deferred); // Only now are values produced
 ```

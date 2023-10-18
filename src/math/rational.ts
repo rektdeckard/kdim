@@ -25,7 +25,7 @@ export type RationalFormatOptions = {
 };
 
 export type RationalLike =
-  | [rational: RationalNumber]
+  | [rational: Rational]
   | [numerator: number]
   | [numerator: number, denominator: number];
 
@@ -34,16 +34,16 @@ export type RationalLike =
  * Operations are only guaranteed where numerator and denominator are within
  * {@link Number.MIN_SAFE_INTEGER} and {@link Number.MAX_SAFE_INTEGER}.
  */
-export class RationalNumber
+export class Rational
   implements
     Number,
-    Add<RationalLike, RationalNumber>,
-    Sub<RationalLike, RationalNumber>,
-    Mul<RationalLike, RationalNumber>,
-    Div<RationalLike, RationalNumber>,
-    Pow<[number], RationalNumber>,
-    Mod<[number], RationalNumber>,
-    Abs<RationalNumber>,
+    Add<RationalLike, Rational>,
+    Sub<RationalLike, Rational>,
+    Mul<RationalLike, Rational>,
+    Div<RationalLike, Rational>,
+    Pow<[number], Rational>,
+    Mod<[number], Rational>,
+    Abs<Rational>,
     Eq<RationalLike>,
     Gt<RationalLike>,
     Gte<RationalLike>,
@@ -70,19 +70,19 @@ export class RationalNumber
     return this.#d;
   }
 
-  static from(...input: RationalLike | [fraction: string]): RationalNumber {
+  static from(...input: RationalLike | [fraction: string]): Rational {
     const [base, opt] = input;
 
-    return base instanceof RationalNumber
+    return base instanceof Rational
       ? base
       : typeof base === "string"
-      ? RationalNumber.parse(base)
+      ? Rational.parse(base)
       : typeof opt === "number"
-      ? (assertInteger(base, opt), new RationalNumber(base, opt))
-      : (assertInteger(base), new RationalNumber(base, opt));
+      ? (assertInteger(base, opt), new Rational(base, opt))
+      : (assertInteger(base), new Rational(base, opt));
   }
 
-  static parse(fraction: string): RationalNumber {
+  static parse(fraction: string): Rational {
     let [nString, dString] = fraction.split(/[\/\u2044]/);
 
     const [first, second] = nString.trim().split(/\s+/);
@@ -91,13 +91,13 @@ export class RationalNumber
       const numerator = Number(first) * denominator + Number(second);
 
       assertInteger(numerator, denominator);
-      return new RationalNumber(numerator, denominator);
+      return new Rational(numerator, denominator);
     } else {
       const denominator = Number(dString);
       const numerator = Number(first);
 
       assertInteger(numerator, denominator);
-      return new RationalNumber(numerator, denominator);
+      return new Rational(numerator, denominator);
     }
   }
 
@@ -116,7 +116,7 @@ export class RationalNumber
     return this;
   }
 
-  #factor(other: RationalNumber): {
+  #factor(other: Rational): {
     denominator: number;
     numerator: number;
     otherNumerator: number;
@@ -136,101 +136,101 @@ export class RationalNumber
     };
   }
 
-  recip(): RationalNumber {
-    return new RationalNumber(this.denominator, this.numerator);
+  recip(): Rational {
+    return new Rational(this.denominator, this.numerator);
   }
 
-  add(...addend: RationalLike): RationalNumber {
-    const other = RationalNumber.from(...addend);
+  add(...addend: RationalLike): Rational {
+    const other = Rational.from(...addend);
     if (other.denominator === this.denominator) {
-      return new RationalNumber(
+      return new Rational(
         this.numerator + other.numerator,
         this.denominator
       );
     }
 
     const { denominator, numerator, otherNumerator } = this.#factor(other);
-    return new RationalNumber(numerator + otherNumerator, denominator);
+    return new Rational(numerator + otherNumerator, denominator);
   }
 
-  sub(...subtrahend: RationalLike): RationalNumber {
-    const other = RationalNumber.from(...subtrahend);
+  sub(...subtrahend: RationalLike): Rational {
+    const other = Rational.from(...subtrahend);
     if (other.denominator === this.denominator) {
-      return new RationalNumber(
+      return new Rational(
         this.numerator - other.numerator,
         this.denominator
       );
     }
 
     const { denominator, numerator, otherNumerator } = this.#factor(other);
-    return new RationalNumber(numerator - otherNumerator, denominator);
+    return new Rational(numerator - otherNumerator, denominator);
   }
 
-  mul(...multiplicand: RationalLike): RationalNumber {
-    const other = RationalNumber.from(...multiplicand);
-    return new RationalNumber(
+  mul(...multiplicand: RationalLike): Rational {
+    const other = Rational.from(...multiplicand);
+    return new Rational(
       this.numerator * other.numerator,
       this.denominator * other.denominator
     );
   }
 
-  div(...divisor: RationalLike): RationalNumber {
-    const other = RationalNumber.from(...divisor);
-    return new RationalNumber(
+  div(...divisor: RationalLike): Rational {
+    const other = Rational.from(...divisor);
+    return new Rational(
       this.numerator * other.denominator,
       this.denominator * other.numerator
     );
   }
 
-  pow(exponent: number): RationalNumber {
+  pow(exponent: number): Rational {
     // TODO: support fractional exponents?
     assertInteger(exponent);
-    return new RationalNumber(
+    return new Rational(
       Math.pow(this.numerator, exponent),
       Math.pow(this.denominator, exponent)
     );
   }
 
-  mod(modulus: number): RationalNumber {
+  mod(modulus: number): Rational {
     assertInteger(modulus);
-    return new RationalNumber(
+    return new Rational(
       this.numerator % (modulus * this.denominator),
       this.denominator
     );
   }
 
-  abs(): RationalNumber {
-    return new RationalNumber(
+  abs(): Rational {
+    return new Rational(
       Math.abs(this.numerator),
       Math.abs(this.denominator)
     );
   }
 
   eq(...other: RationalLike): boolean {
-    const r = RationalNumber.from(...other);
+    const r = Rational.from(...other);
     return this.numerator === r.numerator && this.denominator === r.denominator;
   }
 
   gt(...other: RationalLike): boolean {
-    const r = RationalNumber.from(...other);
+    const r = Rational.from(...other);
     const { numerator, otherNumerator } = this.#factor(r);
     return numerator > otherNumerator;
   }
 
   gte(...other: RationalLike): boolean {
-    const r = RationalNumber.from(...other);
+    const r = Rational.from(...other);
     const { numerator, otherNumerator } = this.#factor(r);
     return numerator >= otherNumerator;
   }
 
   lt(...other: RationalLike): boolean {
-    const r = RationalNumber.from(...other);
+    const r = Rational.from(...other);
     const { numerator, otherNumerator } = this.#factor(r);
     return numerator < otherNumerator;
   }
 
   lte(...other: RationalLike): boolean {
-    const r = RationalNumber.from(...other);
+    const r = Rational.from(...other);
     const { numerator, otherNumerator } = this.#factor(r);
     return numerator <= otherNumerator;
   }
@@ -286,7 +286,7 @@ export class RationalNumber
   }
 
   get [Symbol.toStringTag]() {
-    return "RationalNumber";
+    return "Rational";
   }
 
   [Symbol.toPrimitive](hint: string) {

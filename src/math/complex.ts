@@ -1,14 +1,14 @@
 import type { Add, Sub, Mul, Div, Pow, Eq } from "./types";
 
-export class ComplexNumber
+export class Complex
   implements
     Number,
-    Add<[ComplexNumber | Number], ComplexNumber>,
-    Sub<[ComplexNumber | Number], ComplexNumber>,
-    Mul<[ComplexNumber | Number], ComplexNumber>,
-    Div<[ComplexNumber | Number], ComplexNumber>,
-    Pow<[Number], ComplexNumber>,
-    Eq<[ComplexNumber | Number]>
+    Add<[Complex | Number], Complex>,
+    Sub<[Complex | Number], Complex>,
+    Mul<[Complex | Number], Complex>,
+    Div<[Complex | Number], Complex>,
+    Pow<[Number], Complex>,
+    Eq<[Complex | Number]>
 {
   #r: number;
   #i: number;
@@ -26,43 +26,43 @@ export class ComplexNumber
     return this.#i;
   }
 
-  static from<N extends ComplexNumber | Number>(init: N): ComplexNumber {
-    if (init instanceof ComplexNumber) {
+  static from<N extends Complex | Number>(init: N): Complex {
+    if (init instanceof Complex) {
       return init;
     }
 
-    return new ComplexNumber(init.valueOf());
+    return new Complex(init.valueOf());
   }
 
-  add(addend: Number | ComplexNumber): ComplexNumber {
-    const a = ComplexNumber.from(addend);
-    return new ComplexNumber(this.real + a.real, this.imaginary + a.imaginary);
+  add(addend: Number | Complex): Complex {
+    const a = Complex.from(addend);
+    return new Complex(this.real + a.real, this.imaginary + a.imaginary);
   }
 
-  sub(subtrahend: Number | ComplexNumber): ComplexNumber {
-    const s = ComplexNumber.from(subtrahend);
-    return new ComplexNumber(this.real - s.real, this.imaginary - s.imaginary);
+  sub(subtrahend: Number | Complex): Complex {
+    const s = Complex.from(subtrahend);
+    return new Complex(this.real - s.real, this.imaginary - s.imaginary);
   }
 
-  mul(multiplicand: Number | ComplexNumber): ComplexNumber {
-    const m = ComplexNumber.from(multiplicand);
-    return new ComplexNumber(
+  mul(multiplicand: Number | Complex): Complex {
+    const m = Complex.from(multiplicand);
+    return new Complex(
       this.real * m.real - this.imaginary * m.imaginary,
       this.real * m.imaginary + this.imaginary * m.real
     );
   }
 
-  div(divisor: Number | ComplexNumber): ComplexNumber {
-    const divider = ComplexNumber.from(divisor);
+  div(divisor: Number | Complex): Complex {
+    const divider = Complex.from(divisor);
     const conjugate = divider.conjugate();
     const dividend = this.mul(conjugate);
 
     const cdvsr = divider.real ** 2 + divider.imaginary ** 2;
-    return new ComplexNumber(dividend.real / cdvsr, dividend.imaginary / cdvsr);
+    return new Complex(dividend.real / cdvsr, dividend.imaginary / cdvsr);
   }
 
-  pow(exponent: Number): ComplexNumber {
-    let acc: ComplexNumber = this;
+  pow(exponent: Number): Complex {
+    let acc: Complex = this;
     for (let i = exponent.valueOf() - 1; i > 0; i--) {
       acc = acc.mul(this);
     }
@@ -70,13 +70,13 @@ export class ComplexNumber
     return acc;
   }
 
-  eq(...other: [Number | ComplexNumber]): boolean {
-    const o = ComplexNumber.from(...other);
+  eq(...other: [Number | Complex]): boolean {
+    const o = Complex.from(...other);
     return this.real === o.real && this.imaginary === o.imaginary;
   }
 
-  conjugate(): ComplexNumber {
-    return new ComplexNumber(this.real, -1 * this.imaginary);
+  conjugate(): Complex {
+    return new Complex(this.real, -1 * this.imaginary);
   }
 
   valueOf(): number {
@@ -125,6 +125,6 @@ export class ComplexNumber
   }
 
   get [Symbol.toStringTag]() {
-    return "ComplexNumber";
+    return "Complex";
   }
 }
