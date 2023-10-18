@@ -29,6 +29,11 @@ export type RationalLike =
   | [numerator: number]
   | [numerator: number, denominator: number];
 
+/**
+ * A rational number class for fraction arithmetic without loss of precision.
+ * Operations are only guaranteed where numerator and denominator are within
+ * {@link Number.MIN_SAFE_INTEGER} and {@link Number.MAX_SAFE_INTEGER}.
+ */
 export class RationalNumber
   implements
     Number,
@@ -230,26 +235,6 @@ export class RationalNumber
     return numerator <= otherNumerator;
   }
 
-  valueOf() {
-    return this.numerator / this.denominator;
-  }
-
-  toFixed(fractionDigits?: number | undefined): string {
-    return this.valueOf().toFixed(fractionDigits);
-  }
-
-  toExponential(fractionDigits?: number | undefined): string {
-    return this.valueOf().toExponential(fractionDigits);
-  }
-
-  toPrecision(precision?: number | undefined): string {
-    return this.valueOf().toPrecision(precision);
-  }
-
-  toString(_radix?: number | undefined): string {
-    return this.toFraction();
-  }
-
   toFraction({
     mixed = false,
     format = "nospace",
@@ -278,5 +263,36 @@ export class RationalNumber
     }
 
     return `${this.numerator}${separator}${this.denominator}`;
+  }
+
+  valueOf() {
+    return this.numerator / this.denominator;
+  }
+
+  toFixed(fractionDigits?: number | undefined): string {
+    return this.valueOf().toFixed(fractionDigits);
+  }
+
+  toExponential(fractionDigits?: number | undefined): string {
+    return this.valueOf().toExponential(fractionDigits);
+  }
+
+  toPrecision(precision?: number | undefined): string {
+    return this.valueOf().toPrecision(precision);
+  }
+
+  toString(radix?: number | undefined): string {
+    return this.valueOf().toString(radix);
+  }
+
+  get [Symbol.toStringTag]() {
+    return "RationalNumber";
+  }
+
+  [Symbol.toPrimitive](hint: string) {
+    if (hint === "number") {
+      return this.valueOf();
+    }
+    return this.toFraction({ mixed: false, format: "nospace" });
   }
 }

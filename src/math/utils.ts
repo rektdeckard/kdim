@@ -1,6 +1,15 @@
 import { assertInteger } from "./assertions";
 
+/**
+ * Compute the number of trailing zeros in a number's 32-bit representation,
+ * equivalent to its largest power-of-two divisor.
+ *
+ * @param n an integer
+ * @returns the number of trailing zeros in `a`'s 32-bit representation.
+ */
 export function trailingZeros(n: number): number {
+  assertInteger(n);
+
   let zeros = 0;
   let x = n;
 
@@ -17,6 +26,14 @@ export function trailingZeros(n: number): number {
   return zeros;
 }
 
+/**
+ * Find the Greatest Common Factor of two integers.
+ *
+ * @param a first number
+ * @param b second number
+ * @returns the greatest common factor of `a` and `b`
+ * @throws a {@link RangeError} if non-integral arguments are provided.
+ */
 export function gcf(a: number, b: number): number {
   assertInteger(a, b);
 
@@ -43,6 +60,14 @@ export function gcf(a: number, b: number): number {
   return u << powerOfTwo;
 }
 
+/**
+ * Find the Least Common Multiple of two integers.
+ *
+ * @param a first number
+ * @param b second number
+ * @returns the least common multiple of `a` and `b`
+ * @throws a {@link RangeError} if non-integral arguments are provided.
+ */
 export function lcm(a: number, b: number): number {
   assertInteger(a, b);
   return (a / gcf(a, b)) * b;

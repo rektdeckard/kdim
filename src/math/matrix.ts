@@ -5,6 +5,18 @@ export type MatrixOperand<M extends number, N extends number> =
   | MatrixLike<M, N>
   | number[][];
 
+export type SubmatrixOptions =
+  | {
+      removeRows: number[];
+      removeCols: number[];
+      xywh?: never;
+    }
+  | {
+      xywh: [number, number] | [number, number, number, number];
+      removeRows?: never;
+      removeCols?: never;
+    };
+
 type MatrixResult<
   M extends number,
   N extends number,
@@ -27,7 +39,7 @@ export type MTXOptions = {
  * A concrete Matrix class for simple linear algebra, currently only supporting
  * simple numbers, but with plans to add support for complex numbers.
  *
- * Implements {@link Iterable} over {@link Vec}
+ * Implements {@link Iterable} over {@link Tuple}
  */
 export class Matrix<M extends number, N extends number>
   implements Iterable<Tuple<number, N>>
@@ -278,17 +290,7 @@ export class Matrix<M extends number, N extends number>
     removeRows,
     removeCols,
     xywh,
-  }:
-    | {
-        removeRows: number[];
-        removeCols: number[];
-        xywh?: never;
-      }
-    | {
-        xywh: [number, number] | [number, number, number, number];
-        removeRows?: never;
-        removeCols?: never;
-      }) {
+  }: SubmatrixOptions) {
     if (!!xywh) {
       const [x, y, w, h] = xywh;
       const data = this.#data
@@ -458,39 +460,6 @@ export class Matrix<M extends number, N extends number>
     } else {
       return;
     }
-
-    // {
-    //   // DEPRECATED: old method
-    //   const am = this.clone();
-    //   const im = Matrix.identity<M>(am.rows as M);
-
-    //   for (let fd = 0; fd < am.rows; fd++) {
-    //     let fdScaler = 1.0 / am.at(fd, fd)!;
-
-    //     for (let j = 0; j < am.cols; j++) {
-    //       (am.#data[fd][j] as number) *= fdScaler;
-    //       (im.#data[fd][j] as number) *= fdScaler;
-    //     }
-
-    //     for (let i = 0; i < am.rows; i++) {
-    //       if (i === fd) continue;
-
-    //       const rowScaler = am.at(i, fd)!;
-    //       for (let j = 0; j < am.cols; j++) {
-    //         (am.#data[i][j] as number) =
-    //           am.at(i, j)! - rowScaler * am.at(fd, j)!;
-    //         (im.#data[i][j] as number) =
-    //           im.at(i, j)! - rowScaler * im.at(fd, j)!;
-    //       }
-    //     }
-    //   }
-
-    //   if (!(this as any).mul(im).eq(Matrix.identity(this.rows), tolerance)) {
-    //     throw new Error(`Matrix inversion failed!`);
-    //   }
-
-    //   return im;
-    // }
   }
 
   transpose(): Matrix<N, M> {

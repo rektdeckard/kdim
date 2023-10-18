@@ -16,6 +16,7 @@ A collection of interesting helpers, data structures, and utility types for mess
 - [Numerics](#numerics)
   - [Constants](#constants)
   - [ComplexNumber](#complexnumber)
+  - [RationalNumber](#rationalnumber)
   - [Wrapping](#wrapping)
   - [Saturating](#saturating)
 - [Types](#utility-types)
@@ -30,6 +31,9 @@ A collection of interesting helpers, data structures, and utility types for mess
 - [Transforms](#transforms)
   - [clamp](#clamp)
   - [lerp](#lerp)
+  - [gcf](#gcf)
+  - [lcm](#lcm)
+  - [trailingZeros](#trailingzeros)
 - [Utilities](#utilities)
   - [Range](#range)
   - [Random](#random)
@@ -37,6 +41,9 @@ A collection of interesting helpers, data structures, and utility types for mess
   - [objectHash](#objecthash)
 - [Assertions](#assertions)
   - [castInteger](#castinteger)
+  - [assertInteger](#assertinteger)
+  - [assertNatural](#assertnatural)
+  - [assertCounting](#assertcounting)
   - [assertValidRange](#assertvalidrange)
 
 ## Installation
@@ -128,6 +135,89 @@ b.pow(2); // 48 - 14i
 
 const c = ComplexNumber.from(b); // 7 - i
 b.eq(c); // true
+```
+
+### RationalNumber
+
+A rational number class for fraction arithmetic without loss of precision. Operations are only guaranteed where numerator and denominator are within `Number.MIN_SAFE_INTEGER` and `Number.MAX_SAFE_INTEGER`.
+
+<details>
+  <summary>Class Signature</summary>
+  <p>
+
+```ts
+class RationalNumber implements Number {
+  constructor(numerator: number, denominator: number = 1);
+
+  get numerator(): number;
+  get denominator(): number;
+
+  static from(...input: RationalLike | [fraction: string]): RationalNumber;
+  static parse(fraction: string): RationalNumber;
+
+  recip(): RationalNumber;
+  add(...addend: RationalLike): RationalNumber;
+  sub(...subtrahend: RationalLike): RationalNumber;
+  mul(...multiplicand: RationalLike): RationalNumber;
+  div(...divisor: RationalLike): RationalNumber;
+  pow(exponent: number): RationalNumber;
+  mod(modulus: number): RationalNumber;
+  abs(): RationalNumber;
+  eq(...other: RationalLike): boolean;
+  gt(...other: RationalLike): boolean;
+  gte(...other: RationalLike): boolean;
+  lt(...other: RationalLike): boolean;
+  lte(...other: RationalLike): boolean;
+
+  toFraction(options?: RationalFormatOptions): string;
+
+  valueOf(): number;
+  toFixed(fractionDigits?: number | undefined): string;
+  toExponential(fractionDigits?: number | undefined): string;
+  toPrecision(precision?: number | undefined): string;
+  toString(radix?: number | undefined): string;
+}
+
+type RationalFormat = "space" | "nospace" | "unicode";
+
+type RationalFormatOptions = {
+  mixed?: boolean;
+  format?: RationalFormat;
+};
+
+type RationalLike =
+  | [rational: RationalNumber]
+  | [numerator: number]
+  | [numerator: number, denominator: number];
+```
+
+  </p>
+</details>
+
+```ts
+import { RationalNumber } from "kdim";
+
+const a = new RationalNumber(5, 31); // construct from numerator, denominator
+const b = RationalNumber.parse("3 / 9"); // parse from string (spaces are not required)
+
+const result = a
+  .add(b) // rationals as arguments
+  .mul(12) // integer arguments
+  .div(5, 4) // implicit rational arguments
+  .toFraction(); // "116/155"
+
+RationalNumber.parse("16 / 24").eq("2 / 3"); // true
+```
+
+RationalNumbers are immutable, so arithmetic methods always produce new values. They will always simplify to their most reduced form upon construction.
+
+Serializing a RationalNumber by calling the `toFraction` allows to specify whether it should be in `mixed` number or irrational format (the default), as well as whether the unicode `FRACTION SLASH` (`\u2044`) character should be used instead of a typical forward slash (`/`), which produces small fractions on some platforms, E.G. `3⁄4`.
+
+```ts
+import { RationalNumber } from "kdim";
+
+RationalNumber.from("3/4").toFraction({ format: "nospace" }); // "3/4"
+RationalNumber.from("3/4").toFraction({ format: "unicode" }); // "3⁄4"
 ```
 
 ### Wrapping
@@ -379,15 +469,18 @@ class Matrix<M extends number, N extends number>
   get data(): MatrixLike<M, N>;
 
   isSquare(): boolean;
+  isOrthogonal(): boolean;
 
   at(i: number, j: number): number | undefined;
   row(i: number): Tuple<number, N> | undefined;
   col(j: number): Tuple<number, M> | undefined;
   clone(): Matrix<M, N>;
   submatrix<M extends number, N extends number>(
-    removeRows: number[],
-    removeCols: number[]
+    options: SubmatrixOptions
   ): Matrix<number, number>;
+  augment<O extends number, P extends number>(
+    other: MatrixOperand<M, O>
+  ): Matrix<M, P>;
 
   trace(): number;
   determinant(): number | undefined;
@@ -401,6 +494,7 @@ class Matrix<M extends number, N extends number>
   ): MatrixResult<M, N, I>;
   pow(k: number): Matrix<M, M>;
   eq(other: MatrixOperand<M, N>, tolerance?: number): boolean;
+  dot(other: MatrixOperand<M, 1>): number;
 
   [Symbol.iterator](): Iterator<Vec<N>>;
 }
@@ -714,6 +808,75 @@ const interpolated = lerp(1, 99, value); // 40.2
 ```
 
 > Note: throws a RangeError when the value is outside of `[0, 1]`
+
+### gcf
+
+Find the Greatest Common Factor of two integers.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function gcf(a: number, b: number): number;
+```
+
+  </p>
+</details>
+
+```ts
+import { gcf } from "kdim";
+
+gcf(45, 420); // 15
+```
+
+> Note: throws a RangeError when `a` or `b` are non-integral.
+
+### lcm
+
+Find the Least Common Multiple of two integers.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function lcm(a: number, b: number): number;
+```
+
+  </p>
+</details>
+
+```ts
+import { lcm } from "kdim";
+
+lcm(6, 20); // 60
+```
+
+> Note: throws a RangeError when `a` or `b` are non-integral.
+
+### trailingZeros
+
+Compute the number of trailing zeros in a number's 32-bit representation, equivalent to its largest power-of-two divisor.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function trailingZeros(n: number): number;
+```
+
+  </p>
+</details>
+
+```ts
+import { trailingZeros } from "kdim";
+
+trailingZeros(24); // 3
+```
+
+> Note: throws a RangeError when `n` is non-integral.
 
 ## Utilities
 

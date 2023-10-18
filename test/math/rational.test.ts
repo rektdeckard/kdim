@@ -83,7 +83,24 @@ describe("Rational", () => {
     });
   });
 
+  describe("recip", () => {
+    it("produces reciprocal of regular fractions", () => {
+      const r = RationalNumber.from("5/9").recip();
+      expect([r.numerator, r.denominator]).toStrictEqual([9, 5]);
+    });
+
+    it("produces reciprocal of improper fractions", () => {
+      const r = RationalNumber.from("9/5").recip();
+      expect([r.numerator, r.denominator]).toStrictEqual([5, 9]);
+    });
+  });
+
   describe("add", () => {
+    it("adds integers", () => {
+      const r = new RationalNumber(61, 7).add(5);
+      expect([r.numerator, r.denominator]).toStrictEqual([96, 7]);
+    });
+
     it("adds similar fractions", () => {
       const fourths = RationalNumber.from("1 / 4").add(
         RationalNumber.from("2 / 4")
@@ -116,6 +133,11 @@ describe("Rational", () => {
   });
 
   describe("sub", () => {
+    it("subtracts integers", () => {
+      const r = new RationalNumber(61, 7).sub(5);
+      expect([r.numerator, r.denominator]).toStrictEqual([26, 7]);
+    });
+
     it("subtracts similar fractions", () => {
       const fourths = RationalNumber.from("1 / 4").sub(
         RationalNumber.from("2 / 4")
@@ -287,6 +309,44 @@ describe("Rational", () => {
       expect(RationalNumber.from(13, 7).lte(13, 8)).toBe(false);
       expect(RationalNumber.from(13, 7).lte(13, 7)).toBe(true);
       expect(RationalNumber.from(13, 7).lte(26, 14)).toBe(true);
+    });
+  });
+
+  describe("valueOf", () => {
+    it("resolves whole fractions to integers", () => {
+      expect(new RationalNumber(8, 4).valueOf()).toBe(2);
+      expect(+new RationalNumber(8, 4)).toBe(2);
+    });
+
+    it("resolves rational fractions to decimals", () => {
+      expect(new RationalNumber(3, 5).valueOf()).toBe(0.6);
+      expect(+new RationalNumber(3, 5)).toBe(0.6);
+    });
+  });
+
+  describe("toFixed", () => {
+    it("resolves to fixed", () => {
+      expect(new RationalNumber(8, 3).toFixed(2)).toBe("2.67");
+    });
+  });
+
+  describe("toExponential", () => {
+    it("resolves to fixed", () => {
+      expect(new RationalNumber(8, 3000).toExponential(2)).toBe("2.67e-3");
+    });
+  });
+
+  describe("toPrecision", () => {
+    it("resolves to fixed", () => {
+      expect(new RationalNumber(8, 3000).toPrecision(2)).toBe("0.0027");
+    });
+  });
+
+  describe("toString", () => {
+    it("resolves to decimal string", () => {
+      expect(new RationalNumber(1, 8).toString()).toBe("0.125");
+      expect(new RationalNumber(8, 2).toString(2)).toBe("100");
+      expect(new RationalNumber(32, 2).toString(16)).toBe("10");
     });
   });
 
