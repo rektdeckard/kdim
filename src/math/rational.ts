@@ -54,10 +54,20 @@ export class Rational
   #d: number;
 
   constructor(numerator: number, denominator: number = 1) {
-    assertInteger(numerator, denominator);
+    if (denominator === 0) {
+      throw new RangeError("Cannot divide by zero");
+    }
 
-    this.#n = numerator;
-    this.#d = denominator;
+    if (!Number.isInteger(numerator) || !Number.isInteger(denominator)) {
+      const n = new Rational(...Rational.#rationalize(numerator));
+      const self = n.div(...Rational.#rationalize(denominator));
+
+      this.#n = self.numerator;
+      this.#d = self.denominator;
+    } else {
+      this.#n = numerator;
+      this.#d = denominator;
+    }
 
     this.#simplify();
   }
@@ -77,9 +87,7 @@ export class Rational
       ? base
       : typeof base === "string"
       ? Rational.parse(base)
-      : typeof opt === "number"
-      ? (assertInteger(base, opt), new Rational(base, opt))
-      : (assertInteger(base), new Rational(base, opt));
+      : new Rational(base, opt);
   }
 
   static parse(fraction: string): Rational {
@@ -89,16 +97,51 @@ export class Rational
     if (second !== undefined) {
       const denominator = Number(dString);
       const numerator = Number(first) * denominator + Number(second);
-
-      assertInteger(numerator, denominator);
       return new Rational(numerator, denominator);
     } else {
       const denominator = Number(dString);
       const numerator = Number(first);
-
-      assertInteger(numerator, denominator);
       return new Rational(numerator, denominator);
     }
+  }
+
+  static #rationalize(
+    n: number,
+    precision: number = 0.0000001
+  ): [number, number] {
+    // TODO: implement with Stern-Brocot tree?
+    // https://en.wikipedia.org/wiki/Stern%E2%80%93Brocot_tree
+
+    // Continued fraction method
+    // https://en.wikipedia.org/wiki/Continued_fraction
+    if (Number.isInteger(n)) return [n, 1];
+
+    function integerDecimal(n: number): [number, number] {
+      return [Math.trunc(n), n % 1];
+    }
+
+    const components = [];
+    let x = n;
+    while (true) {
+      const [integer, decimal] = integerDecimal(x);
+      components.unshift(integer);
+
+      if (decimal < precision) {
+        break;
+      }
+
+      if (decimal !== 0) {
+        x = 1 / decimal;
+      }
+    }
+
+    const base = components.pop()!;
+    let r = new Rational(0);
+    for (const c of components) {
+      r = new Rational(c).add(r).recip();
+    }
+    r = r.add(base);
+    return [r.numerator, r.denominator];
   }
 
   #simplify() {
@@ -143,10 +186,7 @@ export class Rational
   add(...addend: RationalLike): Rational {
     const other = Rational.from(...addend);
     if (other.denominator === this.denominator) {
-      return new Rational(
-        this.numerator + other.numerator,
-        this.denominator
-      );
+      return new Rational(this.numerator + other.numerator, this.denominator);
     }
 
     const { denominator, numerator, otherNumerator } = this.#factor(other);
@@ -156,10 +196,7 @@ export class Rational
   sub(...subtrahend: RationalLike): Rational {
     const other = Rational.from(...subtrahend);
     if (other.denominator === this.denominator) {
-      return new Rational(
-        this.numerator - other.numerator,
-        this.denominator
-      );
+      return new Rational(this.numerator - other.numerator, this.denominator);
     }
 
     const { denominator, numerator, otherNumerator } = this.#factor(other);
@@ -200,10 +237,7 @@ export class Rational
   }
 
   abs(): Rational {
-    return new Rational(
-      Math.abs(this.numerator),
-      Math.abs(this.denominator)
-    );
+    return new Rational(Math.abs(this.numerator), Math.abs(this.denominator));
   }
 
   eq(...other: RationalLike): boolean {
