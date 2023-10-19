@@ -3,12 +3,6 @@ import { Rational, FRACTION_SLASH } from "../../src/math";
 
 describe("Rational", () => {
   describe("constructor", () => {
-    it("throws with non-integral arguments", () => {
-      expect(() => new Rational(2, 3.5)).toThrowError(
-        "Arguments must be integers"
-      );
-    });
-
     it("constructs a rational", () => {
       const r = new Rational(2, 9);
       expect(r.numerator).toBe(2);
@@ -18,6 +12,14 @@ describe("Rational", () => {
     it("simplifies during construction", () => {
       const r = new Rational(8, -24);
       expect([r.numerator, r.denominator]).toStrictEqual([-1, 3]);
+    });
+
+    it("constructs from decimals", () => {
+      const r = new Rational(4.462365591397849);
+      expect([r.numerator, r.denominator]).toStrictEqual([415, 93]);
+
+      const s = new Rational(5 / 6548646);
+      expect([s.numerator, s.denominator]).toStrictEqual([5, 6548646]);
     });
   });
 
@@ -50,10 +52,9 @@ describe("Rational", () => {
       expect(fiveAndOneSeventh.denominator).toBe(7);
     });
 
-    it("throws with decimals", () => {
-      expect(() => Rational.parse("9.3 / 5")).toThrowError(
-        "Arguments must be integers"
-      );
+    it("parses decimals", () => {
+      const r = Rational.parse("9.3 / 5");
+      expect([r.numerator, r.denominator]).toStrictEqual([93, 50]);
     });
   });
 
@@ -76,10 +77,9 @@ describe("Rational", () => {
       expect(r.denominator).toBe(11);
     });
 
-    it("throws with decimals", () => {
-      expect(() => Rational.from("1 / 4.7")).toThrowError(
-        "Arguments must be integers"
-      );
+    it("parses decimals", () => {
+      const r = Rational.from("1 / 4.7");
+      expect([r.numerator, r.denominator]).toStrictEqual([10, 47]);
     });
   });
 
@@ -102,30 +102,22 @@ describe("Rational", () => {
     });
 
     it("adds similar fractions", () => {
-      const fourths = Rational.from("1 / 4").add(
-        Rational.from("2 / 4")
-      );
+      const fourths = Rational.from("1 / 4").add(Rational.from("2 / 4"));
       expect([fourths.numerator, fourths.denominator]).toStrictEqual([3, 4]);
 
-      const thirteenths = new Rational(5, 13).add(
-        new Rational(1, 13)
-      );
+      const thirteenths = new Rational(5, 13).add(new Rational(1, 13));
       expect([thirteenths.numerator, thirteenths.denominator]).toStrictEqual([
         6, 13,
       ]);
     });
 
     it("adds dissimilar fractions", () => {
-      const thirtyFifths = new Rational(6, 7).add(
-        new Rational(1, 5)
-      );
+      const thirtyFifths = new Rational(6, 7).add(new Rational(1, 5));
       expect([thirtyFifths.numerator, thirtyFifths.denominator]).toStrictEqual([
         37, 35,
       ]);
 
-      const twentyEigths = new Rational(2, 7).add(
-        new Rational(1, 4)
-      );
+      const twentyEigths = new Rational(2, 7).add(new Rational(1, 4));
       expect([twentyEigths.numerator, twentyEigths.denominator]).toStrictEqual([
         15, 28,
       ]);
@@ -139,30 +131,22 @@ describe("Rational", () => {
     });
 
     it("subtracts similar fractions", () => {
-      const fourths = Rational.from("1 / 4").sub(
-        Rational.from("2 / 4")
-      );
+      const fourths = Rational.from("1 / 4").sub(Rational.from("2 / 4"));
       expect([fourths.numerator, fourths.denominator]).toStrictEqual([-1, 4]);
 
-      const thirteenths = new Rational(5, 13).sub(
-        new Rational(1, 13)
-      );
+      const thirteenths = new Rational(5, 13).sub(new Rational(1, 13));
       expect([thirteenths.numerator, thirteenths.denominator]).toStrictEqual([
         4, 13,
       ]);
     });
 
     it("subtracts dissimilar fractions", () => {
-      const thirtyFifths = new Rational(6, 7).sub(
-        new Rational(1, 5)
-      );
+      const thirtyFifths = new Rational(6, 7).sub(new Rational(1, 5));
       expect([thirtyFifths.numerator, thirtyFifths.denominator]).toStrictEqual([
         23, 35,
       ]);
 
-      const twentyEigths = new Rational(2, 7).sub(
-        new Rational(1, 4)
-      );
+      const twentyEigths = new Rational(2, 7).sub(new Rational(1, 4));
       expect([twentyEigths.numerator, twentyEigths.denominator]).toStrictEqual([
         1, 28,
       ]);
