@@ -61,7 +61,6 @@ export class Rational
     if (!Number.isInteger(numerator) || !Number.isInteger(denominator)) {
       const n = new Rational(...Rational.#rationalize(numerator));
       const self = n.div(...Rational.#rationalize(denominator));
-
       this.#n = self.numerator;
       this.#d = self.denominator;
     } else {
@@ -109,6 +108,7 @@ export class Rational
     n: number,
     precision: number = 0.0000001
   ): [number, number] {
+    const MAX_ITERS = 20;
     // TODO: implement with Stern-Brocot tree?
     // https://en.wikipedia.org/wiki/Stern%E2%80%93Brocot_tree
 
@@ -122,7 +122,7 @@ export class Rational
 
     const components = [];
     let x = n;
-    while (true) {
+    for (let i = 0; i < MAX_ITERS; i++) {
       const [integer, decimal] = integerDecimal(x);
       components.unshift(integer);
 

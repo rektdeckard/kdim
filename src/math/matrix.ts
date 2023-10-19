@@ -1,9 +1,22 @@
-import type { MatrixLike, Tuple } from "../types";
+import { Complex } from "./complex";
+import { Rational } from "./rational";
+import type { Tuple } from "../types";
 
-export type MatrixOperand<M extends number, N extends number> =
-  | Matrix<M, N>
-  | MatrixLike<M, N>
-  | number[][];
+export type MatrixLike<
+  M extends number,
+  N extends number,
+  T extends Complex | Rational = Rational,
+> = Tuple<Tuple<number | T, N>, M> | Readonly<Tuple<Tuple<number | T, N>, M>>;
+
+export type MatrixData<M extends number, N extends number> = Readonly<
+  Tuple<Tuple<number, N>, M>
+>;
+
+export type MatrixOperand<
+  M extends number,
+  N extends number,
+  T extends Complex | Rational,
+> = Matrix<M, N, T> | MatrixLike<M, N, T> | number[][];
 
 export type SubmatrixOptions =
   | {
@@ -20,12 +33,13 @@ export type SubmatrixOptions =
 type MatrixResult<
   M extends number,
   N extends number,
-  I extends MatrixOperand<number, number> | number,
+  I extends MatrixOperand<number, number, T> | number,
+  T extends Complex | Rational,
 > = I extends number
-  ? Matrix<M, N>
-  : I extends MatrixOperand<infer O, infer P>
+  ? Matrix<M, N, T>
+  : I extends MatrixOperand<infer O, infer P, infer T>
   ? N extends O
-    ? Matrix<M, P>
+    ? Matrix<M, P, T>
     : never
   : never;
 
@@ -36,18 +50,50 @@ export type MTXOptions = {
 };
 
 /**
- * A concrete Matrix class for simple linear algebra, currently only supporting
- * simple numbers, but with plans to add support for complex numbers.
+ * A concrete Matrix class for simple linear algebra, supporting both Rational
+ * and Complex number types.
  *
- * Implements {@link Iterable} over {@link Tuple}
+ * Implements {@link Iterable} over {@link Tuple} of number
  */
-export class Matrix<M extends number, N extends number>
-  implements Iterable<Tuple<number, N>>
+export class Matrix<
+  M extends number,
+  N extends number,
+  T extends Complex | Rational = Rational,
+> implements Iterable<Tuple<number, N>>
 {
-  #data: MatrixLike<M, N>;
+  #type: typeof Complex | typeof Rational;
+  #data: Tuple<Tuple<T, N>, M>;
 
-  constructor(data: MatrixLike<M, N>) {
-    this.#data = data;
+  constructor(
+    data: MatrixLike<M, N, T>,
+    type?: T extends Rational ? "rational" : "complex"
+  ) {
+    this.#type = type === "complex" ? Complex : Rational;
+    this.#data = data.map((row) =>
+      row.map((col) => {
+        return typeof col === "number"
+          ? new this.#type(col)
+          : (this.#assertType(col), col);
+      })
+    ) as Tuple<Tuple<T, N>, M>;
+  }
+
+  #assertType(value: number | T) {
+    if (!(value instanceof this.#type)) {
+      throw new Error(`Expected ${this.#type}, found ${typeof value}`);
+    }
+  }
+
+  #coerceType(value: number | T): T {
+    if (value instanceof this.#type) {
+      return value;
+    }
+
+    if (typeof value === "number") {
+      return this.#type.from(value) as T;
+    }
+
+    throw new Error(`Expected ${this.#type}, found ${typeof value}`);
   }
 
   get rows(): M {
@@ -62,63 +108,87 @@ export class Matrix<M extends number, N extends number>
     return this.rows * this.cols;
   }
 
-  get data(): MatrixLike<M, N> {
-    return this.#data;
+  get type(): "rational" | "complex" {
+    return this.#type === Complex ? "complex" : "rational";
   }
 
-  static zero<N extends number>(n: N): Matrix<N, N> {
+  static zero<N extends number, T extends "rational" | "complex">(
+    n: N,
+    type?: T
+  ): Matrix<N, N, T extends "complex" ? Complex : Rational> {
     if (n <= 0) {
       throw new RangeError(`Invalid matrix size [${n}x${n}]`);
     }
 
+    const ty = type === "complex" ? Complex : Rational;
     const data = new Array(n)
       .fill(null)
-      .map(() => new Array(n).fill(0)) as MatrixLike<N, N>;
+      .map(() => new Array(n).fill(new ty(0))) as MatrixLike<
+      N,
+      N,
+      T extends "complex" ? Complex : Rational
+    >;
 
-    return new Matrix<N, N>(data);
+    return new Matrix<N, N, T extends "complex" ? Complex : Rational>(data);
   }
 
-  static identity<N extends number>(n: N): Matrix<N, N> {
+  static identity<N extends number, T extends "rational" | "complex">(
+    n: N,
+    type?: T
+  ): Matrix<N, N, T extends "complex" ? Complex : Rational> {
     if (n <= 0) {
       throw new RangeError(`Invalid matrix size [${n}x${n}]`);
     }
 
-    const m = Matrix.zero(n);
+    const ty = type === "complex" ? Complex : Rational;
+    const m = Matrix.zero(n, type);
     for (let i = 0; i < n; i++) {
-      (m.data[i][i] as number) = 1;
+      (m.#data[i][i] as any) = new ty(1);
     }
 
     return m;
   }
 
-  static withSize<M extends number, N extends number>(
+  static withSize<
+    M extends number,
+    N extends number,
+    T extends "rational" | "complex",
+  >(
     rows: M,
     cols: N,
-    fillValue: number = 0
-  ): Matrix<M, N> {
+    fillValue: number = 0,
+    type?: T
+  ): Matrix<M, N, T extends "complex" ? Complex : Rational> {
     if (rows <= 0 || cols <= 0) {
       throw new RangeError(`Invalid size [${rows} x ${cols}]`);
     }
 
+    const ty = type === "complex" ? Complex : Rational;
     const data = new Array(rows)
       .fill(null)
-      .map(() => new Array(cols).fill(fillValue)) as MatrixLike<M, N>;
+      .map(() => new Array(cols).fill(new ty(fillValue))) as MatrixLike<
+      M,
+      N,
+      T extends "complex" ? Complex : Rational
+    >;
 
-    return new Matrix<M, N>(data);
+    return new Matrix(data);
   }
 
-  static fromDiagonal<N extends number>(
-    diagonal: Tuple<number, N> | number[]
-  ): Matrix<N, N> {
+  static fromDiagonal<N extends number, T extends "rational" | "complex">(
+    diagonal: Tuple<number | T, N> | number[],
+    type?: T
+  ): Matrix<N, N, T extends "complex" ? Complex : Rational> {
     const d = diagonal.length as N;
 
     if (d <= 0) {
       throw new RangeError(`Invalid size [${d} x ${d}]`);
     }
 
-    const m = Matrix.zero(d);
+    const ty = type === "complex" ? Complex : Rational;
+    const m = Matrix.zero(d, type);
     for (let i = 0; i < d; i++) {
-      (m.#data[i][i] as number) = diagonal[i];
+      (m.#data[i][i] as any) = ty.from(diagonal[i] as any);
     }
 
     return m;
@@ -127,7 +197,9 @@ export class Matrix<M extends number, N extends number>
   static fromMTX<M extends number, N extends number>(
     data: string,
     options: MTXOptions = {}
-  ): Matrix<M, N> {
+  ): Matrix<M, N, Rational> {
+    // TODO: implement Complex number parsing here
+
     // Parse headers
     const [header, ...lines] = data.split(/\n/);
     const [mm, ob, format, field, symmetry] = header
@@ -191,7 +263,7 @@ export class Matrix<M extends number, N extends number>
         `Symmetry type '${symmetry}' is unsupported for non-square matrices`
       );
 
-    const matrix = Matrix.withSize(rows as M, columns as N);
+    const matrix = Matrix.withSize<M, N, "rational">(rows as M, columns as N);
 
     // Parse data
     for (let n = 0, o = 0; n < lines.length; n++) {
@@ -233,7 +305,7 @@ export class Matrix<M extends number, N extends number>
         }
       }
 
-      (matrix.#data[i - 1][j - 1] as number) = value;
+      (matrix.#data[i - 1][j - 1] as Rational) = new Rational(value);
     }
 
     return matrix;
@@ -268,22 +340,34 @@ export class Matrix<M extends number, N extends number>
     return this.transpose().mul(this).eq(Matrix.identity(this.cols));
   }
 
+  data() {
+    return this.#data.map((row) =>
+      row.map((col) => col.valueOf())
+    ) as unknown as MatrixData<M, N>;
+  }
+
+  underlying(): Readonly<Tuple<Tuple<T, N>, M>> {
+    return this.#data;
+  }
+
   at(i: number, j: number) {
-    return this.#data.at(i)?.at(j);
+    return this.#data.at(i)?.at(j)?.valueOf();
   }
 
-  row(i: number) {
-    return this.data.at(i);
+  row(i: number): Readonly<Tuple<number, N>> | undefined {
+    return this.data()
+      .at(i)
+      ?.map((col) => col.valueOf()) as Tuple<number, N> | undefined;
   }
 
-  col(j: number) {
+  col(j: number): Readonly<Tuple<number, M>> | undefined {
     if (j >= this.cols) return undefined;
-    return this.data.map((row) => row.at(j)!) as Tuple<number, M>;
+    return this.#data.map((row) => row.at(j)!.valueOf()) as Tuple<number, M>;
   }
 
-  clone(): Matrix<M, N> {
-    const data = this.#data.map((row) => [...row]) as MatrixLike<M, N>;
-    return new Matrix<M, N>(data);
+  clone(): Matrix<M, N, T> {
+    const data = this.#data.map((row) => [...row]) as MatrixLike<M, N, T>;
+    return new Matrix<M, N, T>(data);
   }
 
   submatrix<M extends number, N extends number>({
@@ -295,12 +379,12 @@ export class Matrix<M extends number, N extends number>
       const [x, y, w, h] = xywh;
       const data = this.#data
         .slice(y, h ? h + y : h)
-        .map((r) => r.slice(x, w ? w + x : w)) as MatrixLike<M, N>;
-      return new Matrix<M, N>(data);
+        .map((r) => r.slice(x, w ? w + x : w)) as MatrixLike<M, N, T>;
+      return new Matrix<M, N, T>(data);
     } else {
-      const data = this.#data.reduce<number[][]>((data, row, i) => {
+      const data = this.#data.reduce<T[][]>((data, row, i) => {
         if (!removeRows.includes(i)) {
-          const newRow = row.reduce<number[]>((curr, col, j) => {
+          const newRow = row.reduce<T[]>((curr, col, j) => {
             if (!removeCols.includes(j)) {
               curr.push(col);
             }
@@ -309,28 +393,28 @@ export class Matrix<M extends number, N extends number>
           data.push(newRow);
         }
         return data;
-      }, []) as MatrixLike<M, N>;
+      }, []) as MatrixLike<M, N, T>;
 
-      return new Matrix<M, N>(data);
+      return new Matrix<M, N, T>(data);
     }
   }
 
-  trace(): number {
+  trace(): T {
     if (!this.isSquare()) {
       throw new Error(
         `Cannot find trace of non-square matrix [${this.rows}x${this.cols}]`
       );
     }
 
-    let total = 0;
+    let total: T = new this.#type(0) as T;
     for (let i = 0; i < this.rows; i++) {
-      total += this.data[i][i];
+      total = (total as Rational).add(this.#data[i][i] as Rational) as T;
     }
 
     return total;
   }
 
-  determinant(): number | undefined {
+  determinant(): T | undefined {
     if (!this.isSquare()) {
       throw new Error(
         `Cannot find determinant of non-square matrix [${this.rows}x${this.cols}]`
@@ -338,54 +422,76 @@ export class Matrix<M extends number, N extends number>
     }
 
     if (this.size === 1) {
-      return this.at(0, 0)!;
+      return this.#data[0][0]!;
     }
 
     // FIXME: this code is slow -- better algo?
 
     if (this.rows === 2 && this.cols === 2) {
       // 2 x 2 fast path
-      return this.at(0, 0)! * this.at(1, 1)! - this.at(1, 0)! * this.at(0, 1)!;
+      return (this.#data[0][0] as Rational)
+        .mul(this.#data[1][1] as Rational)
+        .sub(
+          (this.#data[1][0] as Rational).mul(this.#data[0][1] as Rational)
+        ) as T;
     }
 
     if (this.rows === 3 && this.cols === 3) {
       // 3 x 3 Rule of Sarrus fast path
       // det(A) = aei + bfg + cdh - ceg - bdi - afh
-      return (
-        // aei
-        this.at(0, 0)! * this.at(1, 1)! * this.at(2, 2)! +
-        // bfg
-        this.at(0, 1)! * this.at(1, 2)! * this.at(2, 0)! +
-        // cdh
-        this.at(0, 2)! * this.at(1, 0)! * this.at(2, 1)! -
-        // ceg
-        this.at(0, 2)! * this.at(1, 1)! * this.at(2, 0)! -
-        // bdi
-        this.at(0, 1)! * this.at(1, 0)! * this.at(2, 2)! -
-        // afh
-        this.at(0, 0)! * this.at(1, 2)! * this.at(2, 1)!
-      );
+      return (this.#data[0][0] as Rational)
+        .mul(this.#data[1][1] as Rational)
+        .mul(this.#data[2][2] as Rational)
+        .add(
+          (this.#data[0][1] as Rational)
+            .mul(this.#data[1][2] as Rational)
+            .mul(this.#data[2][0] as Rational)
+        )
+        .add(
+          (this.#data[0][2] as Rational)
+            .mul(this.#data[1][0] as Rational)
+            .mul(this.#data[2][1] as Rational)
+        )
+        .sub(
+          (this.#data[0][2] as Rational)
+            .mul(this.#data[1][1] as Rational)
+            .mul(this.#data[2][0] as Rational)
+        )
+        .sub(
+          (this.#data[0][1] as Rational)
+            .mul(this.#data[1][0] as Rational)
+            .mul(this.#data[2][2] as Rational)
+        )
+        .sub(
+          (this.#data[0][0] as Rational)
+            .mul(this.#data[1][2] as Rational)
+            .mul(this.#data[2][1] as Rational)
+        ) as T;
     }
 
-    let total = 0;
+    let total = new this.#type(0);
     for (let i = 0; i < this.rows; i++) {
       const sub = this.submatrix({ removeRows: [0], removeCols: [i] });
-      const sign = (-1) ** (i % 2);
+      const sign = new this.#type((-1) ** (i % 2));
       const subdeterminant = sub.determinant();
 
       if (subdeterminant === undefined) {
         throw new Error(`Failed to find subdeterminant`);
       }
 
-      total += this.at(0, i)! * sign * subdeterminant;
+      total = (total as Rational).add(
+        (this.#data[0][i] as Rational)
+          .mul(sign as Rational)
+          .mul(subdeterminant as Rational)
+      );
     }
 
-    return total;
+    return total as T;
   }
 
   augment<O extends number, P extends number>(
-    other: MatrixOperand<M, O>
-  ): Matrix<M, P> {
+    other: MatrixOperand<M, O, T>
+  ): Matrix<M, P, T> {
     const otherMatrix =
       other instanceof Matrix
         ? other
@@ -403,11 +509,13 @@ export class Matrix<M extends number, N extends number>
       );
     }
 
-    const newData = this.#data.map((row, i) => row.concat(otherMatrix.row(i)!));
-    return new Matrix(newData as MatrixLike<M, P>);
+    const newData = this.#data.map((row, i) =>
+      row.concat(otherMatrix.#data[i] as T[])
+    );
+    return new Matrix(newData as MatrixLike<M, P, T>);
   }
 
-  inverse(tolerance: number = 5): Matrix<M, M> | undefined {
+  inverse(tolerance: number = 5): Matrix<M, M, T> | undefined {
     if (!this.isSquare()) {
       throw new Error(
         `Cannot invert non-square matrix [${this.rows}x${this.cols}]`
@@ -420,54 +528,73 @@ export class Matrix<M extends number, N extends number>
 
     // Gauss-Jordan elimination:
     // https://en.wikipedia.org/wiki/Gaussian_elimination#Finding_the_inverse_of_a_matrix
-    const aug = this.augment(Matrix.identity(this.rows)).data as number[][];
+    const aug = this.augment(
+      Matrix.identity(this.rows, this.type) as Matrix<M, M, T>
+    ).underlying();
 
     // Convert to Reduced Row Echelon Form
     aug.forEach((pivotRow, i) => {
       // Get pivot point
       const pivot = pivotRow[i];
-      if (pivot === 0) return;
+      if (pivot.eq(0)) return;
 
       // Reduce leading zeros of other rows
       aug.forEach((row, j) => {
         if (j === i) return;
-        if (row[i] === 0) return;
+        if (row[i].eq(0)) return;
 
         // Find factor
-        const factor = -1 * (row[i] / pivot);
+        const factor = new this.#type(-1).mul(
+          (row[i] as Rational).div(pivot as Rational)
+        );
 
         // Distribute
-        aug[j] = row.map((value, idx) => value + factor * pivotRow[idx]);
+        (aug[j] as any) = row.map((value, idx) =>
+          (value as Rational).add(
+            (factor as Rational).mul(pivotRow[idx] as Rational)
+          )
+        );
       });
     });
 
     // Reduce coefficients
     aug.forEach((row, i) => {
-      if (row[i] === 1) return;
-      const recip = row[i] === 0 ? 1 : 1 / row[i];
-      aug[i] = row.map((value) => value * recip);
+      if (row[i].eq(1)) return;
+      const recip = row[i].eq(0)
+        ? new this.#type(1)
+        : new this.#type(1).div(row[i] as any);
+      (aug[i] as any) = row.map((value) => value.mul(recip as any));
     });
 
     // Extract result matrix
-    const possibleInverse = new Matrix<M, N>(aug as MatrixLike<M, N>).submatrix<
-      M,
-      M
-    >({ xywh: [this.cols, 0, this.cols, this.rows] });
+    const possibleInverse = new Matrix<M, N, T>(
+      aug as MatrixLike<M, N, T>
+    ).submatrix<M, M>({ xywh: [this.cols, 0, this.cols, this.rows] });
 
     // Check inverse
-    if (this.mul(possibleInverse).eq(Matrix.identity(this.rows), tolerance)) {
+    if (
+      this.mul(possibleInverse as any).eq(
+        Matrix.identity(this.rows, this.type),
+        tolerance
+      )
+    ) {
       return possibleInverse;
     } else {
       return;
     }
   }
 
-  transpose(): Matrix<N, M> {
-    const m = Matrix.withSize<N, M>(this.cols as N, this.rows as M);
+  transpose(): Matrix<N, M, T> {
+    const m = Matrix.withSize(
+      this.cols as N,
+      this.rows as M,
+      0,
+      this.type
+    ) as Matrix<N, M, T>;
 
     for (let j = 0; j < this.cols; j++) {
       for (let i = 0; i < this.rows; i++) {
-        (m.#data[j][i] as number) = this.#data[i][j];
+        (m.#data[j][i] as any) = this.#data[i][j];
       }
     }
 
@@ -475,10 +602,10 @@ export class Matrix<M extends number, N extends number>
   }
 
   vectorize(): number[] {
-    return (this.#data as number[][]).flat();
+    return this.data().flat() as number[];
   }
 
-  add(other: MatrixOperand<M, N>): Matrix<M, N> {
+  add(other: MatrixOperand<M, N, T>): Matrix<M, N, T> {
     if (other instanceof Matrix) {
       // c is Matrix
       if (this.cols !== other.cols || this.rows !== other.rows) {
@@ -493,7 +620,8 @@ export class Matrix<M extends number, N extends number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
-          (data[i][j] as number) = this.at(i, j)! + other.at(i, j)!;
+          this.#assertType(other.#data[i][j]);
+          (data[i][j] as any) = this.#data[i][j].add(other.#data[i][j] as any);
         }
       }
 
@@ -513,7 +641,7 @@ export class Matrix<M extends number, N extends number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
-          (data[i][j] as number) = this.at(i, j)! + other[i][j];
+          (data[i][j] as any) = this.#data[i][j].add(other[i][j]);
         }
       }
 
@@ -524,7 +652,7 @@ export class Matrix<M extends number, N extends number>
     }
   }
 
-  sub(other: MatrixOperand<M, N>): Matrix<M, N> {
+  sub(other: MatrixOperand<M, N, T>): Matrix<M, N, T> {
     if (other instanceof Matrix) {
       // c is Matrix
       if (this.cols !== other.cols || this.rows !== other.rows) {
@@ -539,7 +667,8 @@ export class Matrix<M extends number, N extends number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
-          (data[i][j] as number) = this.at(i, j)! - other.at(i, j)!;
+          this.#assertType(other.#data[i][j]);
+          (data[i][j] as any) = this.#data[i][j].sub(other.#data[i][j] as any);
         }
       }
 
@@ -559,7 +688,9 @@ export class Matrix<M extends number, N extends number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < this.cols; j++) {
-          (data[i][j] as number) = this.at(i, j)! - other[i][j];
+          (data[i][j] as any) = this.#data[i][j].sub(
+            this.#coerceType(other[i][j]) as any
+          );
         }
       }
 
@@ -570,9 +701,9 @@ export class Matrix<M extends number, N extends number>
     }
   }
 
-  mul<I extends MatrixOperand<number, number> | number>(
+  mul<I extends MatrixOperand<number, number, T> | number>(
     other: I
-  ): MatrixResult<M, N, I> {
+  ): MatrixResult<M, N, I, T> {
     if (other instanceof Matrix) {
       // c is Matrix
       if ((this.cols as number) !== other.rows) {
@@ -587,10 +718,11 @@ export class Matrix<M extends number, N extends number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < other.cols; j++) {
-          (data[i][j] as number) = this.#data[i].reduce((acc, curr, n) => {
-            const it = curr * other.at(n, j)!;
-            return acc + it;
-          }, 0);
+          (data[i][j] as any) = this.#data[i].reduce((acc, curr, n) => {
+            this.#assertType(other.#data[n][j]);
+            const it = curr.mul(other.#data[n][j] as any);
+            return acc.add(it as any);
+          }, new this.#type(0));
         }
       }
 
@@ -610,10 +742,10 @@ export class Matrix<M extends number, N extends number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < other[0].length; j++) {
-          (data[i][j] as number) = this.#data[i].reduce((acc, curr, n) => {
-            const it = curr * other[n][j];
-            return acc + it;
-          }, 0);
+          (data[i][j] as any) = this.#data[i].reduce((acc, curr, n) => {
+            const it = curr.mul(this.#coerceType(other[n][j]) as any);
+            return acc.add(it as any);
+          }, new this.#type(0));
         }
       }
 
@@ -627,15 +759,15 @@ export class Matrix<M extends number, N extends number>
     } else {
       // c is scalar
       // @ts-ignore
-      return new Matrix<M, N>(
+      return new Matrix<M, N, T>(
         this.#data.map((i) =>
-          i.map((j) => j * (other as number))
-        ) as MatrixLike<M, N>
+          i.map((j) => j.mul(other as number))
+        ) as MatrixLike<M, N, T>
       );
     }
   }
 
-  pow(k: number): Matrix<M, M> {
+  pow(k: number): Matrix<M, M, T> {
     if (k < 0) {
       throw new RangeError(
         "Negative exponentiation is not permitted. If matrix is invertible, first invert then use positive exponentiation."
@@ -647,7 +779,7 @@ export class Matrix<M extends number, N extends number>
     }
 
     if (k === 0) {
-      return Matrix.identity<M>(this.rows);
+      return Matrix.identity(this.rows, this.type) as Matrix<M, M, T>;
     } else {
       let acc = this as any;
       for (let i = k - 1; i > 0; i--) {
@@ -658,7 +790,7 @@ export class Matrix<M extends number, N extends number>
     }
   }
 
-  eq(other: MatrixOperand<M, N>, tolerance: number = 5): boolean {
+  eq(other: MatrixOperand<M, N, T>, tolerance: number = 5): boolean {
     function closeEnough(a: number, b: number): boolean {
       if (!tolerance) return a === b;
       return Math.abs(a - b) < 1 / 10 ** tolerance;
@@ -666,35 +798,39 @@ export class Matrix<M extends number, N extends number>
 
     if (other instanceof Matrix) {
       // o is Matrix
-      if (!Matrix.isMatrixLike(other.data, this.rows, this.cols)) return false;
+      if (!Matrix.isMatrixLike(other.data(), this.rows, this.cols))
+        return false;
       // @ts-ignore
-      return other.data.every((row, i) =>
-        row.every((col, j) => closeEnough(col, this.at(i, j)!))
-      );
+      return other
+        .underlying()
+        .every((row, i) =>
+          row.every((col, j) => this.#data[i][j].eq(col as any))
+        );
     } else if (Matrix.isMatrixLike(other, this.rows, this.cols)) {
       // o is MatrixLike
       // Hack to access array methods on underlying tuples
       // @ts-ignore
       return other.every((row, i) =>
         // @ts-ignore
-        row.every((col, j) => closeEnough(col, this.at(i, j)!))
+        row.every((col, j) => this.#data[i][j].eq(col))
       );
     }
 
     return false;
   }
 
-  dot(other: MatrixOperand<M, 1>): number {
+  dot(other: MatrixOperand<M, 1, T>): T {
     if (this.cols !== 1 || !Matrix.isMatrixLike(other)) {
       throw new Error(
         `Cannot compute dot product of non column-vector matrices.`
       );
     }
 
-    return (this.transpose() as Matrix<1, M>).mul(other).at(0, 0)!;
+    return (this.transpose() as unknown as Matrix<1, M, T>).mul(other)
+      .#data[0][0] as T;
   }
 
   [Symbol.iterator]() {
-    return this.#data[Symbol.iterator]();
+    return this.data()[Symbol.iterator]();
   }
 }

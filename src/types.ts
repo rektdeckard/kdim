@@ -10,7 +10,3 @@ type _TupleOf<T, K extends number, R extends unknown[]> = R["length"] extends K
 export type Vec<K extends number> =
   | Tuple<number, K>
   | Readonly<Tuple<number, K>>;
-
-export type MatrixLike<M extends number, N extends number> =
-  | Tuple<Tuple<number, N>, M>
-  | Readonly<Tuple<Tuple<number, N>, M>>;
