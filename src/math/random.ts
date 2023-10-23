@@ -84,6 +84,11 @@ export class Random {
     return Random.integer({ min: 1, max: sides });
   }
 
+  static unitVector(): { x: number; y: number } {
+    const theta = Math.random() * 2 * Math.PI;
+    return { x: Math.cos(theta), y: Math.sin(theta) };
+  }
+
   static sample<T>(options: T[] | Set<T>): T | undefined {
     const flat = options instanceof Set ? [...options] : options;
     if (flat.length === 0) return;

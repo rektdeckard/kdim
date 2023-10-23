@@ -197,6 +197,13 @@ describe("Random", () => {
     });
   });
 
+  describe("unitVector", () => {
+    it("returns a unit vector", () => {
+      const v = Random.unitVector();
+      expect(v.x ** 2 + v.y ** 2).toBeCloseTo(1, 5);
+    });
+  });
+
   describe("sample", () => {
     it("selects an element from an array", () => {
       const items = ["green", "eggs", "and", "ham"];
