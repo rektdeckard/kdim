@@ -1041,6 +1041,12 @@ type Noise3DFillOptions = {
   </p>
 </details>
 
+| Type           | Description                                  | Image                                                                                                     |
+| -------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Perlin         | `freq = 5`                                   | ![Animated GIF of Perlin noise](https://github.com/rektdeckard/kdim/blob/main/meta/perlin-5.gif?raw=true) |
+| Perlin fractal | `freq = 5` plus `freq = 40` 1/4 contribution | ![Animated GIF of Perlin noise](https://github.com/rektdeckard/kdim/blob/main/meta/perlin-5-fractal.gif?raw=true) |
+| Simplex | `freq = 5` | ![Animated GIF of Simplex noise](https://github.com/rektdeckard/kdim/blob/main/meta/simplex-5.gif?raw=true) |
+
 The `Noise` module contains various classes implementing `NoiseGenerator`:
 
 #### Perlin
@@ -1082,9 +1088,44 @@ let z = 0;
 })();
 ```
 
-![Animated GIF of Perlin noise](https://github.com/rektdeckard/kdim/blob/main/meta/perlin-5.gif?raw=true)
-
 #### Simplex
+
+[Simplex noise](https://en.wikipedia.org/wiki/Simplex_noise) is a type of gradient noise with with fewer dimensional artifacts than [Perlin noise](#perlin). It is visually more isotropic, and less computationally expensive in higher dimensions.
+
+```ts
+import { Noise } from "kdim";
+
+const simplex = new Noise.Simplex();
+
+// Iteratively create noise over a 2D plane
+for (let x = 0; x < 100; x++) {
+  for (let y = 0; y < 100; y++) {
+    // Generates a number between [-1, 1] that smoothly varies with x and y.
+    // Since we scale the coordinates down to [0, 1], the final texture
+    // will have a frequency of 1 (one "cell" of a pattern).
+    const value = simplex.xy(x / 100, y / 100);
+    doSomething(value);
+  }
+}
+
+// Fill a canvas with Simplex noise, animating smoothly as we take
+// different slices of the 3D volume.
+const canvas = document.querySelector("canvas");
+const ctx = canvas.getContext("2d");
+const img = ctx.createImageData(canvas.width, canvas.height);
+
+let z = 0;
+(function loop() {
+  // Fill the underlying buffer with a 2D slice of 3D noise, which
+  // has a frequncy of 5x5 "cells". The `fill` method will detect
+  // the buffer size and stride automatically.
+  simplex.fill(img, { freq: 5, z });
+  ctx.putImageData(img, 0, 0);
+  z += 0.01;
+
+  requestAnimationFrame(loop);
+})();
+```
 
 ### objectHash
 
