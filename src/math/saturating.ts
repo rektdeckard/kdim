@@ -41,11 +41,11 @@ export class Saturating
       throw new RangeError("Values must be integers");
     }
 
-    assertValidRange(min, max, value);
+    assertValidRange(min, max);
 
     this.#max = max;
     this.#min = min;
-    this.#value = value ?? min;
+    this.#value = value !== undefined ? uncheckedClamp(min, max, value) : min;
   }
 
   static from(bounded: Bounded) {
@@ -57,15 +57,12 @@ export class Saturating
 
   add<N extends Number>(n: N) {
     const addend = typeof n === "number" ? n : Number(n);
-
-    if (!Number.isSafeInteger(addend)) {
-      throw new RangeError("Values must be integers");
-    }
-
     if (addend === 0) return this;
 
-    this.#value = uncheckedClamp(this.#min, this.#max, this.#value + addend);
-    return this;
+    return new Saturating(
+      { min: this.#min, max: this.#max },
+      this.#value + addend
+    );
   }
 
   sub<N extends Number>(n: N) {
@@ -76,24 +73,20 @@ export class Saturating
     const multiplier = castInteger(n);
     if (multiplier === 1) return this;
 
-    this.#value = uncheckedClamp(
-      this.#min,
-      this.#max,
+    return new Saturating(
+      { min: this.#min, max: this.#max },
       this.#value * multiplier
     );
-    return this;
   }
 
   div<N extends Number>(n: N) {
     const divisor = castInteger(n);
     if (divisor === 0) throw new Error("Cannot divide by zero");
 
-    this.#value = uncheckedClamp(
-      this.#min,
-      this.#max,
+    return new Saturating(
+      { min: this.#min, max: this.#max },
       Math.trunc(this.#value / divisor)
     );
-    return this;
   }
 
   eq(other: Number): boolean {

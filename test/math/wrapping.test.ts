@@ -80,7 +80,7 @@ describe("Wrapping", () => {
       expect(u8a.add(u8b).value).toBe(2);
 
       const u274 = new Wrapping({ max: 273 }, 100);
-      expect(u8a.add(u274).value).toBe(6);
+      expect(u8a.add(u274).value).toBe(7);
       expect(u274.add(u8b).value).toBe(107);
     });
 

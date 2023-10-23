@@ -167,7 +167,7 @@ describe("Saturating", () => {
     it("performs non-saturating division", () => {
       const u8 = new Saturating({ max: 7 }, 6);
       expect(u8.div(2).value).toBe(3);
-      expect(u8.div(2).value).toBe(1); // Truncating division
+      expect(u8.div(4).value).toBe(1); // Truncating division
     });
 
     it("performs saturating division", () => {

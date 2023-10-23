@@ -371,5 +371,19 @@ describe("Rational", () => {
       expect(r.toFixed(3)).toBe("0.748");
       expect(r.toFraction()).toBe("116/155");
     });
+
+    it.skip("can approximate Pi", () => {
+      let Pi = new Rational(0);
+      const four = new Rational(4);
+      let n = 1;
+      for (let i = 0; i < 10; i++) {
+        Pi = Pi.add(four.div(n));
+        n += 2;
+        Pi = Pi.sub(four.div(n));
+        n += 2;
+      }
+
+      console.log(Pi)
+    });
   });
 });

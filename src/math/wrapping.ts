@@ -52,71 +52,27 @@ export class Wrapping
     const addend = castInteger(n);
     if (addend === 0) return this;
 
-    if (
-      this.#value + addend <= this.#max &&
-      this.#value + addend >= this.#min
-    ) {
-      this.#value += addend;
-      return this;
+    let v = this.#value;
+    if (v + addend <= this.#max && v + addend >= this.#min) {
+      v += addend;
+    } else {
+      const modAddend = addend % (Math.abs(this.#max - this.#min) + 1);
+
+      if (v + modAddend <= this.#max && v + modAddend >= this.#min) {
+        v += modAddend;
+      } else if (modAddend > 0) {
+        v = modAddend - (this.#max - v) + (this.#min - 1);
+      } else if (modAddend < 0) {
+        v = modAddend - (this.#min - v) + (this.#max + 1);
+      }
     }
 
-    const modAddend = addend % (Math.abs(this.#max - this.#min) + 1);
-
-    if (
-      this.#value + modAddend <= this.#max &&
-      this.#value + modAddend >= this.#min
-    ) {
-      this.#value += modAddend;
-      return this;
-    }
-
-    if (modAddend > 0) {
-      this.#value = modAddend - (this.#max - this.#value) + (this.#min - 1);
-      return this;
-    }
-
-    if (modAddend < 0) {
-      this.#value = modAddend - (this.#min - this.#value) + (this.#max + 1);
-      return this;
-    }
-
-    return this;
+    return new Wrapping({ min: this.#min, max: this.#max }, v);
   }
 
   sub<N extends Number>(n: N) {
     return this.add(-n);
   }
-
-  // mul<N extends Number>(n: N) {
-  //   const multiplier = castInteger(n);
-  //   if (multiplier === 1) return this;
-  //   //  FIXME: what do we do if 0 is out of range?
-  //   // if (multiplier === 0) {
-  //   //   this.#value = 0;
-  //   //   return this;
-  //   // }
-
-  //   this.#value =
-  //     ((this.#value * multiplier) % (this.#max - this.#min + 1)) + this.#min;
-  //   return this;
-  // }
-
-  // div<N extends Number>(n: N) {
-  //   const divisor = castInteger(n);
-  //   if (divisor === 1) return this;
-  //   if (divisor === 0) throw new Error("Cannot divide by zero");
-
-  //   const absolute = Math.trunc(this.#value / divisor);
-
-  //   if (absolute >= this.#min && absolute <= this.#max) {
-  //     this.#value = absolute;
-  //     return this;
-  //   }
-
-  //   const modAmount = absolute % (Math.abs(this.#max - this.#min) + 1);
-
-  //   // TODO
-  // }
 
   eq(other: Number): boolean {
     return this.#value === other.valueOf();
