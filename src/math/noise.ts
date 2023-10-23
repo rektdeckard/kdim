@@ -1,6 +1,6 @@
 import { uncheckedLerp } from "./transforms";
 
-const MAX_ENTROPY = 2 ** 16;
+// const MAX_ENTROPY = 2 ** 16;
 
 export type TypedArrayNoiseTarget = {
   data: Uint8ClampedArray;
