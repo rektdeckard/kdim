@@ -4,6 +4,7 @@ export * from "./constants";
 export * from "./fourier";
 export * from "./matrix";
 export * from "./float";
+export * from "./noise";
 export * from "./probability";
 export * from "./random";
 export * from "./range";
