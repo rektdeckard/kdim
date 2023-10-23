@@ -1,6 +1,7 @@
 export * from "./assertions";
 export * from "./complex";
 export * from "./constants";
+export * from "./fourier";
 export * from "./matrix";
 export * from "./float";
 export * from "./probability";
