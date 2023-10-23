@@ -30,3 +30,6 @@ jobs:
 
       - name: Build
         run: yarn build
+
+      - name: Build example page
+        run: yarn ex-deploy
