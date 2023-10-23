@@ -2,7 +2,7 @@ export * from "./assertions";
 export * from "./complex";
 export * from "./constants";
 export * from "./matrix";
-export * from "./numeric";
+export * from "./float";
 export * from "./probability";
 export * from "./random";
 export * from "./rational";
