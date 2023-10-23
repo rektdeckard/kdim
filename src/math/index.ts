@@ -5,6 +5,7 @@ export * from "./matrix";
 export * from "./float";
 export * from "./probability";
 export * from "./random";
+export * from "./range";
 export * from "./rational";
 export * from "./saturating";
 export * from "./transforms";

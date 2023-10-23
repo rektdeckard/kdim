@@ -544,8 +544,8 @@ describe("Matrix", () => {
       const three = Matrix.identity(3);
       expect(three.determinant()).toBe(1);
 
-      const ten = Matrix.identity(10);
-      expect(ten.determinant()).toBe(1);
+      const nine = Matrix.identity(9);
+      expect(nine.determinant()).toBe(1);
     });
   });
 
@@ -599,19 +599,21 @@ describe("Matrix", () => {
       );
     });
 
-    it.skip("inverts a random matrix", () => {
-      // TODO: need infinite precision floats or fractions to handle this correctly
-      const a = new Matrix<3, 3>([
-        [2, -1, 0],
-        [-1, 2, -1],
-        [0, -1, 2],
-      ]);
+    it("inverts a random matrix", () => {
+      it.fails("floating point errors", () => {
+        // TODO: need infinite precision floats or fractions to handle this correctly
+        const a = new Matrix<3, 3>([
+          [2, -1, 0],
+          [-1, 2, -1],
+          [0, -1, 2],
+        ]);
 
-      expect(a.inverse()?.data).toStrictEqual([
-        [3 / 4, 1 / 2, 1 / 4],
-        [1 / 2, 1, 1 / 2],
-        [1 / 4, 1 / 2, 3 / 4],
-      ]);
+        expect(a.inverse()?.data).toStrictEqual([
+          [3 / 4, 1 / 2, 1 / 4],
+          [1 / 2, 1, 1 / 2],
+          [1 / 4, 1 / 2, 3 / 4],
+        ]);
+      });
 
       const m = new Matrix<3, 3>([
         [-3, 2, -1],

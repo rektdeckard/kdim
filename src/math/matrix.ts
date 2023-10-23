@@ -41,7 +41,7 @@ export type MTXOptions = {
  *
  * Implements {@link Iterable} over {@link Tuple}
  */
-export class Matrix<M extends number, N extends number>
+export class Matrix<M extends number = number, N extends number = number>
   implements Iterable<Tuple<number, N>>
 {
   #data: MatrixLike<M, N>;
