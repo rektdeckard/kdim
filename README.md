@@ -19,9 +19,6 @@ A collection of interesting helpers, data structures, and utility types for mess
   - [Rational Number](#rational)
   - [Wrapping](#wrapping)
   - [Saturating](#saturating)
-- [Types](#utility-types)
-  - [Tuple](#tuple)
-  - [Vec](#vec)
 - [Data Structures](#data-structures)
   - [Matrix](#matrix)
   - [Binary Search Tree](#bst)
@@ -34,22 +31,29 @@ A collection of interesting helpers, data structures, and utility types for mess
   - [gcf](#gcf)
   - [lcm](#lcm)
   - [trailingZeros](#trailingzeros)
-- [Utilities](#utilities)
-  - [Range](#range)
+- [Generators](#generators)
   - [Random](#random)
-  - [Comparator](#comparator)
+  - [Range](#range)
+  - [Noise](#noise)
   - [objectHash](#objecthash)
+- [Analysis](#analysis)
+  - [Comparator](#comparator)
+  - [Fourier](#fourier)
 - [Assertions](#assertions)
   - [castInteger](#castinteger)
   - [assertInteger](#assertinteger)
   - [assertNatural](#assertnatural)
   - [assertCounting](#assertcounting)
   - [assertValidRange](#assertvalidrange)
+- [Types](#utility-types)
+  - [Tuple](#tuple)
+  - [Vec](#vec)
 
 ## Installation
 
 ```bash
-npm install --save kdim
+npm install kdim
+#^ Or whatever package manager you use
 ```
 
 ## Numerics
@@ -222,7 +226,7 @@ Rational.from("3/4").toFraction({ format: "unicode" }); // "3⁄4"
 
 ### Wrapping
 
-A wrapping integer class, allowing a value to be constrained to an arbitrary range, and wrapping around the range when arithmetic operations cause it to overflow or underflow.
+A wrapping integer class, allowing a value to be constrained to an arbitrary range, and wrapping around the range when arithmetic operations cause it to overflow or underflow Wrapping numbers are immutable, so arithmetic methods always produce new values.
 
 <details>
   <summary>Class Signature</summary>
@@ -245,8 +249,8 @@ class Wrapping implements Bounded, Number {
 
   static from(bounded: Bounded): Wrapping;
 
-  add<N extends Number>(n: N): this;
-  sub<N extends Number>(n: N): this;
+  add<N extends Number>(n: N): Wrapping;
+  sub<N extends Number>(n: N): Wrapping;
 
   get value(): number;
   get min(): number;
@@ -274,11 +278,11 @@ class Wrapping implements Bounded, Number {
 ```ts
 import { Wrapping } from "kdim";
 
-const u16 = new Wrapping({ max: 0xffff }, 1); // default min = 0
-u16.add(0xfffd); // (0xFFFE)
-u16.add(1); // (0xFFFF)
-u16.add(1); // (0x0000)
-u16.add(1); // (0x0001)
+let u16 = new Wrapping({ max: 0xffff }, 1); // default min = 0
+u16 = u16.add(0xfffd); // (0xFFFE)
+u16 = u16.add(1); // (0xFFFF)
+u16 = u16.add(1); // (0x0000)
+u16 = u16.add(1); // (0x0001)
 ```
 
 Wrapping integers can have arbitrary `min` and `max` values (inclusive), and can be initialized with a starting value. Arithmetic operations can be performed with any numeric type, using the bounds of the reciever, and can be chained:
@@ -286,12 +290,12 @@ Wrapping integers can have arbitrary `min` and `max` values (inclusive), and can
 ```ts
 import { Wrapping } from "kdim";
 
-const wk = new Wrapping({ min: 1, max: 7 }); // default value = min
-const yr = new Wrapping({ min: 1, max: 365 }, 24);
+let wk = new Wrapping({ min: 1, max: 7 }); // default value = min
+let yr = new Wrapping({ min: 1, max: 365 }, 24);
 
-wk.add(yr); // (4)
-
-yr.add(wk) // (28)
+wk = wk.add(yr); // (4)
+yr = yr
+  .add(wk) // (28)
   .sub(3) // (25)
   .sub(30); // (361)
 ```
@@ -309,7 +313,7 @@ const clip = Wrapping.from(vuMeter);
 
 ### Saturating
 
-A saturating (or clamping) integer class allowing a value to be constrained to an arbitrary range, and clamping it to the bounds when arithmetic operations would cause it to overflow or underflow.
+A saturating (or clamping) integer class allowing a value to be constrained to an arbitrary range, and clamping it to the bounds when arithmetic operations would cause it to overflow or underflow. Saturating numbers are immutable, so arithmetic methods always produce new values.
 
 <details>
   <summary>Class Signature</summary>
@@ -321,10 +325,10 @@ class Saturating implements Bounded, Number {
 
   static from(bounded: Bounded): Saturating;
 
-  add<N extends Number>(n: N): this;
-  sub<N extends Number>(n: N): this;
-  mul<N extends Number>(n: N): this;
-  div<N extends Number>(n: N): this;
+  add<N extends Number>(n: N): Saturating;
+  sub<N extends Number>(n: N): Saturating;
+  mul<N extends Number>(n: N): Saturating;
+  div<N extends Number>(n: N): Saturating;
 
   get value(): number;
   get min(): number;
@@ -352,10 +356,10 @@ class Saturating implements Bounded, Number {
 ```ts
 import { Saturating } from "kdim";
 
-const level = new Saturating({ min: 1, max: 99 });
-level.add(50); // (51)
-level.add(30); // (81)
-level.add(30); // (99)
+let level = new Saturating({ min: 1, max: 99 });
+level = level.add(50); // (51)
+level = level.add(30); // (81)
+level = level.add(30); // (99)
 ```
 
 As with [Wrapping](#wrapping), Saturating types support arithmetic operations with any numeric type, using the receiver.
@@ -367,7 +371,7 @@ const s = new Saturating({ min: -1, max: 10 }, 1);
 const w = new Wrapping({ max: 7 });
 s.add(7); // (8)
 w.add(5); // (5)
-s.add(w); // (10)
+s.add(w); // (8)
 ```
 
 > **NOTE:** constructor throws a `RangeError` when `min >= max` or any of `min`, `max`, or `initial` have a fracitonal component, as will attempting to `add()`, `sub()`, `mul()`, or `div()` a number with a fractional component or attempting to `div(0)`.
@@ -381,51 +385,6 @@ const s = new Saturating({ max: 50 }, 40);
 const primitiveSum = s + 20; // 60
 s; // Still (40)
 s.add(20); // 50
-```
-
-## Utility Types
-
-### Tuple
-
-A typed tuple of generic length.
-
-```ts
-import { Tuple } from "kdim";
-
-const threeBoolTuple: Tuple<boolean, 3> = [true, false, false];
-const wrongBoolTuple: Tuple<boolean, 3> = [false, true]; // Error: Source has 2 element(s) but target requires 3
-```
-
-This also composes to allow for strongly-typed multidimensional arrays, such as a chess board:
-
-```ts
-import { Tuple } from "kdim";
-
-type Piece = "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
-type Board = Tuple<Tuple<Piece | null, 8>, 8>;
-
-const board: Board = [
-  ["rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"],
-  ["pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn"],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  ["pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn"],
-  ["rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"],
-];
-```
-
-### Vec
-
-A convenience type equivalent to `Tuple<number, K extends number>`, useful for mathematical computation and data structures.
-
-```ts
-import { Vec } from "kdim";
-
-const position: Vec<3> = [1.0, 69, 420];
-const speed: Vec<3> = [-1, 3, 11];
-const accel: Vec<3> = [0, 0, "no"]; // Error: type 'string' is not assignable to type 'number'
 ```
 
 ## Data Structures
@@ -878,7 +837,71 @@ trailingZeros(24); // 3
 
 > Note: throws a RangeError when `n` is non-integral.
 
-## Utilities
+## Generators
+
+### Random
+
+Produce random values of common numeric and other types (E.G. `u8`, `integer`, `bool`), sample and shuffle `Array`s and `Set`s of values, and determine characteristics of those sets.
+
+<details>
+  <summary>Class Signature</summary>
+
+```ts
+class Random {
+  static bool(): boolean;
+  static natural(max?: number): number;
+  static counting(max?: number): number;
+  static integer(opts?: { min?: number; max?: number }): number;
+  static float(opts?: { min?: number; max?: number }): number;
+  static dice(sides: number): number;
+  static u8(): number;
+  static u16(): number;
+  static u32(): number;
+  static i8(): number;
+  static i16(): number;
+  static i32(): number;
+
+  static unitVector(): { x: number; y: number };
+
+  static sample<T>(options: T[] | Set<T>): T | undefined;
+  static take<T>(options: T[] | Set<T>): T | undefined;
+  static permute<T>(array: T[]): void;
+  static permutation<T>(array: T[]): T[];
+  static permutationsOf(set: number | Array<unknown> | Set<unknown>): number;
+  static derange<T>(array: T[]): void;
+  static derangement<T>(array: T[]): T[];
+  static derangementsOf(set: number | Array<unknown> | Set<unknown>): number;
+}
+```
+
+</details>
+
+```ts
+import { Random } from "kdim";
+
+// Generate values
+const trueOrFalse = Random.bool();
+const volume = Random.integer({ max: 11 });
+const attackRoll = Random.dice(20);
+
+// Sample lists and sets
+const adjectives = ["harder", "better", "faster", "stronger"];
+const doIt = Random.sample(adjectives);
+
+const cookieJar = new Set(["chocolate chip", "oatmeal", "macadamia"]);
+const eaten = Random.take(cookieJar); // "macadamia" maybe?
+cookieJar.has(eaten); // false
+
+// Shuffle lists
+const code = [13, 17, 29, 42];
+const shuf = Random.permutation(code); // [29, 17, 13, 42] maybe?
+
+const friends = ["alice", "bob", "carlos", "dan", "erin"];
+const secretSantas = Random.derangement(friends); // Shuffled with no fixed points
+Random.derangementsOf(friends); // 44: ways to match 5 people for secret santa
+```
+
+> Note: Generators that take numeric arguments will throw if range is invalid (E.G. `min > max`), values are invalid (decimal number passed to integer generator), or other
 
 ### Range
 
@@ -977,67 +1000,124 @@ const complexes = Array.from(deferred); // Only now are values produced
 
 > Note: Generators over infinite ranges _will_ lock up resources and crash the process if you attempt to convert them to an Array via `Array.from(gen)`, `[...gen]`, or other means.
 
-### Random
+### Noise
 
-Produce random values of common numeric and other types (E.G. `u8`, `integer`, `bool`), sample and shuffle `Array`s and `Set`s of values, and determine characteristics of those sets.
+Generate structured mathematical noise patterns like Perlin and Simplex, in both 2D and 3D spaces. Layer patterns for fractal noise fields. Efficiently fill `TypedArray` and `ImageData` buffers for use in graphics applications.
 
 <details>
-  <summary>Class Signature</summary>
+  <summary>Abstract Class Signature</summary>
+  <p>
 
 ```ts
-class Random {
-  static bool(): boolean;
-  static natural(max?: number): number;
-  static counting(max?: number): number;
-  static integer(opts?: { min?: number; max?: number }): number;
-  static float(opts?: { min?: number; max?: number }): number;
-  static dice(sides: number): number;
-  static u8(): number;
-  static u16(): number;
-  static u32(): number;
-  static i8(): number;
-  static i16(): number;
-  static i32(): number;
-
-  static sample<T>(options: T[] | Set<T>): T | undefined;
-  static take<T>(options: T[] | Set<T>): T | undefined;
-  static permute<T>(array: T[]): void;
-  static permutation<T>(array: T[]): T[];
-  static permutationsOf(set: number | Array<unknown> | Set<unknown>): number;
-  static derange<T>(array: T[]): void;
-  static derangement<T>(array: T[]): T[];
-  static derangementsOf(set: number | Array<unknown> | Set<unknown>): number;
+abstract class NoiseGenerator {
+  abstract seed(seed: number): this;
+  abstract xy(x: number, y: number): number;
+  abstract xyz(x: number, y: number, z: number): number;
+  abstract fill(target: NoiseTarget, options?: NoiseFillOptions): void;
 }
+
+type NoiseTarget = ImageData | number[][] | TypedArrayNoiseTarget;
+
+type TypedArrayNoiseTarget = {
+  data: Uint8ClampedArray;
+  width: number;
+  stride: number;
+};
+
+type NoiseFillOptions = {
+  freq?: number;
+  set?: (cell: { x: number; y: number; z: number; v: number }) => void;
+} & (Noise2DFillOptions | Noise3DFillOptions);
+
+type Noise2DFillOptions = {
+  z?: never;
+};
+
+type Noise3DFillOptions = {
+  z: number;
+};
 ```
 
+  </p>
+</details>
+
+The `Noise` module contains various classes implementing `NoiseGenerator`:
+
+#### Perlin
+
+[Perlin noise](https://en.wikipedia.org/wiki/Perlin_noise) is a type of gradient noise with smoothly-varying texture in 2 and 3 dimensions.
+
+```ts
+import { Noise } from "kdim";
+
+const perlin = new Noise.Perlin();
+
+// Iteratively create noise over a 2D plane
+for (let x = 0; x < 100; x++) {
+  for (let y = 0; y < 100; y++) {
+    // Generates a number between [-1, 1] that smoothly varies with x and y.
+    // Since we scale the coordinates down to [0, 1], the final texture
+    // will have a frequency of 1 (one "cell" of a pattern).
+    const value = perlin.xy(x / 100, y / 100);
+    doSomething(value);
+  }
+}
+
+// Fill a canvas with Perlin noise, animating smoothly as we take
+// different slices of the 3D volume.
+const canvas = document.querySelector("canvas");
+const ctx = canvas.getContext("2d");
+const img = ctx.createImageData(canvas.width, canvas.height);
+
+let z = 0;
+(function loop() {
+  // Fill the underlying buffer with a 2D slice of 3D noise, which
+  // has a frequncy of 5x5 "cells". The `fill` method will detect
+  // the buffer size and stride automatically.
+  perlin.fill(img, { freq: 5, z });
+  ctx.putImageData(img, 0, 0);
+  z += 0.01;
+
+  requestAnimationFrame(loop);
+})();
+```
+
+![Animated GIF of Perlin noise](https://github.com/rektdeckard/kdim/blob/main/meta/perlin-5.gif?raw=true)
+
+#### Simplex
+
+### objectHash
+
+A hashing function for arbitrary objects and primitives that digests the value into a pseudo-unique base-16 hash string. Uses structural hashing, such that objects of identical structure will produce the same hash.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+type ObjectHashAlgorithm = "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
+
+type ObjectHashOptions = {
+  algorithm?: ObjectHashAlgorithm;
+};
+
+async function objectHash<T>(
+  obj: T,
+  options?: ObjectHashOptions
+): Promise<string>;
+```
+
+  </p>
 </details>
 
 ```ts
-import { Random } from "kdim";
+import { objectHash } from "kdim";
 
-// Generate values
-const trueOrFalse = Random.bool();
-const volume = Random.integer({ max: 11 });
-const attackRoll = Random.dice(20);
-
-// Sample lists and sets
-const adjectives = ["harder", "better", "faster", "stronger"];
-const doIt = Random.sample(adjectives);
-
-const cookieJar = new Set(["chocolate chip", "oatmeal", "macadamia"]);
-const eaten = Random.take(cookieJar); // "macadamia" maybe?
-cookieJar.has(eaten); // false
-
-// Shuffle lists
-const code = [13, 17, 29, 42];
-const shuf = Random.permutation(code); // [29, 17, 13, 42] maybe?
-
-const friends = ["alice", "bob", "carlos", "dan", "erin"];
-const secretSantas = Random.derangement(friends); // Shuffled with no fixed points
-Random.derangementsOf(friends); // 44: ways to match 5 people for secret santa
+const hash = await objectHash({ foo: 7, bar: [] }, { algorithm: "SHA-1" });
+// "1448bf86764e7ff7f9df0cb61b2d77c946ba854"
 ```
 
-> Note: Generators that take numeric arguments will throw if range is invalid (E.G. `min > max`), values are invalid (decimal number passed to integer generator), or other
+## Analysis
 
 ### Comparator
 
@@ -1123,35 +1203,34 @@ abComp.gt({ id: 1, tag: "cool" }, { id: 1, tag: "neat" }); // true
 abComp.lte({ id: 5, tag: "ok" }, { id: 99, tag: "neat" }); // false
 ```
 
-### objectHash
+### Fourier
 
-A hashing function for arbitrary objects and primitives that digests the value into a pseudo-unique base-16 hash string. Uses structural hashing, such that objects of identical structure will produce the same hash.
+Perform Fourier analysis on discrete numeric data.
 
 <details>
-  <summary>Function Signature</summary>
-  <p>
+<summary>Class Signature</summary>
+<p>
 
 ```ts
-type ObjectHashAlgorithm = "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
-
-type ObjectHashOptions = {
-  algorithm?: ObjectHashAlgorithm;
-};
-
-async function objectHash<T>(
-  obj: T,
-  options?: ObjectHashOptions
-): Promise<string>;
+class Fourier {
+  static dft(input: (Number | Complex)[]): Complex[];
+}
 ```
 
   </p>
 </details>
 
 ```ts
-import { objectHash } from "kdim";
+import { Fourier } from "kdim";
 
-const hash = await objectHash({ foo: 7, bar: [] }, { algorithm: "SHA-1" });
-// "1448bf86764e7ff7f9df0cb61b2d77c946ba854"
+const samples = [1, 1, 0, 0];
+const d = Fourier.dft(sample);
+// [
+//   Complex { real: 2, imaginary: 0 },
+//   Complex { real: 1, imaginary: -1 },
+//   Complex { real: 0, imaginary: 0 },
+//   Complex { real: 1, imaginary: 1 },
+// ]
 ```
 
 ## Assertions
@@ -1280,6 +1359,51 @@ assertValidRange(0, 5);
 assertValidRange(0, 5, 1);
 assertValidRange(5, 0); // Error: Minimum must be less than maximum
 assertValidRange(0, 5, 9); // Error: Value must be between minimum and maximum
+```
+
+## Utility Types
+
+### Tuple
+
+A typed tuple of generic length.
+
+```ts
+import { Tuple } from "kdim";
+
+const threeBoolTuple: Tuple<boolean, 3> = [true, false, false];
+const wrongBoolTuple: Tuple<boolean, 3> = [false, true]; // Error: Source has 2 element(s) but target requires 3
+```
+
+This also composes to allow for strongly-typed multidimensional arrays, such as a chess board:
+
+```ts
+import { Tuple } from "kdim";
+
+type Piece = "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
+type Board = Tuple<Tuple<Piece | null, 8>, 8>;
+
+const board: Board = [
+  ["rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"],
+  ["pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn"],
+  [null, null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null, null],
+  ["pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn", "pawn"],
+  ["rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"],
+];
+```
+
+### Vec
+
+A convenience type equivalent to `Tuple<number, K extends number>`, useful for mathematical computation and data structures.
+
+```ts
+import { Vec } from "kdim";
+
+const position: Vec<3> = [1.0, 69, 420];
+const speed: Vec<3> = [-1, 3, 11];
+const accel: Vec<3> = [0, 0, "no"]; // Error: type 'string' is not assignable to type 'number'
 ```
 
 ## License

@@ -6,7 +6,7 @@ const { button, input, label, div, canvas } = van.tags;
 export default function Noises() {
   const WIDTH = 400;
   const HEIGHT = 400;
-  const DEFAULT_FREQ = 4;
+  const DEFAULT_FREQ = 5;
 
   const c = canvas({ width: WIDTH, height: HEIGHT });
   const ctx = c.getContext("2d")!;
