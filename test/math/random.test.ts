@@ -171,15 +171,16 @@ describe("Random", () => {
       }
     });
 
-    it("throws with illigal values", () => {
+    it("throws with illegal values", () => {
       expect(() => Random.dice(-1)).toThrowError();
       expect(() => Random.dice(5.75)).toThrowError();
       expect(() => Random.dice(0)).toThrowError();
     });
 
     it("produces a sensible distribution", () => {
+      const r = new Random.Seedable(1);
       const runs = 10000;
-      const results = Range.of({ from: 1, to: runs }, () => Random.dice(6));
+      const results = Range.of({ from: 1, to: runs }, () => r.dice(6));
       const distro = results.reduce(
         (acc, curr) => {
           acc[curr] += 1;
@@ -324,6 +325,100 @@ describe("Random", () => {
       let s = new Set(a);
       expect(Random.derangementsOf(a)).toBe(9);
       expect(Random.derangementsOf(s)).toBe(9);
+    });
+  });
+
+  describe("Seedable", () => {
+    describe("Mulberry32", () => {
+      it("is the default seedable", () => {
+        expect(Random.Seedable).toBe(Random.Mulberry32);
+      });
+
+      it("is predictable", () => {
+        const g = new Random.Mulberry32(666);
+        expect(g.bool()).toBe(true);
+        expect(g.natural()).toBe(1514679567);
+        expect(g.counting()).toBe(2849391811);
+        expect(g.u8()).toBe(121);
+        expect(g.u16()).toBe(39571);
+        expect(g.u32()).toBe(644278945);
+        expect(g.i8()).toBe(-16);
+        expect(g.i16()).toBe(7699);
+        expect(g.i32()).toBe(-1410694584);
+        expect(g.integer()).toBe(1968126296);
+        expect(g.float()).toBe(0.7661116695962846);
+        expect(g.dice(20)).toBe(10);
+        expect(g.unitVector()).toStrictEqual({
+          x: 0.9992225297660807,
+          y: 0.03942506826720617,
+        });
+      });
+    });
+
+    describe("SplitMix32", () => {
+      it("is predictable", () => {
+        const g = new Random.SplitMix32(666);
+        expect(g.bool()).toBe(false);
+        expect(g.natural()).toBe(224847477);
+        expect(g.counting()).toBe(865245964);
+        expect(g.u8()).toBe(186);
+        expect(g.u16()).toBe(59586);
+        expect(g.u32()).toBe(4227186911);
+        expect(g.i8()).toBe(5);
+        expect(g.i16()).toBe(13983);
+        expect(g.i32()).toBe(-1145114559);
+        expect(g.integer()).toBe(1844201441);
+        expect(g.float()).toBe(0.43102536140941083);
+        expect(g.dice(20)).toBe(10);
+        expect(g.unitVector()).toStrictEqual({
+          x: 0.18092356300312376,
+          y: -0.9834971603163146,
+        });
+      });
+    });
+
+    describe("SFC32", () => {
+      it("is predictable", () => {
+        const g = new Random.SFC32(1, 543, 100023, 8);
+        expect(g.bool()).toBe(false);
+        expect(g.natural()).toBe(900757);
+        expect(g.counting()).toBe(2381172690);
+        expect(g.u8()).toBe(50);
+        expect(g.u16()).toBe(35504);
+        expect(g.u32()).toBe(746039829);
+        expect(g.i8()).toBe(89);
+        expect(g.i16()).toBe(18618);
+        expect(g.i32()).toBe(-1626494651);
+        expect(g.integer()).toBe(3941025327);
+        expect(g.float()).toBe(0.8008981156162918);
+        expect(g.dice(20)).toBe(14);
+        expect(g.unitVector()).toStrictEqual({
+          x: 0.983859500088544,
+          y: -0.178942683799926,
+        });
+      });
+    });
+
+    describe("JSF32B", () => {
+      it("is predictable", () => {
+        const g = new Random.JSF32B(1, 543, 100023, 8);
+        expect(g.bool()).toBe(false);
+        expect(g.natural()).toBe(358710434);
+        expect(g.counting()).toBe(3247315120);
+        expect(g.u8()).toBe(159);
+        expect(g.u16()).toBe(23879);
+        expect(g.u32()).toBe(3698694198);
+        expect(g.i8()).toBe(121);
+        expect(g.i16()).toBe(-11689);
+        expect(g.i32()).toBe(476263606);
+        expect(g.integer()).toBe(543207503);
+        expect(g.float()).toBe(0.02261793869547546);
+        expect(g.dice(20)).toBe(13);
+        expect(g.unitVector()).toStrictEqual({
+          x: 0.27612674275218246,
+          y: -0.9611212316545036,
+        });
+      });
     });
   });
 });

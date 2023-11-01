@@ -1,3 +1,8 @@
+/**
+ * PRNG implementations adapted from GitHub user bryce
+ * https://github.com/bryc/code/blob/master/jshash/PRNGs.md
+ */
+
 import {
   assertCounting,
   assertInteger,
@@ -11,97 +16,170 @@ import {
   I8_MIN,
   I16_MIN,
   I32_MIN,
+  I32_MAX,
 } from "./constants";
 import { factorial, lerp } from "./transforms";
 import { BoundedOptions } from "./types";
 
-export class Random {
-  constructor(..._: never) {
-    throw new Error(
-      "Random contains static methods only and is not meant to be constructed"
-    );
+export interface PRNG {
+  bool(): boolean;
+  natural(max?: number): number;
+  counting(max?: number): number;
+  u8(): number;
+  u16(): number;
+  u32(): number;
+  i8(): number;
+  i16(): number;
+  i32(): number;
+  integer(opts?: Partial<BoundedOptions>): number;
+  dice(sides: number): number;
+  unitVector(): { x: number; y: number };
+  /**
+   * Choose a random value from a collection of `T`.
+   *
+   * @param options an {@link Array} or {@link Set} of `T`
+   */
+  sample<T>(options: T[] | Set<T>): T | undefined;
+  /**
+   * Remove and return a random value from a collection of `T`.
+   *
+   * @param options an {@link Array} or {@link Set} of `T`
+   */
+  take<T>(options: T[] | Set<T>): T | undefined;
+  /**
+   * Shuffles a provided array in-place to a new, random permutation using the
+   * Fisher-Yates algorithm.
+   *
+   * @param array an array of values
+   */
+  permute<T>(array: T[]): void;
+  /**
+   * Shuffles a provided array and returns the random permutation as a new
+   * array using the Fisher-Yates algorithm.
+   *
+   * @param array array an array of values
+   */
+  permutation<T>(array: T[]): T[];
+  /**
+   * Compute the number of unique permutations of a collection.
+   *
+   * @param set an {@link Array} or {@link Set}, or number representing its size
+   */
+  permutationsOf(set: number | Array<unknown> | Set<unknown>): number;
+  /**
+   * Shuffles a provided array in-place to a new, random derangement with no
+   * fixed points, per the algorithm described by Martínez, Conrado,
+   * Alois Panholzer, and Helmut Prodinger:
+   * https://epubs.siam.org/doi/pdf/10.1137/1.9781611972986.7
+   *
+   * @param array an array of values
+   */
+  derange<T>(array: T[]): void;
+  /**
+   * Shuffles a provided array and returns a new, random derangement with no
+   * fixed points, per the algorithm described by Martínez, Conrado,
+   * Alois Panholzer, and Helmut Prodinger:
+   * https://epubs.siam.org/doi/pdf/10.1137/1.9781611972986.7
+   *
+   * @param array an array of values
+   */
+  derangement<T>(array: T[]): T[];
+  /**
+   * Compute the number of unique derangements of a collection.
+   *
+   * @param set an {@link Array} or {@link Set}, or number representing its size
+   */
+  derangementsOf(set: number | Array<unknown> | Set<unknown>): number;
+}
+
+class GenericPRNG implements PRNG {
+  #gen: () => number;
+
+  constructor(gen: () => number) {
+    this.#gen = gen;
   }
 
-  static bool() {
-    return Math.random() >= 0.5;
+  bool() {
+    return this.#gen() >= 0.5;
   }
 
-  static natural(max: number = U32_MAX) {
+  natural(max: number = U32_MAX - 1) {
     assertNatural(max);
-    return Math.floor(lerp(0, max + 1, Math.random()));
+    return Math.floor(lerp(0, max + 1, this.#gen()));
   }
 
-  static counting(max: number = U32_MAX) {
+  counting(max: number = U32_MAX - 1) {
     assertCounting(max);
-    return Math.floor(lerp(1, max + 1, Math.random()));
+    return Math.floor(lerp(1, max + 1, this.#gen()));
   }
 
-  static u8() {
-    return Math.floor(lerp(0, U8_MAX + 1, Math.random()));
+  u8() {
+    return Math.floor(lerp(0, U8_MAX + 1, this.#gen()));
   }
 
-  static u16() {
-    return Math.floor(lerp(0, U16_MAX + 1, Math.random()));
+  u16() {
+    return Math.floor(lerp(0, U16_MAX + 1, this.#gen()));
   }
 
-  static u32() {
-    return Math.floor(lerp(0, U32_MAX + 1, Math.random()));
+  u32() {
+    return Math.floor(lerp(0, U32_MAX, this.#gen()));
   }
 
-  static i8() {
-    return Random.u8() + I8_MIN;
+  i8() {
+    return this.u8() + I8_MIN;
   }
 
-  static i16() {
-    return Random.u16() + I16_MIN;
+  i16() {
+    return this.u16() + I16_MIN;
   }
 
-  static i32() {
-    return Random.u32() + I32_MIN;
+  i32() {
+    return this.u32() + I32_MIN;
   }
 
-  static integer(
-    { min = 0, max = U32_MAX }: Partial<BoundedOptions> = {
-      max: U32_MAX,
+  integer(
+    { min = 0, max = U32_MAX - 1 }: Partial<BoundedOptions> = {
+      max: U32_MAX - 1,
     }
   ) {
     assertInteger(min, max);
     assertValidRange(min, max);
-    return Math.floor(lerp(min, max + 1, Math.random()));
+    return Math.floor(lerp(min, max + 1, this.#gen()));
   }
 
-  static float(
-    { min = 0, max = U32_MAX }: Partial<BoundedOptions> = {
-      max: U32_MAX,
+  float({ min, max }: Partial<BoundedOptions> = {}) {
+    if (min === undefined && max === undefined) {
+      return this.#gen();
     }
-  ) {
-    assertValidRange(min, max);
-    return lerp(min, max + 1, Math.random());
+
+    const mn = min ?? 0,
+      mx = max ?? I32_MAX;
+    assertValidRange(mn, mx);
+    return lerp(mn, mx + 1, this.#gen());
   }
 
-  static dice(sides: number) {
-    assertCounting(sides);
-    return Random.integer({ min: 1, max: sides });
+  dice(sides: number) {
+    return this.integer({ min: 1, max: sides });
   }
 
-  static unitVector(): { x: number; y: number } {
-    const theta = Math.random() * 2 * Math.PI;
+  unitVector(): { x: number; y: number } {
+    const theta = this.#gen() * 2 * Math.PI;
     return { x: Math.cos(theta), y: Math.sin(theta) };
   }
 
-  static sample<T>(options: T[] | Set<T>): T | undefined {
+  sample<T>(options: T[] | Set<T>): T | undefined {
     const flat = options instanceof Set ? [...options] : options;
     if (flat.length === 0) return;
 
-    const index = Random.natural(flat.length - 1);
+    const index = this.natural(flat.length - 1);
     return flat[index];
   }
 
-  static take<T>(options: T[] | Set<T>): T | undefined {
+  take<T>(options: T[] | Set<T>): T | undefined {
     const flat = options instanceof Set ? [...options] : options;
     if (flat.length === 0) return;
 
-    const index = Random.natural(flat.length - 1);
+    const index = this.natural(flat.length - 1);
     const it = flat[index];
 
     if (options instanceof Set) {
@@ -119,9 +197,9 @@ export class Random {
    *
    * @param array an array of values
    */
-  static permute<T>(array: T[]) {
+  permute<T>(array: T[]) {
     for (let i = 0; i < array.length - 1; i++) {
-      const j = i + Random.integer({ max: array.length - i - 1 });
+      const j = i + this.integer({ max: array.length - i - 1 });
       const temp = array[i];
       array[i] = array[j];
       array[j] = temp;
@@ -134,10 +212,10 @@ export class Random {
    *
    * @param array array an array of values
    */
-  static permutation<T>(array: T[]): T[] {
+  permutation<T>(array: T[]): T[] {
     const p = [...array];
     for (let i = 0; i <= array.length - 1; i++) {
-      const j = i + Random.integer({ max: array.length - i - 1 });
+      const j = i + this.integer({ max: array.length - i - 1 });
       const temp = p[i];
       p[i] = p[j];
       p[j] = temp;
@@ -146,7 +224,7 @@ export class Random {
     return p;
   }
 
-  static permutationsOf(set: number | Array<unknown> | Set<unknown>) {
+  permutationsOf(set: number | Array<unknown> | Set<unknown>) {
     let n =
       set instanceof Set ? set.size : Array.isArray(set) ? set.length : set;
     if (n === 0) return 1;
@@ -161,7 +239,7 @@ export class Random {
    *
    * @param array an array of values
    */
-  static derange<T>(array: T[]) {
+  derange<T>(array: T[]) {
     const mark = new Array<boolean>(array.length).fill(false);
 
     let i = array.length;
@@ -171,17 +249,17 @@ export class Random {
       if (!mark[i - 1]) {
         let j = 0;
         do {
-          j = Random.integer({ min: 1, max: i - 1 });
+          j = this.integer({ min: 1, max: i - 1 });
         } while (mark[j - 1]);
 
         const temp = array[j - 1];
         array[j - 1] = array[i - 1];
         array[i - 1] = temp;
 
-        const pivot = Math.random();
+        const pivot = this.#gen();
         if (
           pivot <
-          ((u - 1) * Random.derangementsOf(u - 2)) / Random.derangementsOf(u)
+          ((u - 1) * this.derangementsOf(u - 2)) / this.derangementsOf(u)
         ) {
           mark[j - 1] = true;
           u--;
@@ -200,15 +278,266 @@ export class Random {
    *
    * @param array an array of values
    */
-  static derangement<T>(array: T[]): T[] {
+  derangement<T>(array: T[]): T[] {
     const p = [...array];
-    Random.derange(p);
+    this.derange(p);
     return p;
   }
 
-  static derangementsOf(set: number | Array<unknown> | Set<unknown>) {
+  derangementsOf(set: number | Array<unknown> | Set<unknown>) {
     let n =
       set instanceof Set ? set.size : Array.isArray(set) ? set.length : set;
     return Math.floor((factorial(n) + 1) / Math.E);
+  }
+}
+
+class Mulberry32 extends GenericPRNG {
+  #seed: number;
+  constructor(seed: number) {
+    super(() => {
+      this.#seed |= 0;
+      this.#seed = (this.#seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(this.#seed ^ (this.#seed >>> 15), 1 | this.#seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    });
+    this.#seed = seed;
+  }
+}
+
+class SFC32 extends GenericPRNG {
+  #a: number;
+  #b: number;
+  #c: number;
+  #d: number;
+  constructor(a: number, b: number, c: number, d: number) {
+    super(() => {
+      this.#a |= 0;
+      this.#b |= 0;
+      this.#c |= 0;
+      this.#d |= 0;
+      const t = (((this.#a + this.#b) | 0) + this.#d) | 0;
+      this.#d = (this.#d + 1) | 0;
+      this.#a = this.#b ^ (this.#b >>> 9);
+      this.#b = (this.#c + (this.#c << 3)) | 0;
+      this.#c = (this.#c << 21) | (this.#c >>> 11);
+      this.#c = (this.#c + t) | 0;
+      return (t >>> 0) / 4294967296;
+    });
+    this.#a = a;
+    this.#b = b;
+    this.#c = c;
+    this.#d = d;
+  }
+}
+
+class SplitMix32 extends GenericPRNG {
+  #seed: number;
+  constructor(seed: number) {
+    super(() => {
+      this.#seed |= 0;
+      this.#seed = (this.#seed + 0x9e3779b9) | 0;
+      let t = this.#seed ^ (this.#seed >>> 16);
+      t = Math.imul(t, 0x21f0aaad);
+      t = t ^ (t >>> 15);
+      t = Math.imul(t, 0x735a2d97);
+      return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
+    });
+    this.#seed = seed;
+  }
+}
+
+class JSF32B extends GenericPRNG {
+  #a: number;
+  #b: number;
+  #c: number;
+  #d: number;
+  constructor(a: number, b: number, c: number, d: number) {
+    super(() => {
+      this.#a |= 0;
+      this.#b |= 0;
+      this.#c |= 0;
+      this.#d |= 0;
+      let t = (this.#a - ((this.#b << 27) | (this.#b >>> 5))) | 0;
+      this.#a = this.#b ^ ((this.#c << 17) | (c >>> 15));
+      this.#b = (this.#c + this.#d) | 0;
+      this.#c = (this.#d + t) | 0;
+      this.#d = (this.#a + t) | 0;
+      return (this.#d >>> 0) / 4294967296;
+    });
+    this.#a = a;
+    this.#b = b;
+    this.#c = c;
+    this.#d = d;
+  }
+}
+
+class GJRand32 extends GenericPRNG {
+  #a: number;
+  #b: number;
+  #c: number;
+  #d: number;
+  constructor(a: number, b: number, c: number, d: number) {
+    super(() => {
+      this.#a |= 0;
+      this.#b |= 0;
+      this.#c |= 0;
+      this.#d |= 0;
+      this.#a = (this.#a << 16) | (this.#a >>> 16);
+      this.#b = (this.#b + this.#c) | 0;
+      this.#a = (this.#a + this.#b) | 0;
+      this.#c = this.#c ^ this.#b;
+      this.#c = (this.#c << 11) | (this.#c >>> 21);
+      this.#b = this.#b ^ this.#a;
+      this.#a = (this.#a + this.#c) | 0;
+      this.#b = (this.#c << 19) | (this.#c >>> 13);
+      this.#c = (this.#c + this.#a) | 0;
+      this.#d = (this.#d + 0x96a5) | 0;
+      this.#b = (this.#b + this.#d) | 0;
+      return (this.#a >>> 0) / 4294967296;
+    });
+    this.#a = a;
+    this.#b = b;
+    this.#c = c;
+    this.#d = d;
+  }
+}
+
+export class Random {
+  static #prng = new GenericPRNG(Math.random);
+
+  constructor(..._: never) {
+    throw new Error(
+      "Random contains static methods only and is not meant to be constructed"
+    );
+  }
+
+  static Seedable = Mulberry32;
+  static SFC32 = SFC32;
+  static JSF32B = JSF32B;
+  static SplitMix32 = SplitMix32;
+  static Mulberry32 = Mulberry32;
+  static GJRand32 = GJRand32;
+
+  static bool() {
+    return Random.#prng.bool();
+  }
+
+  static natural(max: number = U32_MAX) {
+    return Random.#prng.natural(max);
+  }
+
+  static counting(max: number = U32_MAX) {
+    return Random.#prng.counting(max);
+  }
+
+  static u8() {
+    return Random.#prng.u8();
+  }
+
+  static u16() {
+    return Random.#prng.u16();
+  }
+
+  static u32() {
+    return Random.#prng.u32();
+  }
+
+  static i8() {
+    return Random.#prng.i8();
+  }
+
+  static i16() {
+    return Random.#prng.i16();
+  }
+
+  static i32() {
+    return Random.#prng.i32();
+  }
+
+  static integer(opts?: Partial<BoundedOptions>) {
+    return Random.#prng.integer(opts);
+  }
+
+  static float(opts?: Partial<BoundedOptions>) {
+    return Random.#prng.float(opts);
+  }
+
+  static dice(sides: number) {
+    return Random.#prng.dice(sides);
+  }
+
+  static unitVector(): { x: number; y: number } {
+    return Random.#prng.unitVector();
+  }
+
+  static sample<T>(options: T[] | Set<T>): T | undefined {
+    return Random.#prng.sample(options);
+  }
+
+  static take<T>(options: T[] | Set<T>): T | undefined {
+    return Random.#prng.take(options);
+  }
+
+  /**
+   * Shuffles a provided array in-place to a new, random permutation using the
+   * Fisher-Yates algorithm.
+   *
+   * @param array an array of values
+   */
+  static permute<T>(array: T[]) {
+    return Random.#prng.permute(array);
+  }
+
+  /**
+   * Shuffles a provided array and returns the random permutation as a new
+   * array using the Fisher-Yates algorithm.
+   *
+   * @param array array an array of values
+   */
+  static permutation<T>(array: T[]): T[] {
+    return Random.#prng.permutation(array);
+  }
+
+  /**
+   * Compute the number of unique permutations of a collection.
+   *
+   * @param set an {@link Array} or {@link Set}, or number representing its size
+   */
+  static permutationsOf(set: number | Array<unknown> | Set<unknown>) {
+    return Random.#prng.permutationsOf(set);
+  }
+
+  /**
+   * Shuffles a provided array in-place to a new, random derangement with no
+   * fixed points, per the algorithm described by Martínez, Conrado,
+   * Alois Panholzer, and Helmut Prodinger:
+   * https://epubs.siam.org/doi/pdf/10.1137/1.9781611972986.7
+   *
+   * @param array an array of values
+   */
+  static derange<T>(array: T[]) {
+    return Random.#prng.derange(array);
+  }
+
+  /**
+   * Shuffles a provided array and returns a new, random derangement with no
+   * fixed points, per the algorithm described by Martínez, Conrado,
+   * Alois Panholzer, and Helmut Prodinger:
+   * https://epubs.siam.org/doi/pdf/10.1137/1.9781611972986.7
+   *
+   * @param array an array of values
+   */
+  static derangement<T>(array: T[]): T[] {
+    return Random.#prng.derangement(array);
+  }
+
+  /**
+   * Compute the number of unique derangements of a collection.
+   *
+   * @param set an {@link Array} or {@link Set}, or number representing its size
+   */
+  static derangementsOf(set: number | Array<unknown> | Set<unknown>) {
+    return Random.#prng.derangementsOf(set);
   }
 }
