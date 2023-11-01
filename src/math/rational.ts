@@ -220,8 +220,6 @@ export class Rational
   }
 
   pow(exponent: number): Rational {
-    // TODO: support fractional exponents?
-    assertInteger(exponent);
     return new Rational(
       Math.pow(this.numerator, exponent),
       Math.pow(this.denominator, exponent)

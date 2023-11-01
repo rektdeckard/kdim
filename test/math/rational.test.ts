@@ -196,6 +196,11 @@ describe("Rational", () => {
       expect([p.numerator, p.denominator]).toStrictEqual([1, 64]);
     });
 
+    it("raises to a fractional exponent", () => {
+      const p = new Rational(1, 4).pow(1 / 2);
+      expect(p.toFraction()).toBe("1/2");
+    });
+
     // TODO: should we support negative exponents? Rational exponents?
     it.skip("raises to negative integer exponent", () => {
       const p = new Rational(1, 4).pow(-2);
@@ -383,7 +388,7 @@ describe("Rational", () => {
         n += 2;
       }
 
-      console.log(Pi)
+      console.log(Pi);
     });
   });
 });
