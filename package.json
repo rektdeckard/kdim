@@ -1,6 +1,6 @@
 {
   "name": "kdim",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Utility data stuctures, math, and types for JS",
   "author": {
     "name": "Tobias Fried",
