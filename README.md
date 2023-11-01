@@ -603,7 +603,7 @@ tree.remove(testPoint);
 tree.has(testPoint); // false
 ```
 
-> Note: by default, input datasets are shallowly copied during tree construction, and retained within the data structure. If desired, the underlying dataset may be used without copying, using the option `copy: false`;
+> **NOTE:** by default, input datasets are shallowly copied during tree construction, and retained within the data structure. If desired, the underlying dataset may be used without copying, using the option `copy: false`;
 
 ### BloomFilter
 
@@ -644,7 +644,7 @@ await filter.test({ name: "Phoebe Bridgers" }); // true
 await filter.test({ name: "Julia Jacklin" }); // false
 ```
 
-> Note: by default, `BloomFilter` uses a set of object hashers that considers two objects to have the same hash if all their properties are equal, therefore will consider structurally identical objects equal.
+> **NOTE:** by default, `BloomFilter` uses a set of object hashers that considers two objects to have the same hash if all their properties are equal, therefore will consider structurally identical objects equal.
 
 ### RingBuffer
 
@@ -741,7 +741,7 @@ clamp(0, 255, a); // 32
 clamp(0, 255, b); // 255
 ```
 
-> Note: throws a RangeError when the range is invalid, E.G. `min > max`.
+> **NOTE:** throws a RangeError when the range is invalid, E.G. `min > max`.
 
 ### lerp
 
@@ -766,7 +766,7 @@ const value = 0.4;
 const interpolated = lerp(1, 99, value); // 40.2
 ```
 
-> Note: throws a RangeError when the value is outside of `[0, 1]`
+> **NOTE:** throws a RangeError when the value is outside of `[0, 1]`
 
 ### gcf
 
@@ -789,7 +789,7 @@ import { gcf } from "kdim";
 gcf(45, 420); // 15
 ```
 
-> Note: throws a RangeError when `a` or `b` are non-integral.
+> **NOTE:** throws a RangeError when `a` or `b` are non-integral.
 
 ### lcm
 
@@ -812,7 +812,7 @@ import { lcm } from "kdim";
 lcm(6, 20); // 60
 ```
 
-> Note: throws a RangeError when `a` or `b` are non-integral.
+> **NOTE:** throws a RangeError when `a` or `b` are non-integral.
 
 ### trailingZeros
 
@@ -835,7 +835,7 @@ import { trailingZeros } from "kdim";
 trailingZeros(24); // 3
 ```
 
-> Note: throws a RangeError when `n` is non-integral.
+> **NOTE:** throws a RangeError when `n` is non-integral.
 
 ## Generators
 
@@ -901,7 +901,7 @@ const secretSantas = Random.derangement(friends); // Shuffled with no fixed poin
 Random.derangementsOf(friends); // 44: ways to match 5 people for secret santa
 ```
 
-> Note: Generators that take numeric arguments will throw if range is invalid (E.G. `min > max`), values are invalid (decimal number passed to integer generator), or other
+> **NOTE:** Generators that take numeric arguments will throw if range is invalid (E.G. `min > max`), values are invalid (decimal number passed to integer generator), or other
 
 ### Range
 
@@ -951,7 +951,7 @@ const descending = Range.of({ from: 43, to: 40 }); // [43, 42, 41, 40]
 
 By default, `from = 0` and `step = 1`, unless specified.
 
-> Note: throws an Error when given a negative `step` size; the sign of the step is determined by the direction of the range, E.G. `Math.sign(to - from)`.
+> **NOTE:** throws an Error when given a negative `step` size; the sign of the step is determined by the direction of the range, E.G. `Math.sign(to - from)`.
 
 #### Ranges of custom values via factory function
 
@@ -998,7 +998,7 @@ const deferred = Range.lazy({ to: 20 }, (n) => new Complex(-n, n - 5));
 const complexes = Array.from(deferred); // Only now are values produced
 ```
 
-> Note: Generators over infinite ranges _will_ lock up resources and crash the process if you attempt to convert them to an Array via `Array.from(gen)`, `[...gen]`, or other means.
+> **NOTE:** Generators over infinite ranges _will_ lock up resources and crash the process if you attempt to convert them to an Array via `Array.from(gen)`, `[...gen]`, or other means.
 
 ### Noise
 
@@ -1041,11 +1041,11 @@ type Noise3DFillOptions = {
   </p>
 </details>
 
-| Type           | Description                                  | Image                                                                                                     |
-| -------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Perlin         | `freq = 5`                                   | ![Animated GIF of Perlin noise](https://github.com/rektdeckard/kdim/blob/main/meta/perlin-5.gif?raw=true) |
-| Perlin fractal | `freq = 5` plus `freq = 40` 1/4 contribution | ![Animated GIF of Perlin noise](https://github.com/rektdeckard/kdim/blob/main/meta/perlin-5-fractal.gif?raw=true) |
-| Simplex | `freq = 5` | ![Animated GIF of Simplex noise](https://github.com/rektdeckard/kdim/blob/main/meta/simplex-5.gif?raw=true) |
+| Type           | Description                                                                                     | Image                                                                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Perlin         | `freq = 5`                                                                                      | ![Animated GIF of Perlin noise](https://github.com/rektdeckard/kdim/blob/main/meta/perlin-5.gif?raw=true)         |
+| Simplex        | `freq = 5`                                                                                      | ![Animated GIF of Simplex noise](https://github.com/rektdeckard/kdim/blob/main/meta/simplex-5.gif?raw=true)       |
+| Compound noise | Perlin of `freq = 5` added pixel-wise with Simplex of `freq = 40` contribution scaled by `0.25` | ![Animated GIF of Perlin noise](https://github.com/rektdeckard/kdim/blob/main/meta/perlin-5-fractal.gif?raw=true) |
 
 The `Noise` module contains various classes implementing `NoiseGenerator`:
 
@@ -1303,7 +1303,7 @@ const safeU8 = castInteger(u8); // 5
 const errF = castInteger(f); // Error: Values must be safe integers
 ```
 
-> Note: throws a RangeError if `n` has a fractional part, is not in safe integer range, or cannot be coerced from/to a number via `Number(n)` and `n.valueOf()`.
+> **NOTE:** throws a RangeError if `n` has a fractional part, is not in safe integer range, or cannot be coerced from/to a number via `Number(n)` and `n.valueOf()`.
 
 ### assertInteger
 
@@ -1328,7 +1328,7 @@ assertInteger(1, 2, 10); // ok
 assertInteger(7.89); // Error: Arguments must be integers
 ```
 
-> Note: throws a RangeError if any `number` has a fractional part, or is not in safe integer range.
+> **NOTE:** throws a RangeError if any `number` has a fractional part, or is not in safe integer range.
 
 ### assertNatural
 
@@ -1353,7 +1353,7 @@ assertNatural(1, 2, 10); // ok
 assertNatural(-1); // Error: Arguments must be natural numbers
 ```
 
-> Note: throws a RangeError if any `number` has a fractional part, or is not zero or greater.
+> **NOTE:** throws a RangeError if any `number` has a fractional part, or is not zero or greater.
 
 ### assertCounting
 
@@ -1378,7 +1378,7 @@ assertCounting(1, 2, 10); // ok
 assertCounting(0); // Error: Arguments must be counting numbers
 ```
 
-> Note: throws a RangeError if any `number` has a fractional part, or is not greater than zero.
+> **NOTE:** throws a RangeError if any `number` has a fractional part, or is not greater than zero.
 
 ### assertValidRange
 
