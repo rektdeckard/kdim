@@ -1,0 +1,8 @@
+{
+  "label": "Numerics",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Numeric data types useful for general-purpose math and in other modules of this library."
+  }
+}

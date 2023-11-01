@@ -1,0 +1,8 @@
+{
+  "label": "Generators",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Create values and series of values."
+  }
+}
