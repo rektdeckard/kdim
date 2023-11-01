@@ -1,4 +1,4 @@
-import type { Add, Sub, Mul, Div, Pow, Eq } from "./types";
+import type { Add, Sub, Mul, Div, Pow, Abs, Eq } from "./types";
 
 export class Float
   implements
@@ -8,6 +8,7 @@ export class Float
     Mul<[Float | Number], Float>,
     Div<[Float | Number], Float>,
     Pow<[Float | Number], Float>,
+    Abs<Float>,
     Eq<[Number]>
 {
   #value: number;
@@ -46,6 +47,11 @@ export class Float
 
   pow(exponent: Float | Number): Float {
     return new Float(this.#value ** exponent.valueOf());
+  }
+
+  abs(): Float {
+    if (Math.sign(this.#value) > 0) return this;
+    return new Float(Math.abs(this.#value));
   }
 
   eq(other: Float | Number): boolean {
