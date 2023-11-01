@@ -1,6 +1,6 @@
 import { uncheckedLerp } from "./transforms";
 
-// const MAX_ENTROPY = 2 ** 16;
+const MAX_ENTROPY = 2 ** 16;
 
 export type TypedArrayNoiseTarget = {
   data: Uint8ClampedArray;
@@ -89,7 +89,7 @@ function fillConfig(
       };
 }
 
-abstract class NoiseGenerator {
+export abstract class NoiseGenerator {
   abstract seed(seed: number): this;
   abstract xy(x: number, y: number): number;
   abstract xyz(x: number, y: number, z: number): number;
@@ -309,11 +309,12 @@ class Perlin implements NoiseGenerator {
 
   fill(target: NoiseTarget, options?: NoiseFillOptions): void {
     const { width, height, freq, setCell } = fillConfig(target, options);
+    const d = Math.min(width, height);
 
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        const sx = x / (width / freq);
-        const sy = y / (width / freq);
+        const sx = x / (d / freq);
+        const sy = y / (d / freq);
         const v =
           options?.z !== undefined
             ? this.xyz(sx, sy, options?.z)
@@ -561,11 +562,12 @@ class Simplex implements NoiseGenerator {
 
   fill(target: NoiseTarget, options?: NoiseFillOptions): void {
     const { width, height, freq, setCell } = fillConfig(target, options);
+    const d = Math.min(width, height);
 
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        const sx = x / (width / freq);
-        const sy = y / (width / freq);
+        const sx = x / (d / freq);
+        const sy = y / (d / freq);
         const v =
           options?.z !== undefined
             ? this.xyz(sx, sy, options?.z)
@@ -578,61 +580,84 @@ class Simplex implements NoiseGenerator {
   }
 }
 
-// class Color implements NoiseGenerator {
-//   constructor() {}
-
-//   seed(seed: number): this {
-//     return this;
-//   }
-
-//   xy(_x: number, _y: number): number {
-//     return uncheckedLerp(-1, 1, Math.random());
-//   }
-
-//   xyz(x: number, y: number, _z: number): number {
-//     return this.xy(x, y);
-//   }
-
-//   fill(target: NoiseTarget, options?: NoiseFillOptions): void {
-//     const { width, height, freq, setCell, typedArray } = fillConfig(
-//       target,
-//       options
-//     );
-
-//     if (typedArray) {
-//       const cycles = Math.ceil(typedArray.byteLength / MAX_ENTROPY);
-
-//       if (cycles === 1) {
-//         crypto.getRandomValues(typedArray);
-//       } else {
-//         for (let i = 0; i < cycles; i++) {
-//           crypto.getRandomValues(
-//             typedArray.slice(i * MAX_ENTROPY, (i + 1) * MAX_ENTROPY)
-//           );
-//         }
-//       }
-//     } else {
-//       throw new Error("NOT IMPLEMENTED");
-//     }
-
-//     // for (let x = 0; x < width; x++) {
-//     //   for (let y = 0; y < height; y++) {
-//     //     const sx = x / (width / freq);
-//     //     const sy = y / (width / freq);
-//     //     const v =
-//     //       options?.z !== undefined
-//     //         ? this.xyz(sx, sy, options?.z)
-//     //         : this.xy(sx, sy);
-
-//     //     const scaled = uncheckedLerp(0, 255, scale(v));
-//     //     setCell({ x, y, z: options?.z ?? 0, v: scaled });
-//     //   }
-//     // }
+// class Worley implements NoiseGenerator {
+//   constructor(seed?: number) {
+//     void seed;
 //   }
 // }
+
+class Color implements NoiseGenerator {
+  constructor(seed?: number) {
+    void seed;
+  }
+
+  seed(seed: number): this {
+    void seed;
+    return this;
+  }
+
+  xy(_x: number, _y: number): number {
+    return uncheckedLerp(-1, 1, Math.random());
+  }
+
+  xyz(x: number, y: number, _z: number): number {
+    return this.xy(x, y);
+  }
+
+  fill(target: NoiseTarget, options?: NoiseFillOptions): void {
+    const { width, height, freq, setCell, typedArray } = fillConfig(
+      target,
+      options
+    );
+    const d = Math.min(width, height);
+
+    if (typedArray) {
+      const l = typedArray.byteLength;
+      const cycles = Math.ceil(l / MAX_ENTROPY);
+
+      if (cycles === 1) {
+        crypto.getRandomValues(typedArray);
+      } else {
+        for (let i = 0; i < cycles; i++) {
+          const size =
+            (i + 1) * MAX_ENTROPY > l ? l - i * MAX_ENTROPY : MAX_ENTROPY;
+          const data = new Uint8ClampedArray(size);
+          crypto.getRandomValues(data);
+          typedArray.set(data, i * MAX_ENTROPY);
+        }
+      }
+
+      if (options?.set) {
+        for (let x = 0; x < width; x++) {
+          for (let y = 0; y < height; y++) {
+            const cell = (x + y * width) * 4;
+            options.set({ x, y, z: 0, v: typedArray[cell] });
+          }
+        }
+      }
+    } else {
+      throw new Error("NOT IMPLEMENTED");
+
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          const sx = x / (d / freq);
+          const sy = y / (d / freq);
+          const v =
+            options?.z !== undefined
+              ? this.xyz(sx, sy, options?.z ?? 0)
+              : this.xy(sx, sy);
+
+          const scaled = uncheckedLerp(0, 255, scale(v));
+          setCell({ x, y, z: options?.z ?? 0, v: scaled });
+        }
+      }
+    }
+  }
+}
 
 export const Noise = {
   Perlin,
   Simplex,
-//   Color,
+  // Worley,
+  Color,
 } as const;
