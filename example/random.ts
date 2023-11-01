@@ -1,4 +1,4 @@
-import van from "./van-1.2.3.min";
+import van from "./vendor/van-1.2.3.min";
 import { Random } from "../src";
 
 import "./index.css";

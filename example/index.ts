@@ -1,4 +1,4 @@
-import van, { ChildDom } from "./van-1.2.3.min";
+import van, { ChildDom } from "./vendor/van-1.2.3.min";
 
 import MatrixExample from "./matrix";
 import ComplexExample from "./complex";
