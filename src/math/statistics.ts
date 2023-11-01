@@ -152,13 +152,16 @@ export class Statistics {
     //     }
     // }
 
-    const counts = new Map<string, number>();
+    const counts = new Map<number, number>();
     for (let element of sorted) {
-      const str = element.toString();
-      if (counts.has(str)) {
-        counts.set(str, counts.get(str)! + 1);
+      if (typeof element === "number") {
+        if (counts.has(element)) {
+          counts.set(element, counts.get(element)! + 1);
+        } else {
+          counts.set(element, 1);
+        }
       } else {
-        counts.set(str, 1);
+        throw new Error("NOT IMPLEMENTED");
       }
     }
 

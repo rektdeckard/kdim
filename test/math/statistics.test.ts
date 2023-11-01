@@ -108,13 +108,13 @@ describe("Statistics", () => {
     });
   });
 
-  describe.skip("mode", () => {
+  describe("mode", () => {
     it("calculates mode of primitive numbers", () => {
       const data = [1, 5, 2, 3, 5, 7, 11, 3, 5, 4, 1];
       expect(Statistics.mode(data)).toStrictEqual([5]);
     });
 
-    it("calculates mode of object number types", () => {
+    it.skip("calculates mode of object number types", () => {
       const data = [
         new Complex(1, 0),
         new Complex(2, -3),

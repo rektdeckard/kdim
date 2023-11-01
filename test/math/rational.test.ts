@@ -377,6 +377,7 @@ describe("Rational", () => {
       expect(r.toFraction()).toBe("116/155");
     });
 
+    // FIXME: infinite loop in simplify()
     it.skip("can approximate Pi", () => {
       let Pi = new Rational(0);
       const four = new Rational(4);

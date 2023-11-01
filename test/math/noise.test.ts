@@ -178,7 +178,7 @@ describe("Noise", () => {
     });
   });
 
-  describe.skip("Color", () => {
+  describe.runIf("crypto" in globalThis).skip("Color", () => {
     describe("construct", () => {
       it("can construct a Color generator", () => {
         const g = new Noise.Color();

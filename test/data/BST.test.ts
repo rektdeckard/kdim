@@ -300,7 +300,7 @@ describe("BST", () => {
     });
   });
 
-  describe.skip("stress test", () => {
+  describe.runIf(process.env.CI)("stress test", () => {
     it("can insert many", () => {
       const size = 2 ** 14;
       const keyspace = 2 ** 16;

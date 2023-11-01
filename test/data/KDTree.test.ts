@@ -82,8 +82,7 @@ describe("KDTree", () => {
       expect(tree.tree?.point).not.toBeNull();
     });
 
-    // TODO: figure out how to type `Vec` to support this
-    it.skip("can be constructed from typed arrays", () => {
+    it("can be constructed from typed arrays", () => {
       const data = [
         new Int8Array(4).fill(1),
         new Int8Array(4).fill(2),
