@@ -38,6 +38,7 @@ A collection of interesting helpers, data structures, and utility types for mess
   - [objectHash](#objecthash)
 - [Analysis](#analysis)
   - [Comparator](#comparator)
+  - [Statistics](#statistics)
   - [Fourier](#fourier)
 - [Assertions](#assertions)
   - [castInteger](#castinteger)
@@ -1242,6 +1243,132 @@ abComp.eq({ id: 1, tag: "cool" }, { id: 1, foo: "bad" }); // false
 abComp.eq({ id: 1, tag: "cool" }, { id: 1, foo: "cool" }); // true
 abComp.gt({ id: 1, tag: "cool" }, { id: 1, tag: "neat" }); // true
 abComp.lte({ id: 5, tag: "ok" }, { id: 99, tag: "neat" }); // false
+```
+
+### Statistics
+
+Perform common statistical analyses on discrete numeric data. These data are typically `number[]`, but can also be object number types like [Complex](#complex) and [Rational](#rational), or your own custom number types that implement the `ArithmeticObject` interface listed in the class signature below.
+
+<details>
+<summary>Class Signature</summary>
+<p>
+
+```ts
+class Statistics {
+  static min<T extends Number & Arithmetic<T>>(data: T[]): T | undefined;
+  static max<T extends Number & Arithmetic<T>>(data: T[]): T | undefined;
+  static mean<T extends Number & Arithmetic<T>>(data: T[]): T | undefined;
+  static median<T extends Number & Arithmetic<T>>(data: T[]): T | undefined;
+  static mode<T extends Number & Arithmetic<T>>(
+    data: T[]
+  ): number[] | undefined;
+  static variance<T extends Number & Arithmetic<T>>(data: T[]): T | undefined;
+  static sd<T extends Number & Arithmetic<T>>(data: T[]): T | undefined;
+  static sem<T extends Number & Arithmetic<T>>(data: T[]): T | undefined;
+  static range<T extends Number & Arithmetic<T>>(data: T[]): T | undefined;
+  static iqr<T extends Number & Arithmetic<T>>(
+    data: T[],
+    options?: SummaryOptions
+  ): T | undefined;
+  static mad<T extends Number & Arithmetic<T>>(data: T[]): T | undefined;
+  static percentiles<T extends Number & Arithmetic<T>>(
+    data: T[],
+    options?: PercentileOptions | number[]
+  ): T[] | undefined;
+  static summary<T extends Number & Arithmetic<T>>(
+    data: T[],
+    options?: SummaryOptions
+  ): FiveNumberSummary<T> | undefined;
+}
+
+type ArithmethicObject<T extends Number> = Add<[T] | [number], T> &
+  Sub<[T] | [number], T> &
+  Mul<[T] | [number], T> &
+  Div<[T] | [number], T> &
+  Pow<[T] | [number], T> &
+  Eq<[T] | [number]> &
+  Abs<T>;
+
+type Arithmetic<T extends Number> = number | ArithmethicObject<T>;
+
+type FiveNumberSummary<T extends Number> = {
+  q0: T;
+  q1: T;
+  q2: T;
+  q3: T;
+  q4: T;
+};
+
+type InterpolationMethod =
+  | "midpoint"
+  | "nearest"
+  | "hrank"
+  | "lrank"
+  | "weighted"
+  | "outer";
+
+type SummaryOptions = {
+  method?: InterpolationMethod;
+};
+
+type PercentileOptions = SummaryOptions & {
+  p: number[];
+};
+
+const QUARTILES = [0, 0.25, 0.5, 0.75, 1];
+```
+
+  </p>
+</details>
+
+#### Central tendency
+
+Calculate common measures of centrality, including `mean`, `median`, `mode`.
+
+```ts
+import { Statistics } from "kdim";
+
+const data = [3, 2, 2, 9, 4, 7, 1]; // data does not need to be pre-sorted
+
+Statistics.mean(data); // 6
+Statistics.median(data); // 5
+Statistics.mode(data); // [2] (returned as an array for cases of multimodal data)
+```
+
+#### Dispersion
+
+Calculate common measures of statistical dispersion.
+
+```ts
+import { Statistics } from "kdim";
+
+const data = [2, 4, 4, 4, 5, 5, 7, 9];
+
+Statistics.sd(data); // Standard Deviation = 2
+Statistics.variance(data); // Variance = 4
+Statistics.sem(data); // Standard Error of Mean = 0.7071067811865475
+Statistics.range(data); // Range = 7
+Statistics.mad(data); // Mean Absolute Deviation = 0.5
+Statistics.iqr(data); // Inter-Quartile Range = 2
+```
+
+#### Interpolation methods
+
+Many of the statistical methods offer multiple `InterpolationMethod` strategies for interpolating between discrete data points.
+
+```ts
+import { Statistics } from "kdim";
+
+const data = [6, 7, 15, 36, 39, 40, 41, 42, 43, 47, 49];
+
+// Five-Number Summary using different interpolation strategies
+
+Statistics.summary(data); // default "midpoint"
+// { q0: 6, q1: 25.5, q2: 40, q3: 42.5, q4: 49 }
+Statistics.summary(data, { method: "nearest" });
+// { q0: 6, q1: 36, q2: 40, q3: 43, q4: 49 }
+Statistics.summary(data, { method: "lrank" });
+// { q0: 6, q1: 15, q2: 40, q3: 42, q4: 49 }
 ```
 
 ### Fourier

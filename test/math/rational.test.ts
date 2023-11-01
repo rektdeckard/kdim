@@ -379,17 +379,52 @@ describe("Rational", () => {
 
     // FIXME: infinite loop in simplify()
     it.skip("can approximate Pi", () => {
+      const ITERS = 10;
+
       let Pi = new Rational(0);
       const four = new Rational(4);
+
       let n = 1;
-      for (let i = 0; i < 10; i++) {
-        Pi = Pi.add(four.div(n));
+      for (let i = 0; i < ITERS; i++) {
+        const p1 = Pi.add(four.div(n));
+        if (
+          !Number.isInteger(p1.numerator) ||
+          !Number.isInteger(p1.denominator)
+        ) {
+          break;
+        } else {
+          Pi = p1;
+        }
         n += 2;
-        Pi = Pi.sub(four.div(n));
+        const p2 = Pi.sub(four.div(n));
+        if (
+          !Number.isInteger(p1.numerator) ||
+          !Number.isInteger(p1.denominator)
+        ) {
+          break;
+        } else {
+          Pi = p2;
+        }
         n += 2;
       }
 
-      console.log(Pi);
+      // const ITERS = 10;
+
+      // let i = 0;
+      // let n = 1;
+      // let sign = 1;
+
+      // let term = new Rational(1);
+      // while (i < ITERS) {
+      //   sign *= -1;
+      //   n += 2;
+      //   term = term.add(new Rational(1, sign * n));
+      // }
+
+      // const four = new Rational(4);
+      // const Pi = four.mul(term);
+
+      // console.log(Pi.toFraction());
     });
   });
 });
