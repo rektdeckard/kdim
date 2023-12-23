@@ -222,6 +222,21 @@ describe("KDTree", () => {
     });
   });
 
+  describe("size", () => {
+    it("reports correct size", () => {
+      const data = [
+        [0, 7, 15],
+        [1, 1, 0],
+        [6, 9, 420],
+        [8, 40, -12],
+        [31, 9, 33],
+      ];
+
+      const tree = new KDTree(data);
+      expect(tree.size()).toBe(5);
+    });
+  });
+
   describe("nearestNeighbor", () => {
     it("can find nearest neighbor in a simple 2d tree", () => {
       const data = [

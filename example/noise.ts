@@ -3,9 +3,23 @@ import { Noise, NoiseGenerator, uncheckedLerp } from "../src";
 
 const { button, input, label, div, canvas } = van.tags;
 
+function toSaturated(v: number): { r: number; g: number; b: number } {
+  // v: [0, 255]
+  // red: 0 -> 255, 0, 0
+  // yellow: 51
+  // green: 102
+  // cyan: 153
+  // blue: 204
+  // magenta: 255
+  const r = 255 - v;
+  const g = Math.abs(64 - v) * 4;
+  const b = Math.abs(128 - v) * 4;
+  return { r, g, b };
+}
+
 export default function Noises() {
-  const WIDTH = 800;
-  const HEIGHT = 600;
+  const WIDTH = 400;
+  const HEIGHT = 400;
   const DEFAULT_FREQ = 5;
 
   const c = canvas({ width: WIDTH, height: HEIGHT });
@@ -144,6 +158,27 @@ export default function Noises() {
     }
   }
 
+  let sign = 1;
+  function worleyNoise() {
+    g1.fill(d, {
+      z: t,
+      freq: freq.val,
+      set: ({ x, y, v }) => {
+        const cell = (x + y * d.width) * 4;
+        d.data[cell] = d.data[cell + 1] = d.data[cell + 2] = 255 - v * 2;
+        d.data[cell + 3] = 255;
+      },
+    });
+    ctx.putImageData(d, 0, 0);
+    t += 0.01 * sign;
+    if (t > 1 || t < 0) {
+      sign *= -1;
+    }
+    if (run.val) {
+      raf = requestAnimationFrame(worleyNoise);
+    }
+  }
+
   fn();
 
   return div(
@@ -248,6 +283,17 @@ export default function Noises() {
           },
         },
         "Color  (normalized)"
+      ),
+      button(
+        {
+          onclick: () => {
+            g1 = new Noise.Worley(freq.val);
+            cancelAnimationFrame(raf);
+            fn = worleyNoise;
+            fn();
+          },
+        },
+        "Worley"
       )
     )
   );

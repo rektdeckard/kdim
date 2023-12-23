@@ -98,6 +98,10 @@ export class KDTree<K extends number> implements Iterable<Vec<K>> {
     return this.nearestNeighbor(point).distance === 0;
   }
 
+  size(): number {
+    return this.#data.length;
+  }
+
   nearestNeighbor(point: Vec<K>): {
     point: Vec<K> | null;
     distance: number;

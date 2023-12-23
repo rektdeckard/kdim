@@ -1,3 +1,5 @@
+import { KDTree } from "../data";
+import { Range } from "./range";
 import { uncheckedLerp } from "./transforms";
 
 const MAX_ENTROPY = 2 ** 16;
@@ -90,7 +92,7 @@ function fillConfig(
 }
 
 export abstract class NoiseGenerator {
-  abstract seed(seed: number): this;
+  abstract seed(init: number): this;
   abstract xy(x: number, y: number): number;
   abstract xyz(x: number, y: number, z: number): number;
   abstract fill(target: NoiseTarget, options?: NoiseFillOptions): void;
@@ -580,11 +582,61 @@ class Simplex implements NoiseGenerator {
   }
 }
 
-// class Worley implements NoiseGenerator {
-//   constructor(seed?: number) {
-//     void seed;
-//   }
-// }
+class Worley implements NoiseGenerator {
+  #tree: KDTree<3>;
+
+  constructor(seed: number = 10) {
+    this.#tree = this.#generatePoints(seed);
+  }
+
+  #generatePoints(size: number): KDTree<3> {
+    const points = Range.of<[number, number, number]>(size, () => [
+      Math.random(),
+      Math.random(),
+      Math.random(),
+    ]);
+    return new KDTree<3>(points);
+  }
+
+  seed(size: number): this {
+    this.#tree = this.#generatePoints(size);
+    return this;
+  }
+
+  xy(x: number, y: number): number {
+    return this.xyz(x, y, 0);
+  }
+
+  xyz(x: number, y: number, z: number): number {
+    const nearest = this.#tree.nearestNeighbor([x, y, z])!.distance!;
+    return nearest;
+  }
+
+  fill(target: NoiseTarget, options?: NoiseFillOptions | undefined): void {
+    // call into WASM with buffer
+
+    const { width, height, freq, setCell } = fillConfig(target, options);
+    if (freq !== this.#tree.size() - 1) {
+      this.seed(freq);
+      console.log(freq, this.#tree.size() - 1);
+    }
+    const d = Math.min(width, height);
+
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const sx = x / d;
+        const sy = y / d;
+        const v =
+          options?.z !== undefined
+            ? this.xyz(sx, sy, options?.z)
+            : this.xy(sx, sy);
+
+        const scaled = uncheckedLerp(0, 255, v);
+        setCell({ x, y, z: options?.z ?? 0, v: scaled });
+      }
+    }
+  }
+}
 
 class Color implements NoiseGenerator {
   constructor(seed?: number) {
@@ -658,6 +710,6 @@ class Color implements NoiseGenerator {
 export const Noise = {
   Perlin,
   Simplex,
-  // Worley,
+  Worley,
   Color,
 } as const;

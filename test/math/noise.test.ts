@@ -268,4 +268,19 @@ describe("Noise", () => {
       });
     });
   });
+
+  describe("Worley", () => {
+    describe("construct", () => {
+      it("can construct a Worley generator", () => {
+        const g = new Noise.Worley();
+        expect(g).toBeDefined();
+      });
+
+      it.skip("can construct with a seed", () => {
+        const g = new Noise.Worley(13);
+        const f = new Noise.Worley(13);
+        expect(f.xy(2, 2)).toBe(g.xy(2, 2));
+      });
+    });
+  });
 });
