@@ -19,7 +19,8 @@ import {
   I32_MAX,
 } from "./constants";
 import { factorial, lerp } from "./transforms";
-import { BoundedOptions } from "./types";
+import type { BoundedOptions } from "./types";
+import type { Vec } from "../types";
 
 export interface PRNG {
   bool(): boolean;
@@ -33,7 +34,7 @@ export interface PRNG {
   i32(): number;
   integer(opts?: Partial<BoundedOptions>): number;
   dice(sides: number): number;
-  unitVector(): { x: number; y: number };
+  unitVector<N extends number>(n: N): Vec<N>;
   /**
    * Choose a random value from a collection of `T`.
    *
@@ -162,9 +163,28 @@ class GenericPRNG implements PRNG {
     return this.integer({ min: 1, max: sides });
   }
 
-  unitVector(): { x: number; y: number } {
-    const theta = this.#gen() * 2 * Math.PI;
-    return { x: Math.cos(theta), y: Math.sin(theta) };
+  unitVector<N extends number>(n: N = 2 as N): Vec<N> {
+    assertCounting(n);
+    const phi = this.#gen() * 2 * Math.PI;
+
+    if (n === 1) return [1] as Vec<N>;
+    if (n === 2) {
+      return [Math.cos(phi), Math.sin(phi)] as Vec<N>;
+    }
+    if (n === 3) {
+      const theta = Math.acos(1 - 2 * this.#gen());
+      return [
+        Math.cos(phi) * Math.sin(theta),
+        Math.sin(phi) * Math.sin(theta),
+        Math.cos(theta),
+      ] as Vec<N>;
+    }
+
+    const r = Array(n)
+      .fill(null)
+      .map(() => this.float({ min: -1, max: 1 }));
+    const mag = Math.sqrt(r.reduce((acc, curr) => acc + curr ** 2, 0));
+    return r.map((v) => v / mag) as Vec<N>;
   }
 
   sample<T>(options: T[] | Set<T>): T | undefined {
@@ -467,8 +487,8 @@ export class Random {
     return Random.#prng.dice(sides);
   }
 
-  static unitVector(): { x: number; y: number } {
-    return Random.#prng.unitVector();
+  static unitVector<N extends number = 2>(n: N = 2 as N): Vec<N> {
+    return Random.#prng.unitVector<N>(n);
   }
 
   static sample<T>(options: T[] | Set<T>): T | undefined {

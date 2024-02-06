@@ -199,9 +199,19 @@ describe("Random", () => {
   });
 
   describe("unitVector", () => {
-    it("returns a unit vector", () => {
-      const v = Random.unitVector();
-      expect(v.x ** 2 + v.y ** 2).toBeCloseTo(1, 5);
+    it("generates a unit vector", () => {
+      const [x, y] = Random.unitVector();
+      expect(x ** 2 + y ** 2).toBeCloseTo(1, 5);
+    });
+
+    it("generates higher-dimensional unit vectors", () => {
+      const [a, b, c, d, e] = Random.unitVector(5);
+      expect(a ** 2 + b ** 2 + c ** 2 + d ** 2 + e ** 2).toBeCloseTo(1, 5);
+
+      for (const vec of Range.lazy({ from: 3, to: 10 }, Random.unitVector)) {
+        const sqSum = vec.reduce((acc, curr) => acc + curr ** 2, 0);
+        expect(sqSum).toBeCloseTo(1, 5);
+      }
     });
   });
 
@@ -348,10 +358,9 @@ describe("Random", () => {
         expect(g.integer()).toBe(1968126296);
         expect(g.float()).toBe(0.7661116695962846);
         expect(g.dice(20)).toBe(10);
-        expect(g.unitVector()).toStrictEqual({
-          x: 0.9992225297660807,
-          y: 0.03942506826720617,
-        });
+        expect(g.unitVector()).toStrictEqual([
+          0.9992225297660807, 0.03942506826720617,
+        ]);
       });
     });
 
@@ -370,10 +379,9 @@ describe("Random", () => {
         expect(g.integer()).toBe(1844201441);
         expect(g.float()).toBe(0.43102536140941083);
         expect(g.dice(20)).toBe(10);
-        expect(g.unitVector()).toStrictEqual({
-          x: 0.18092356300312376,
-          y: -0.9834971603163146,
-        });
+        expect(g.unitVector()).toStrictEqual([
+          0.18092356300312376, -0.9834971603163146,
+        ]);
       });
     });
 
@@ -392,10 +400,9 @@ describe("Random", () => {
         expect(g.integer()).toBe(3941025327);
         expect(g.float()).toBe(0.8008981156162918);
         expect(g.dice(20)).toBe(14);
-        expect(g.unitVector()).toStrictEqual({
-          x: 0.983859500088544,
-          y: -0.178942683799926,
-        });
+        expect(g.unitVector()).toStrictEqual([
+          0.983859500088544, -0.178942683799926,
+        ]);
       });
     });
 
@@ -414,10 +421,9 @@ describe("Random", () => {
         expect(g.integer()).toBe(543207503);
         expect(g.float()).toBe(0.02261793869547546);
         expect(g.dice(20)).toBe(13);
-        expect(g.unitVector()).toStrictEqual({
-          x: 0.27612674275218246,
-          y: -0.9611212316545036,
-        });
+        expect(g.unitVector()).toStrictEqual([
+          0.27612674275218246, -0.9611212316545036,
+        ]);
       });
     });
   });

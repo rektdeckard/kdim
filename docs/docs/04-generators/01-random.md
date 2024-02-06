@@ -20,7 +20,7 @@ class Random {
   static i16(): number;
   static i32(): number;
 
-  static unitVector(): { x: number; y: number };
+  static unitVector<N extends number>(n: N): Vec<N>;
 
   static sample<T>(options: T[] | Set<T>): T | undefined;
   static take<T>(options: T[] | Set<T>): T | undefined;
