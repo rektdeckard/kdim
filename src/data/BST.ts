@@ -1,4 +1,4 @@
-import { Comparator, CompareFunction } from "./Comparator";
+import { Comparator, type CompareFunction } from "./Comparator";
 
 export class BSTNode<V> {
   value: V;

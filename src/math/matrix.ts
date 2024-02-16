@@ -389,8 +389,8 @@ export class Matrix<M extends number = number, N extends number = number>
     const otherMatrix =
       other instanceof Matrix
         ? other
-        : Matrix.isMatrixLike(other)
-        ? new Matrix<M, O>(other as MatrixLike<M, O>)
+        : Matrix.isMatrixLike<M, O>(other)
+        ? new Matrix<M, O>(other)
         : null;
 
     if (!otherMatrix) {

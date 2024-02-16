@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Noise } from "../../src";
+import { Noise, Random } from "../../src";
 
 describe("Noise", () => {
   describe("Perlin", () => {
@@ -9,16 +9,16 @@ describe("Noise", () => {
         expect(g).toBeDefined();
       });
 
-      it("can construct with a seed", () => {
-        const g = new Noise.Perlin(13);
-        const f = new Noise.Perlin(13);
+      it("can construct with a prng", () => {
+        const g = new Noise.Perlin(new Random.Seedable(13));
+        const f = new Noise.Perlin(new Random.Seedable(13));
         expect(f.xy(2, 2)).toBe(g.xy(2, 2));
       });
     });
 
     describe("xy", () => {
       it("can create noise", () => {
-        const g = new Noise.Perlin(0);
+        const g = new Noise.Perlin(new Random.Seedable(13));
         const [w, h] = [40, 40];
 
         for (let x = 0; x < w; x++) {
@@ -60,7 +60,7 @@ describe("Noise", () => {
           };
         }
 
-        const p = new Noise.Perlin(1);
+        const p = new Noise.Perlin().seed(1);
         const d = new ImageData(8, 8);
         p.fill(d);
         expect(Array.from(d.data)).toStrictEqual([
@@ -94,16 +94,16 @@ describe("Noise", () => {
         expect(g).toBeDefined();
       });
 
-      it("can construct with a seed", () => {
-        const g = new Noise.Simplex(13);
-        const f = new Noise.Simplex(13);
+      it("can construct with a prng", () => {
+        const g = new Noise.Simplex(new Random.Seedable(13));
+        const f = new Noise.Simplex(new Random.Seedable(13));
         expect(f.xy(2, 2)).toBe(g.xy(2, 2));
       });
     });
 
     describe("xy", () => {
       it("can create noise", () => {
-        const g = new Noise.Simplex(0);
+        const g = new Noise.Simplex().seed(0);
         const [w, h] = [40, 40];
 
         for (let x = 0; x < w; x++) {
@@ -151,7 +151,7 @@ describe("Noise", () => {
           };
         }
 
-        const p = new Noise.Simplex(1);
+        const p = new Noise.Simplex().seed(1);
         const d = new ImageData(8, 8);
         p.fill(d);
         expect(Array.from(d.data)).toStrictEqual([
@@ -178,16 +178,16 @@ describe("Noise", () => {
     });
   });
 
-  describe.runIf("crypto" in globalThis).skip("Color", () => {
+  describe.runIf("crypto" in globalThis)("Color", () => {
     describe("construct", () => {
       it("can construct a Color generator", () => {
         const g = new Noise.Color();
         expect(g).toBeDefined();
       });
 
-      it("can construct with a seed", () => {
-        const g = new Noise.Color(13);
-        const f = new Noise.Color(13);
+      it("can construct with a prng", () => {
+        const g = new Noise.Color(new Random.Seedable(13));
+        const f = new Noise.Color(new Random.Seedable(13));
         expect(f.xy(2, 2)).toBe(g.xy(2, 2));
       });
     });
@@ -276,9 +276,9 @@ describe("Noise", () => {
         expect(g).toBeDefined();
       });
 
-      it.skip("can construct with a seed", () => {
-        const g = new Noise.Worley(13);
-        const f = new Noise.Worley(13);
+      it("can construct with a prng", () => {
+        const g = new Noise.Worley(new Random.Seedable(13));
+        const f = new Noise.Worley(new Random.Seedable(13));
         expect(f.xy(2, 2)).toBe(g.xy(2, 2));
       });
     });

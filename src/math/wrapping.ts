@@ -1,5 +1,5 @@
 import { assertValidRange, castInteger } from "./assertions";
-import { Add, Sub, Eq, Bounded, BoundedOptions } from "./types";
+import type { Add, Sub, Eq, Bounded, BoundedOptions } from "./types";
 
 /**
  * A wrapping integer class implementing {@link Number}, allowing a value

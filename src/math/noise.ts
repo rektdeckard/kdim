@@ -1,5 +1,6 @@
 import { KDTree } from "../data";
 import { Range } from "./range";
+import { GenericPRNG, type PRNG } from "./random";
 import { uncheckedLerp } from "./transforms";
 
 const MAX_ENTROPY = 2 ** 16;
@@ -169,10 +170,10 @@ class Perlin implements NoiseGenerator {
     return t * t * t * (t * (t * 6 - 15) + 10);
   }
 
-  constructor(seed: number = Math.random()) {
+  constructor(rng: PRNG = new GenericPRNG()) {
     this.#perm = new Array(512);
     this.#grads = new Array(512);
-    this.seed(seed);
+    this.seed(rng.float());
   }
 
   ease(easingFn: EasingFunction): this {
@@ -333,10 +334,10 @@ class Simplex implements NoiseGenerator {
   #perm: number[];
   #grads: Gradient[];
 
-  constructor(seed: number = Math.random()) {
+  constructor(rng?: PRNG | null) {
     this.#perm = new Array(512);
     this.#grads = new Array(512);
-    this.seed(seed);
+    this.seed((rng || new GenericPRNG()).float());
   }
 
   static #F2 = 0.5 * (Math.sqrt(3) - 1);
@@ -584,16 +585,18 @@ class Simplex implements NoiseGenerator {
 
 class Worley implements NoiseGenerator {
   #tree: KDTree<3>;
+  #rng: PRNG;
 
-  constructor(seed: number = 10) {
-    this.#tree = this.#generatePoints(seed);
+  constructor(rng?: PRNG | null, size: number = 10) {
+    this.#rng = rng || new GenericPRNG();
+    this.#tree = this.#generatePoints(size);
   }
 
   #generatePoints(size: number): KDTree<3> {
     const points = Range.of<[number, number, number]>(size, () => [
-      Math.random(),
-      Math.random(),
-      Math.random(),
+      this.#rng.float({ min: 0, max: 1 }),
+      this.#rng.float({ min: 0, max: 1 }),
+      this.#rng.float({ min: 0, max: 1 }),
     ]);
     return new KDTree<3>(points);
   }
@@ -618,7 +621,6 @@ class Worley implements NoiseGenerator {
     const { width, height, freq, setCell } = fillConfig(target, options);
     if (freq !== this.#tree.size() - 1) {
       this.seed(freq);
-      console.log(freq, this.#tree.size() - 1);
     }
     const d = Math.min(width, height);
 
@@ -639,8 +641,10 @@ class Worley implements NoiseGenerator {
 }
 
 class Color implements NoiseGenerator {
-  constructor(seed?: number) {
-    void seed;
+  #rng: PRNG;
+
+  constructor(rng?: PRNG | null) {
+    this.#rng = rng || new GenericPRNG();
   }
 
   seed(seed: number): this {
@@ -649,7 +653,7 @@ class Color implements NoiseGenerator {
   }
 
   xy(_x: number, _y: number): number {
-    return uncheckedLerp(-1, 1, Math.random());
+    return this.#rng.float({ min: -1, max: 1 });
   }
 
   xyz(x: number, y: number, _z: number): number {

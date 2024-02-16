@@ -1,5 +1,5 @@
 import { Comparator } from "../data";
-import { Add, Sub, Mul, Div, Pow, Abs, Eq } from "./types";
+import type { Add, Sub, Mul, Div, Pow, Abs, Eq } from "./types";
 
 export type ArithmethicObject<T extends Number> = Add<[T] | [number], T> &
   Sub<[T] | [number], T> &
@@ -152,7 +152,7 @@ export class Statistics {
     //     }
     // }
 
-    const counts = new Map<number, number>();
+    const counts = new Map<string | number, number>();
     for (let element of sorted) {
       if (typeof element === "number") {
         if (counts.has(element)) {
@@ -162,6 +162,12 @@ export class Statistics {
         }
       } else {
         throw new Error("NOT IMPLEMENTED");
+        // const key = element.toString();
+        // if (counts.has(key)) {
+        //   counts.set(key, counts.get(key)! + 1);
+        // } else {
+        //   counts.set(key, 1);
+        // }
       }
     }
 

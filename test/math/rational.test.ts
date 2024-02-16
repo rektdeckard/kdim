@@ -424,7 +424,7 @@ describe("Rational", () => {
       // const four = new Rational(4);
       // const Pi = four.mul(term);
 
-      // console.log(Pi.toFraction());
+      console.log(Pi.toFraction());
     });
   });
 });

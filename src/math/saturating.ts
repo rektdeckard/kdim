@@ -1,6 +1,6 @@
 import { assertValidRange, castInteger } from "./assertions";
 import { uncheckedClamp } from "./transforms";
-import { Add, Sub, Mul, Div, Eq, Bounded, BoundedOptions } from "./types";
+import type { Add, Sub, Mul, Div, Eq, Bounded, BoundedOptions } from "./types";
 
 /**
  * A saturating (or clamping) integer class implementing {@link Number},

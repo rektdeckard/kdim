@@ -32,6 +32,7 @@ export interface PRNG {
   i8(): number;
   i16(): number;
   i32(): number;
+  float(opts?: Partial<BoundedOptions>): number;
   integer(opts?: Partial<BoundedOptions>): number;
   dice(sides: number): number;
   unitVector<N extends number>(n: N): Vec<N>;
@@ -93,10 +94,10 @@ export interface PRNG {
   derangementsOf(set: number | Array<unknown> | Set<unknown>): number;
 }
 
-class GenericPRNG implements PRNG {
+export class GenericPRNG implements PRNG {
   #gen: () => number;
 
-  constructor(gen: () => number) {
+  constructor(gen: () => number = Math.random) {
     this.#gen = gen;
   }
 
@@ -123,7 +124,7 @@ class GenericPRNG implements PRNG {
   }
 
   u32() {
-    return Math.floor(lerp(0, U32_MAX, this.#gen()));
+    return Math.floor(lerp(0, U32_MAX + 1, this.#gen()));
   }
 
   i8() {
@@ -139,8 +140,8 @@ class GenericPRNG implements PRNG {
   }
 
   integer(
-    { min = 0, max = U32_MAX - 1 }: Partial<BoundedOptions> = {
-      max: U32_MAX - 1,
+    { min = 0, max = U32_MAX }: Partial<BoundedOptions> = {
+      max: U32_MAX,
     }
   ) {
     assertInteger(min, max);

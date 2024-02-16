@@ -12,6 +12,7 @@ import {
   I16_MIN,
   I32_MAX,
   I32_MIN,
+  GenericPRNG,
 } from "../../src/math";
 
 describe("Random", () => {
@@ -351,11 +352,11 @@ describe("Random", () => {
         expect(g.counting()).toBe(2849391811);
         expect(g.u8()).toBe(121);
         expect(g.u16()).toBe(39571);
-        expect(g.u32()).toBe(644278945);
+        expect(g.u32()).toBe(644278946);
         expect(g.i8()).toBe(-16);
         expect(g.i16()).toBe(7699);
-        expect(g.i32()).toBe(-1410694584);
-        expect(g.integer()).toBe(1968126296);
+        expect(g.i32()).toBe(-1410694583);
+        expect(g.integer()).toBe(1968126297);
         expect(g.float()).toBe(0.7661116695962846);
         expect(g.dice(20)).toBe(10);
         expect(g.unitVector()).toStrictEqual([
@@ -372,11 +373,11 @@ describe("Random", () => {
         expect(g.counting()).toBe(865245964);
         expect(g.u8()).toBe(186);
         expect(g.u16()).toBe(59586);
-        expect(g.u32()).toBe(4227186911);
+        expect(g.u32()).toBe(4227186912);
         expect(g.i8()).toBe(5);
         expect(g.i16()).toBe(13983);
-        expect(g.i32()).toBe(-1145114559);
-        expect(g.integer()).toBe(1844201441);
+        expect(g.i32()).toBe(-1145114558);
+        expect(g.integer()).toBe(1844201442);
         expect(g.float()).toBe(0.43102536140941083);
         expect(g.dice(20)).toBe(10);
         expect(g.unitVector()).toStrictEqual([
@@ -393,11 +394,11 @@ describe("Random", () => {
         expect(g.counting()).toBe(2381172690);
         expect(g.u8()).toBe(50);
         expect(g.u16()).toBe(35504);
-        expect(g.u32()).toBe(746039829);
+        expect(g.u32()).toBe(746039830);
         expect(g.i8()).toBe(89);
         expect(g.i16()).toBe(18618);
-        expect(g.i32()).toBe(-1626494651);
-        expect(g.integer()).toBe(3941025327);
+        expect(g.i32()).toBe(-1626494650);
+        expect(g.integer()).toBe(3941025328);
         expect(g.float()).toBe(0.8008981156162918);
         expect(g.dice(20)).toBe(14);
         expect(g.unitVector()).toStrictEqual([
@@ -414,17 +415,50 @@ describe("Random", () => {
         expect(g.counting()).toBe(3247315120);
         expect(g.u8()).toBe(159);
         expect(g.u16()).toBe(23879);
-        expect(g.u32()).toBe(3698694198);
+        expect(g.u32()).toBe(3698694199);
         expect(g.i8()).toBe(121);
         expect(g.i16()).toBe(-11689);
-        expect(g.i32()).toBe(476263606);
-        expect(g.integer()).toBe(543207503);
+        expect(g.i32()).toBe(476263607);
+        expect(g.integer()).toBe(543207504);
         expect(g.float()).toBe(0.02261793869547546);
         expect(g.dice(20)).toBe(13);
         expect(g.unitVector()).toStrictEqual([
           0.27612674275218246, -0.9611212316545036,
         ]);
       });
+    });
+  });
+
+  describe("GenericPRNG", () => {
+    it("can be constructed without an argument", () => {
+      const rng = new GenericPRNG();
+      expect(rng).toBeDefined();
+      expect(rng.bool()).toBeTypeOf("boolean");
+      expect(rng.natural()).toBeGreaterThanOrEqual(0);
+      expect(rng.counting()).toBeGreaterThan(0);
+    });
+
+    it("can be constructed with a function argument", () => {
+      const unrng = new GenericPRNG(() => 0.5);
+      expect(unrng).toBeDefined();
+      expect(unrng.bool()).toBe(true);
+      expect(unrng.natural(0)).toBe(0);
+      expect(unrng.counting(2)).toBe(2);
+      expect(unrng.u8()).toBe((U8_MAX + 1) / 2);
+      expect(unrng.u16()).toBe((U16_MAX + 1) / 2);
+      expect(unrng.u32()).toBe((U32_MAX + 1) / 2);
+      expect(unrng.i8()).toBe(0);
+      expect(unrng.i16()).toBe(0);
+      expect(unrng.i32()).toBe(0);
+      expect(unrng.integer({ max: 40 })).toBe(20);
+      expect(unrng.integer({ min: 20, max: 40 })).toBe(30);
+      expect(unrng.float()).toBe(0.5);
+      expect(unrng.dice(20)).toBe(11);
+      {
+        const [x, y] = unrng.unitVector();
+        expect(x).toBeCloseTo(-1, 10);
+        expect(y).toBeCloseTo(0, 10);
+      }
     });
   });
 });

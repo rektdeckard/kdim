@@ -115,7 +115,7 @@ describe("Statistics", () => {
     });
 
     it.skip("calculates mode of object number types", () => {
-      const data = [
+      const complex = [
         new Complex(1, 0),
         new Complex(2, -3),
         new Complex(2, 5),
@@ -127,10 +127,22 @@ describe("Statistics", () => {
         new Complex(2, 5),
         new Complex(1, 0),
       ];
-      expect(Statistics.mode(data)!.map((c) => c.toString())).toStrictEqual([
+      expect(Statistics.mode(complex)!.map((c) => c.toString())).toStrictEqual([
         "1",
         "2+5i",
       ]);
+
+      const rationals = [
+        new Rational(1, 5),
+        new Rational(3, 22),
+        new Rational(2, 3),
+        new Rational(91, 12),
+        new Rational(2, 10),
+      ];
+      // FIXME: this should somehow return an array of Rationals
+      expect(
+        Statistics.mode<Rational>(rationals)!.map((r) => r.toString())
+      ).toStrictEqual(["0.2"]);
     });
   });
 
