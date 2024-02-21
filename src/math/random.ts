@@ -150,14 +150,14 @@ export class GenericPRNG implements PRNG {
   }
 
   float({ min, max }: Partial<BoundedOptions> = {}) {
-    if (min === undefined && max === undefined) {
+    if ((min === undefined && max === undefined) || (min === 0 && max === 1)) {
       return this.#gen();
     }
 
     const mn = min ?? 0,
       mx = max ?? I32_MAX;
     assertValidRange(mn, mx);
-    return lerp(mn, mx + 1, this.#gen());
+    return lerp(mn, mx, this.#gen());
   }
 
   dice(sides: number) {

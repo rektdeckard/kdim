@@ -1,6 +1,6 @@
 import { KDTree } from "../data";
 import { Range } from "./range";
-import { GenericPRNG, type PRNG } from "./random";
+import { Random, type PRNG } from "./random";
 import { uncheckedLerp } from "./transforms";
 
 const MAX_ENTROPY = 2 ** 16;
@@ -170,7 +170,7 @@ class Perlin implements NoiseGenerator {
     return t * t * t * (t * (t * 6 - 15) + 10);
   }
 
-  constructor(rng: PRNG = new GenericPRNG()) {
+  constructor(rng: PRNG = Random) {
     this.#perm = new Array(512);
     this.#grads = new Array(512);
     this.seed(rng.float());
@@ -337,7 +337,7 @@ class Simplex implements NoiseGenerator {
   constructor(rng?: PRNG | null) {
     this.#perm = new Array(512);
     this.#grads = new Array(512);
-    this.seed((rng || new GenericPRNG()).float());
+    this.seed((rng || Random).float());
   }
 
   static #F2 = 0.5 * (Math.sqrt(3) - 1);
@@ -588,15 +588,15 @@ class Worley implements NoiseGenerator {
   #rng: PRNG;
 
   constructor(rng?: PRNG | null, size: number = 10) {
-    this.#rng = rng || new GenericPRNG();
+    this.#rng = rng || Random;
     this.#tree = this.#generatePoints(size);
   }
 
   #generatePoints(size: number): KDTree<3> {
     const points = Range.of<[number, number, number]>(size, () => [
-      this.#rng.float({ min: 0, max: 1 }),
-      this.#rng.float({ min: 0, max: 1 }),
-      this.#rng.float({ min: 0, max: 1 }),
+      this.#rng.float(),
+      this.#rng.float(),
+      this.#rng.float(),
     ]);
     return new KDTree<3>(points);
   }
@@ -644,7 +644,7 @@ class Color implements NoiseGenerator {
   #rng: PRNG;
 
   constructor(rng?: PRNG | null) {
-    this.#rng = rng || new GenericPRNG();
+    this.#rng = rng || Random;
   }
 
   seed(seed: number): this {
