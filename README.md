@@ -872,6 +872,13 @@ class Random {
   static derange<T>(array: T[]): void;
   static derangement<T>(array: T[]): T[];
   static derangementsOf(set: number | Array<unknown> | Set<unknown>): number;
+
+  static Seedable = Mulberry32;
+  static SFC32 = SFC32;
+  static JSF32B = JSF32B;
+  static SplitMix32 = SplitMix32;
+  static Mulberry32 = Mulberry32;
+  static GJRand32 = GJRand32;
 }
 ```
 
@@ -902,7 +909,31 @@ const secretSantas = Random.derangement(friends); // Shuffled with no fixed poin
 Random.derangementsOf(friends); // 44: ways to match 5 people for secret santa
 ```
 
-> **NOTE:** Generators that take numeric arguments will throw if range is invalid (E.G. `min > max`), values are invalid (decimal number passed to integer generator), or other
+> **NOTE:** Generators that take numeric arguments will throw if range is invalid (E.G. `min > max`), values are invalid (decimal number passed to integer generator), or other.
+
+#### Seedable PRNGs
+
+In addition to the default, static random generator functions, there are a number of constructable, seedable PRNGs, each with slightly different characteristics:
+
+- `Seedable`: the default seedable PRNG, currently `Mulberry32`
+- `Mulberry32`: a fast, well-distributed PRNG with 32 bits of internal state and a reasonable period of ~4 billion
+- `SFC32`: a fast, chaotic PRNG with 128 bits of internal state and a large period
+- `GJRand32`: a chaotic PRNG with 128 bits of internal state and a massive period, with pretty good performance
+- `JSF32B`: yet another fast, chaotic PRNG with overall good characteristics
+- `SplitMix32`: the fastest PRNG here, with overall great characteristics, if relatively small seed and period
+
+```ts
+const m32 = new Random.Mulberry32(69);
+const sfc = new Random.SFC32(69, 420, 0, 42);
+const gjr = new Random.GJRand32(69, 420, 0, 42);
+const jsf = new Random.JSF32B(69, 420, 0, 42);
+const smx = new Random.SplitMix32(69);
+
+[m32, sfc, gjr, jsf, smx].map((rng) => rng.dice(20));
+// [ 16, 1, 1, 18, 10 ]
+```
+
+> **NOTE:** remember to construct these PRNGs! Unlike the `Random` singleton itself, each of these needs an initial seed, which can be chosen as a constant if predictable results are desired, or from another source of entropy, like `Math.random()`.
 
 ### Range
 
@@ -943,7 +974,7 @@ class Range {
 import { Range } from "kdim";
 
 // Produce simple numeric ranges
-const zeroToFive = Range.of(5); // [0, 1, 2, 3, 4, 5]
+const zeroToFive = Range.of(5); // [0, 1, 2, 3, 4]
 
 // Produce ranges with custom bounds and step sizes
 const oddNumbers = Range.of({ from: 1, to: 9, step: 2 }); // [1, 3, 5, 7, 9]
@@ -959,7 +990,7 @@ By default, `from = 0` and `step = 1`, unless specified.
 ```ts
 // Produce a range of custom values with a factory function
 type Foo = { bar: number };
-const foos = Range.of<Foo>(3, (n) => ({
+const foos = Range.of<Foo>(4, (n) => ({
   bar: n ** n,
 }));
 // [{ bar: 0 }, { bar: 1 }, { bar: 4 }, { bar: 27 }]
@@ -1003,7 +1034,8 @@ const complexes = Array.from(deferred); // Only now are values produced
 
 ### Noise
 
-Generate structured mathematical noise patterns like Perlin and Simplex, in both 2D and 3D spaces. Layer patterns for fractal noise fields. Efficiently fill `TypedArray` and `ImageData` buffers for use in graphics applications.
+Generate structured mathematical noise patterns like Perlin and Simplex, in both 2D and 3D spaces. Layer patterns for fractal noise fields. Efficiently fill `TypedArray` and `ImageData` buffers for use in graphics applications. These can be parametrized with [Seedable PRNGs](#seedable-prngs), or use the default (unseedable) PRNG based on `Math.random()`.
+
 
 <details>
   <summary>Abstract Class Signature</summary>
@@ -1126,6 +1158,48 @@ let z = 0;
 
   requestAnimationFrame(loop);
 })();
+```
+
+### Probability
+
+Sample weighted collections of elements to emulate complex probabilities, unfair dice, etc. These can be parametrized with [Seedable PRNGs](#seedable-prngs), or use the default (unseedable) PRNG based on `Math.random()`.
+
+<details>
+  <summary>Class Signature</summary>
+  <p>
+
+```ts
+class Probability<T> {
+  constructor(events: ProbabilityEvent<T>[] = [], rng?: PRNG | null);
+  event(event: ProbabilityEvent<T>): this;
+  sample(): ProbabilityEvent<T>;
+  take(): ProbabilityEvent<T>;
+}
+
+type ProbabilityEvent<T> = {
+  value: T;
+  p?: number;
+};
+```
+
+  </p>
+</details>
+
+```ts
+import { Probability } from "kdim";
+
+const events = [
+  { value: "common", p: 0.65 },
+  { value: "uncommon", p: 0.25 },
+  { value: "rare", p: 0.1 },
+];
+
+const d1 = new Probability(events);
+d1.sample().value; // "common", probably?
+
+const rng = new Random.Mulberry32(42);
+const d2 = new Probability(events, new Random.Seedable(42));
+d2.sample().value; // "uncommon", definitely.
 ```
 
 ### objectHash
