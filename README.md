@@ -1320,7 +1320,7 @@ const d = Fourier.dft(sample);
 // ]
 ```
 
-## Transforms
+## Utilities
 
 ### clamp
 
