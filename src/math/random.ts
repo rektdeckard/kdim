@@ -18,7 +18,7 @@ import {
   I32_MIN,
   I32_MAX,
 } from "./constants";
-import { factorial, lerp } from "./transforms";
+import { factorial, lerp } from "./utils";
 import type { BoundedOptions } from "./types";
 import type { Vec } from "../types";
 

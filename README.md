@@ -25,21 +25,22 @@ A collection of interesting helpers, data structures, and utility types for mess
   - [K-dimensional Tree](#kdtree)
   - [Bloom Filter](#bloomfilter)
   - [Ring Buffer](#ringbuffer)
-- [Transforms](#transforms)
+- [Generators](#generators)
+  - [Random](#random)
+  - [Range](#range)
+  - [Probability](#probability)
+  - [Noise](#noise)
+- [Analysis](#analysis)
+  - [Comparator](#comparator)
+  - [Statistics](#statistics)
+  - [Fourier](#fourier)
+- [Utils](#Utilities)
   - [clamp](#clamp)
   - [lerp](#lerp)
   - [gcf](#gcf)
   - [lcm](#lcm)
   - [trailingZeros](#trailingzeros)
-- [Generators](#generators)
-  - [Random](#random)
-  - [Range](#range)
-  - [Noise](#noise)
   - [objectHash](#objecthash)
-- [Analysis](#analysis)
-  - [Comparator](#comparator)
-  - [Statistics](#statistics)
-  - [Fourier](#fourier)
 - [Assertions](#assertions)
   - [castInteger](#castinteger)
   - [assertInteger](#assertinteger)
@@ -714,130 +715,6 @@ buff.dequeue(); // 24
 buff.drain(); // [36, 48];
 ```
 
-## Transforms
-
-### clamp
-
-Constrain a value to within a given range `[min, max]`.
-
-<details>
-  <summary>Function Signature</summary>
-  <p>
-
-```ts
-function clamp(min: number, max: number, value: number): number;
-```
-
-  </p>
-</details>
-
-```ts
-import { clamp } from "kdim";
-
-// Clamp values to [0, 255]
-const a = 32;
-const b = 300;
-
-clamp(0, 255, a); // 32
-clamp(0, 255, b); // 255
-```
-
-> **NOTE:** throws a RangeError when the range is invalid, E.G. `min > max`.
-
-### lerp
-
-Linear interpolation of a value in the range `[0, 1]` to a value in the range `[from, to]`.
-
-<details>
-  <summary>Function Signature</summary>
-  <p>
-
-```ts
-function lerp(from: number, to: number, value: number): number;
-```
-
-  </p>
-</details>
-
-```ts
-import { lerp } from "kdim";
-
-// Interpolate 0.4 in range [0,1] to range [1,99]
-const value = 0.4;
-const interpolated = lerp(1, 99, value); // 40.2
-```
-
-> **NOTE:** throws a RangeError when the value is outside of `[0, 1]`
-
-### gcf
-
-Find the Greatest Common Factor of two integers.
-
-<details>
-  <summary>Function Signature</summary>
-  <p>
-
-```ts
-function gcf(a: number, b: number): number;
-```
-
-  </p>
-</details>
-
-```ts
-import { gcf } from "kdim";
-
-gcf(45, 420); // 15
-```
-
-> **NOTE:** throws a RangeError when `a` or `b` are non-integral.
-
-### lcm
-
-Find the Least Common Multiple of two integers.
-
-<details>
-  <summary>Function Signature</summary>
-  <p>
-
-```ts
-function lcm(a: number, b: number): number;
-```
-
-  </p>
-</details>
-
-```ts
-import { lcm } from "kdim";
-
-lcm(6, 20); // 60
-```
-
-> **NOTE:** throws a RangeError when `a` or `b` are non-integral.
-
-### trailingZeros
-
-Compute the number of trailing zeros in a number's 32-bit representation, equivalent to its largest power-of-two divisor.
-
-<details>
-  <summary>Function Signature</summary>
-  <p>
-
-```ts
-function trailingZeros(n: number): number;
-```
-
-  </p>
-</details>
-
-```ts
-import { trailingZeros } from "kdim";
-
-trailingZeros(24); // 3
-```
-
-> **NOTE:** throws a RangeError when `n` is non-integral.
-
 ## Generators
 
 ### Random
@@ -1036,7 +913,6 @@ const complexes = Array.from(deferred); // Only now are values produced
 
 Generate structured mathematical noise patterns like Perlin and Simplex, in both 2D and 3D spaces. Layer patterns for fractal noise fields. Efficiently fill `TypedArray` and `ImageData` buffers for use in graphics applications. These can be parametrized with [Seedable PRNGs](#seedable-prngs), or use the default (unseedable) PRNG based on `Math.random()`.
 
-
 <details>
   <summary>Abstract Class Signature</summary>
   <p>
@@ -1200,37 +1076,6 @@ d1.sample().value; // "common", probably?
 const rng = new Random.Mulberry32(42);
 const d2 = new Probability(events, new Random.Seedable(42));
 d2.sample().value; // "uncommon", definitely.
-```
-
-### objectHash
-
-A hashing function for arbitrary objects and primitives that digests the value into a pseudo-unique base-16 hash string. Uses structural hashing, such that objects of identical structure will produce the same hash.
-
-<details>
-  <summary>Function Signature</summary>
-  <p>
-
-```ts
-type ObjectHashAlgorithm = "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
-
-type ObjectHashOptions = {
-  algorithm?: ObjectHashAlgorithm;
-};
-
-async function objectHash<T>(
-  obj: T,
-  options?: ObjectHashOptions
-): Promise<string>;
-```
-
-  </p>
-</details>
-
-```ts
-import { objectHash } from "kdim";
-
-const hash = await objectHash({ foo: 7, bar: [] }, { algorithm: "SHA-1" });
-// "1448bf86764e7ff7f9df0cb61b2d77c946ba854"
 ```
 
 ## Analysis
@@ -1473,6 +1318,161 @@ const d = Fourier.dft(sample);
 //   Complex { real: 0, imaginary: 0 },
 //   Complex { real: 1, imaginary: 1 },
 // ]
+```
+
+## Transforms
+
+### clamp
+
+Constrain a value to within a given range `[min, max]`.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function clamp(min: number, max: number, value: number): number;
+```
+
+  </p>
+</details>
+
+```ts
+import { clamp } from "kdim";
+
+// Clamp values to [0, 255]
+const a = 32;
+const b = 300;
+
+clamp(0, 255, a); // 32
+clamp(0, 255, b); // 255
+```
+
+> **NOTE:** throws a RangeError when the range is invalid, E.G. `min > max`.
+
+### lerp
+
+Linear interpolation of a value in the range `[0, 1]` to a value in the range `[from, to]`.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function lerp(from: number, to: number, value: number): number;
+```
+
+  </p>
+</details>
+
+```ts
+import { lerp } from "kdim";
+
+// Interpolate 0.4 in range [0,1] to range [1,99]
+const value = 0.4;
+const interpolated = lerp(1, 99, value); // 40.2
+```
+
+> **NOTE:** throws a RangeError when the value is outside of `[0, 1]`
+
+### gcf
+
+Find the Greatest Common Factor of two integers.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function gcf(a: number, b: number): number;
+```
+
+  </p>
+</details>
+
+```ts
+import { gcf } from "kdim";
+
+gcf(45, 420); // 15
+```
+
+> **NOTE:** throws a RangeError when `a` or `b` are non-integral.
+
+### lcm
+
+Find the Least Common Multiple of two integers.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function lcm(a: number, b: number): number;
+```
+
+  </p>
+</details>
+
+```ts
+import { lcm } from "kdim";
+
+lcm(6, 20); // 60
+```
+
+> **NOTE:** throws a RangeError when `a` or `b` are non-integral.
+
+### trailingZeros
+
+Compute the number of trailing zeros in a number's 32-bit representation, equivalent to its largest power-of-two divisor.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+function trailingZeros(n: number): number;
+```
+
+  </p>
+</details>
+
+```ts
+import { trailingZeros } from "kdim";
+
+trailingZeros(24); // 3
+```
+
+> **NOTE:** throws a RangeError when `n` is non-integral.
+
+### objectHash
+
+A hashing function for arbitrary objects and primitives that digests the value into a pseudo-unique base-16 hash string. Uses structural hashing, such that objects of identical structure will produce the same hash.
+
+<details>
+  <summary>Function Signature</summary>
+  <p>
+
+```ts
+type ObjectHashAlgorithm = "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
+
+type ObjectHashOptions = {
+  algorithm?: ObjectHashAlgorithm;
+};
+
+async function objectHash<T>(
+  obj: T,
+  options?: ObjectHashOptions
+): Promise<string>;
+```
+
+  </p>
+</details>
+
+```ts
+import { objectHash } from "kdim";
+
+const hash = await objectHash({ foo: 7, bar: [] }, { algorithm: "SHA-1" });
+// "1448bf86764e7ff7f9df0cb61b2d77c946ba854"
 ```
 
 ## Assertions

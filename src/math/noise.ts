@@ -1,7 +1,7 @@
 import { KDTree } from "../data";
 import { Range } from "./range";
 import { Random, type PRNG } from "./random";
-import { uncheckedLerp } from "./transforms";
+import { uncheckedLerp } from "./utils";
 
 const MAX_ENTROPY = 2 ** 16;
 
