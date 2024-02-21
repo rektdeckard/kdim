@@ -5,12 +5,12 @@ describe("Range", () => {
   describe("simple range", () => {
     it("constructs a simple range", () => {
       const r = Range.of(5);
-      expect(r).toStrictEqual([0, 1, 2, 3, 4, 5]);
+      expect(r).toStrictEqual([0, 1, 2, 3, 4]);
     });
 
     it("constructs a simple descending range", () => {
       const r = Range.of(-4);
-      expect(r).toStrictEqual([0, -1, -2, -3, -4]);
+      expect(r).toStrictEqual([0, -1, -2, -3]);
     });
 
     it("constructs a range from starting point", () => {
@@ -53,7 +53,7 @@ describe("Range", () => {
 
       expect(r[1].eq(new Complex(1))).toBe(true);
       expect(r[2].eq(new Complex(2))).toBe(true);
-      expect(r.map(Number)).toStrictEqual([0, 1, 2, 3]);
+      expect(r.map(Number)).toStrictEqual([0, 1, 2]);
     });
 
     it("constructs a descending range of Complex numbers with steps", () => {
@@ -67,7 +67,7 @@ describe("Range", () => {
   describe("functional constructor", () => {
     it("constructs a range of objects", () => {
       const r = Range.of(3, (n) => ({ val: n }));
-      expect(r).toStrictEqual([{ val: 0 }, { val: 1 }, { val: 2 }, { val: 3 }]);
+      expect(r).toStrictEqual([{ val: 0 }, { val: 1 }, { val: 2 }]);
     });
 
     it("constructs a descending range of objects with steps", () => {

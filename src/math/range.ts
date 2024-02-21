@@ -21,7 +21,7 @@ export class Range {
       from = 0,
       to = 0,
       step = 1,
-    } = typeof where === "object" ? where : { to: where };
+    } = typeof where === "object" ? where : { to: where - Math.sign(where) };
 
     if (from === to) {
       throw new Error("Range must be nonzero in size");
@@ -50,7 +50,7 @@ export class Range {
    * Produce an {@link Array} of values over a finite range.
    *
    * @param where A number or configuration object. When `where` is a number, range is
-   * inferred to be [0, `where`], with a step size of 1, or -1 if `where < 0`. When
+   * inferred to be [0, `where`), with a step size of 1, or -1 if `where < 0`. When
    * `where` is an object, it contains a `to` property, and optional `from` and `step`
    * properties, all numbers. If `step` is provided it must be positive, as the step
    * sign is inferred by the range direction.
@@ -61,7 +61,7 @@ export class Range {
    *
    * @example
    * // Producing a simple numeric range
-   * const list = Range.of(3); // [0, 1, 2, 3]
+   * const list = Range.of(3); // [0, 1, 2]
    *
    * @example
    * // Producing a range with specific bounds and step size
@@ -96,7 +96,7 @@ export class Range {
    * Produce a {@link Generator} of values over both finite and infinite ranges.
    *
    * @param where A number or configuration object. When `where` is a number, range is
-   * inferred to be [0, `where`], with a step size of 1, or -1 if `where < 0`. When
+   * inferred to be [0, `where`), with a step size of 1, or -1 if `where < 0`. When
    * `where` is an object, it contains a `to` property, and optional `from` and `step`
    * properties, all numbers. If `step` is provided it must be positive, as the step
    * sign is inferred by the range direction.

@@ -56,7 +56,7 @@ describe("dft", () => {
 
   it("computes dft of a real function", () => {
     // https://en.wikipedia.org/wiki/Discrete_Fourier_transform#/media/File:DFT_2sin(t)_+_cos(4t)_25_points.svg
-    const s = Range.of(24, (t) =>
+    const s = Range.of(25, (t) =>
       Complex.from(
         2 * Math.sin((2 * Math.PI * t) / 25) + Math.cos((8 * Math.PI * t) / 25)
       )
