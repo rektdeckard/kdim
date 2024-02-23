@@ -8,6 +8,10 @@ details {
   padding: 0.5em 0.5em 0;
 }
 
+canvas {
+  border: 1px solid #aaa;
+}
+
 summary {
   font-weight: bold;
   margin: -0.5em -0.5em 0;

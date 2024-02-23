@@ -320,7 +320,7 @@ class Mulberry32 extends GenericPRNG {
       this.#seed = (this.#seed + 0x6d2b79f5) | 0;
       let t = Math.imul(this.#seed ^ (this.#seed >>> 15), 1 | this.#seed);
       t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
     });
     this.#seed = seed;
   }
@@ -343,7 +343,7 @@ class SFC32 extends GenericPRNG {
       this.#b = (this.#c + (this.#c << 3)) | 0;
       this.#c = (this.#c << 21) | (this.#c >>> 11);
       this.#c = (this.#c + t) | 0;
-      return (t >>> 0) / 4294967296;
+      return (t >>> 0) / 0x100000000;
     });
     this.#a = a;
     this.#b = b;
@@ -362,7 +362,7 @@ class SplitMix32 extends GenericPRNG {
       t = Math.imul(t, 0x21f0aaad);
       t = t ^ (t >>> 15);
       t = Math.imul(t, 0x735a2d97);
-      return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
+      return ((t = t ^ (t >>> 15)) >>> 0) / 0x100000000;
     });
     this.#seed = seed;
   }
@@ -384,7 +384,7 @@ class JSF32B extends GenericPRNG {
       this.#b = (this.#c + this.#d) | 0;
       this.#c = (this.#d + t) | 0;
       this.#d = (this.#a + t) | 0;
-      return (this.#d >>> 0) / 4294967296;
+      return (this.#d >>> 0) / 0x100000000;
     });
     this.#a = a;
     this.#b = b;
@@ -415,7 +415,7 @@ class GJRand32 extends GenericPRNG {
       this.#c = (this.#c + this.#a) | 0;
       this.#d = (this.#d + 0x96a5) | 0;
       this.#b = (this.#b + this.#d) | 0;
-      return (this.#a >>> 0) / 4294967296;
+      return (this.#a >>> 0) / 0x100000000;
     });
     this.#a = a;
     this.#b = b;
