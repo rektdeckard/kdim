@@ -39,9 +39,9 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "ex": "vite serve ./example",
-    "ex:serve": "yarn run ex",
+    "ex:serve": "pnpm ex",
     "ex:build": "vite build ./example",
-    "ex:deploy": "yarn run ex:build && gh-pages -d ./example/dist"
+    "ex:deploy": "pnpm ex:build && gh-pages -d ./example/dist"
   },
   "devDependencies": {
     "@types/node": "18.11.18",
