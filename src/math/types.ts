@@ -22,6 +22,12 @@ export interface Mod<In extends any[], Out = In[0]> {
   mod(...modulus: In): Out;
 }
 
+export interface Trig<Out> {
+  sin(): Out;
+  cos(): Out;
+  tan(): Out;
+}
+
 export interface Abs<Out> {
   abs(): Out;
 }

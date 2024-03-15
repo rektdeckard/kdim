@@ -1,4 +1,4 @@
-import type { Add, Sub, Mul, Div, Pow, Abs, Eq } from "./types";
+import type { Add, Sub, Mul, Div, Pow, Trig, Abs, Eq } from "./types";
 
 export class Complex
   implements
@@ -8,6 +8,7 @@ export class Complex
     Mul<[Complex | Number], Complex>,
     Div<[Complex | Number], Complex>,
     Pow<[Number], Complex>,
+    Trig<Complex>,
     Abs<Complex>,
     Eq<[Complex | Number]>
 {
@@ -69,6 +70,24 @@ export class Complex
     }
 
     return acc;
+  }
+
+  sin(): Complex {
+    return new Complex(
+      Math.sin(this.real) * Math.cosh(this.imaginary),
+      Math.cos(this.real) * Math.sinh(this.imaginary)
+    );
+  }
+
+  cos(): Complex {
+    return new Complex(
+      Math.cos(this.real) * Math.cosh(this.imaginary),
+      -1 * Math.sin(this.real) * Math.sinh(this.imaginary)
+    );
+  }
+
+  tan(): Complex {
+    return this.sin().div(this.cos());
   }
 
   abs(): Complex {
