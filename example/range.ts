@@ -3,6 +3,7 @@ import { Range } from "../src";
 
 import "./index.css";
 
+const { h2 } = van.tags;
 const { math, mrow, mo, mi, mn } = van.tagsNS(
   "http://www.w3.org/1998/Math/MathML"
 );
@@ -39,5 +40,9 @@ function RangeDisplay(...args: RangeParams) {
 }
 
 export default function () {
-  return [RangeDisplay(5), RangeDisplay({ from: 13, to: 9 })];
+  return [
+    h2("Ranges and sequences"),
+    RangeDisplay(5),
+    RangeDisplay({ from: 13, to: 9 }),
+  ];
 }

@@ -1,6 +1,7 @@
 import van from "./vendor/van-1.2.3.min";
 import { Matrix } from "../src";
 
+const { h2 } = van.tags;
 const { math, mtr, mtd, mtable, msub, msup, mrow, mo, mi, mn } = van.tagsNS(
   "http://www.w3.org/1998/Math/MathML"
 );
@@ -81,6 +82,7 @@ function MDet() {
 
 export default function () {
   return [
+    h2("Matrix math"),
     MatrixDisplay({
       name: "S",
       matrix: new Matrix<2, 2>([
