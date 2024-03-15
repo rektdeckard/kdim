@@ -6,16 +6,46 @@ import type { Constructor, Factory } from "../helper";
  *
  * @throws an {@link Error} when attemping to construct. All methods are static.
  */
-export class Range {
-  constructor(..._: never) {
-    throw new Error(
-      "Range contains static methods only and is not meant to be constructed"
-    );
+export class Range implements Iterable<number> {
+  #from: number;
+  #to: number;
+  #step: number;
+
+  constructor(where: number | { from?: number; to: number; step?: number }) {
+    const { from, to, step } = Range.#config(where);
+    this.#from = from;
+    this.#to = to;
+    this.#step = step;
+  }
+
+  *[Symbol.iterator]() {
+    for (
+      let i = this.#from;
+      this.#from < this.#to ? i <= this.#to : i >= this.#to;
+      i += this.#step
+    ) {
+      yield i;
+    }
+  }
+
+  contains(value: number | Range): boolean {
+    const mmin = this.#step > 0 ? this.#from : this.#to;
+    const mmax = this.#step > 0 ? this.#to : this.#from;
+
+    if (value instanceof Range) {
+      const vmin = value.#step > 0 ? value.#from : value.#to;
+      const vmax = value.#step > 0 ? value.#to : value.#from;
+      return mmin <= vmin && mmax >= vmax;
+    }
+
+    return value >= mmin && value <= mmax;
   }
 
   static #config<N = number>(
     where: number | { from?: number; to: number; step?: number },
-    factory?: Constructor<N, [n: number]> | Factory<N, [n: number]>
+    factory?:
+      | Constructor<N, [n: number, index: number]>
+      | Factory<N, [n: number, index: number]>
   ) {
     let {
       from = 0,
@@ -37,11 +67,11 @@ export class Range {
       step *= -1;
     }
 
-    const produce: (i: number) => N = !factory
-      ? (i) => i as N
-      : isConstructor<N, [number]>(factory, from)
-      ? (i) => new factory(i)
-      : (i) => factory(i);
+    const produce: (n: number, index: number) => N = !factory
+      ? (n) => n as N
+      : isConstructor<N, [number, number]>(factory, from, 0)
+        ? (n, i) => new factory(n, i)
+        : (n, i) => factory(n, i);
 
     return { from, to, step, produce };
   }
@@ -80,13 +110,15 @@ export class Range {
    */
   static of<N = number>(
     where: number | { from?: number; to: number; step?: number },
-    factory?: Constructor<N, [n: number]> | Factory<N, [n: number]>
+    factory?:
+      | Constructor<N, [n: number, index?: number]>
+      | Factory<N, [n: number, index?: number]>
   ): N[] {
     const { from, to, step, produce } = Range.#config(where, factory);
 
     const values: N[] = [];
-    for (let i = from; from < to ? i <= to : i >= to; i += step) {
-      values.push(produce(i));
+    for (let i = from, j = 0; from < to ? i <= to : i >= to; i += step, j++) {
+      values.push(produce(i, j));
     }
 
     return values;
@@ -127,12 +159,14 @@ export class Range {
    */
   static *lazy<N = number>(
     where: number | { from?: number; to: number; step?: number },
-    factory?: Constructor<N, [n: number]> | Factory<N, [n: number]>
+    factory?:
+      | Constructor<N, [n: number, index?: number]>
+      | Factory<N, [n: number, index?: number]>
   ): Generator<N, void, void> {
     const { from, to, step, produce } = Range.#config(where, factory);
 
-    for (let i = from; from < to ? i <= to : i >= to; i += step) {
-      yield produce(i);
+    for (let i = from, j = 0; from < to ? i <= to : i >= to; i += step, j++) {
+      yield produce(i, j);
     }
   }
 }

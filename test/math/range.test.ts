@@ -39,7 +39,7 @@ describe("Range", () => {
       );
     });
 
-    it("throws when attempting to construct", () => {
+    it.skip("throws when attempting to construct", () => {
       // @ts-ignore
       expect(() => new Range(5)).toThrowError(
         "Range contains static methods only and is not meant to be constructed"
@@ -47,17 +47,43 @@ describe("Range", () => {
     });
   });
 
+  describe("range object", () => {
+    it("constructs a Range", () => {
+      const ra = new Range(5);
+      expect([...ra]).toStrictEqual([0, 1, 2, 3, 4]);
+
+      const rb = new Range({ from: 5, to: 9 });
+      expect([...rb]).toStrictEqual([5, 6, 7, 8, 9]);
+      expect(Array.from(rb)).toStrictEqual([5, 6, 7, 8, 9]);
+    });
+
+    it("compares ranges", () => {
+      const fingers = new Range({ from: 1, to: 10 });
+      expect(fingers.contains(5)).toBe(true);
+      expect(fingers.contains(11)).toBe(false);
+      expect(fingers.contains(-1)).toBe(false);
+      expect(fingers.contains(new Range({ from: 2, to: 7 }))).toBe(true);
+      expect(fingers.contains(new Range({ from: 7, to: 2 }))).toBe(true);
+      expect(fingers.contains(new Range({ from: 7, to: 11 }))).toBe(false);
+      expect(fingers.contains(new Range({ from: 7, to: -1 }))).toBe(false);
+      expect(fingers.contains(new Range({ from: -1, to: 10 }))).toBe(false);
+    });
+  });
+
   describe("complex constructor", () => {
     it("constructs a range of Complex numberss", () => {
       const r = Range.of(3, Complex);
 
-      expect(r[1].eq(new Complex(1))).toBe(true);
-      expect(r[2].eq(new Complex(2))).toBe(true);
+      expect(r[1].eq(new Complex(1, 1))).toBe(true);
+      expect(r[2].eq(new Complex(2, 2))).toBe(true);
       expect(r.map(Number)).toStrictEqual([0, 1, 2]);
     });
 
     it("constructs a descending range of Complex numbers with steps", () => {
-      const r = Range.of({ from: 25, to: 10, step: 2.5 }, Complex);
+      const r = Range.of(
+        { from: 25, to: 10, step: 2.5 },
+        (n) => new Complex(n)
+      );
       expect(r[1].eq(new Complex(22.5))).toBe(true);
       expect(r[4].eq(new Complex(15))).toBe(true);
       expect(r.map(Number)).toStrictEqual([25, 22.5, 20, 17.5, 15, 12.5, 10]);
@@ -66,20 +92,20 @@ describe("Range", () => {
 
   describe("functional constructor", () => {
     it("constructs a range of objects", () => {
-      const r = Range.of(3, (n) => ({ val: n }));
-      expect(r).toStrictEqual([{ val: 0 }, { val: 1 }, { val: 2 }]);
+      const r = Range.of(3, (n) => ({ n }));
+      expect(r).toStrictEqual([{ n: 0 }, { n: 1 }, { n: 2 }]);
     });
 
     it("constructs a descending range of objects with steps", () => {
-      const r = Range.of({ from: 25, to: 10, step: 2.5 }, (n) => ({ val: n }));
+      const r = Range.of({ from: 25, to: 10, step: 2.5 }, (n, i) => ({ n, i }));
       expect(r).toStrictEqual([
-        { val: 25 },
-        { val: 22.5 },
-        { val: 20 },
-        { val: 17.5 },
-        { val: 15 },
-        { val: 12.5 },
-        { val: 10 },
+        { i: 0, n: 25 },
+        { i: 1, n: 22.5 },
+        { i: 2, n: 20 },
+        { i: 3, n: 17.5 },
+        { i: 4, n: 15 },
+        { i: 5, n: 12.5 },
+        { i: 6, n: 10 },
       ]);
     });
 
@@ -131,7 +157,7 @@ describe("Range", () => {
     });
 
     it("can use a complex constructor", () => {
-      const gen = Range.lazy(5, Complex);
+      const gen = Range.lazy(5, (n) => new Complex(n));
       expect([...gen].every((c, i) => c.eq(i))).toBe(true);
     });
   });

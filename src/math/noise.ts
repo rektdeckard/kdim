@@ -60,36 +60,37 @@ function fillConfig(
           }),
       }
     : Array.isArray(target)
-    ? {
-        width: target[0].length,
-        height: target.length,
-        freq,
-        setCell:
-          set ??
-          (({ x, y, v }) => {
-            target[y][x] = v; // FIXME
-          }),
-      }
-    : {
-        width: target.width,
-        height:
-          target.data.length /
-          target.width /
-          (target as TypedArrayNoiseTarget).stride,
-        freq,
-        typedArray: (target as TypedArrayNoiseTarget).data,
-        setCell:
-          set ??
-          (({ x, y, v }) => {
-            const cell =
-              (x + y * target.width) * (target as TypedArrayNoiseTarget).stride;
-            target.data[cell] =
-              target.data[cell + 1] =
-              target.data[cell + 2] =
-                v;
-            target.data[cell + 3] = 255; // alpha
-          }),
-      };
+      ? {
+          width: target[0].length,
+          height: target.length,
+          freq,
+          setCell:
+            set ??
+            (({ x, y, v }) => {
+              target[y][x] = v; // FIXME
+            }),
+        }
+      : {
+          width: target.width,
+          height:
+            target.data.length /
+            target.width /
+            (target as TypedArrayNoiseTarget).stride,
+          freq,
+          typedArray: (target as TypedArrayNoiseTarget).data,
+          setCell:
+            set ??
+            (({ x, y, v }) => {
+              const cell =
+                (x + y * target.width) *
+                (target as TypedArrayNoiseTarget).stride;
+              target.data[cell] =
+                target.data[cell + 1] =
+                target.data[cell + 2] =
+                  v;
+              target.data[cell + 3] = 255; // alpha
+            }),
+        };
 }
 
 export abstract class NoiseGenerator {
@@ -593,7 +594,7 @@ class Worley implements NoiseGenerator {
   }
 
   #generatePoints(size: number): KDTree<3> {
-    const points = Range.of<[number, number, number]>(size, () => [
+    const points = Range.of<[number, number, number]>(size + 1, () => [
       this.#rng.float(),
       this.#rng.float(),
       this.#rng.float(),

@@ -158,6 +158,33 @@ describe("Complex", () => {
     });
   });
 
+  describe("sin", () => {
+    it("can compute the sine of a complex number", () => {
+      const a = new Complex(4, 7);
+      const s = a.sin();
+      expect(s.real).toBeCloseTo(-414.968, 3);
+      expect(s.imaginary).toBeCloseTo(-358.403, 3);
+    });
+  });
+
+  describe("cos", () => {
+    it("can compute the cosine of a complex number", () => {
+      const a = new Complex(7, -4);
+      const c = a.cos();
+      expect(c.real).toBeCloseTo(20.588, 3);
+      expect(c.imaginary).toBeCloseTo(17.929, 3);
+    });
+  });
+
+  describe("tan", () => {
+    it("can compute the tangent of a complex number", () => {
+      const a = new Complex(4, 3);
+      const t = a.tan();
+      expect(t.real).toBeCloseTo(0.005, 3);
+      expect(t.imaginary).toBeCloseTo(1.001, 3);
+    });
+  });
+
   describe("eq", () => {
     it("considers complex numbers with identical real and imaginary parts equal", () => {
       const a = new Complex(369, 50);
