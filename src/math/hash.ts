@@ -106,7 +106,6 @@ export function typeHasher(
   return {
     dispatch: function (value: any): string {
       const type: Type = value === null ? "null" : typeof value;
-      // console.log("[DEBUG] Dispatch: ", value, "->", type, " -> ", "_" + type);
       // @ts-ignore
       return this[("_" + type) as PropertyHasher](value);
     },

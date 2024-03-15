@@ -326,7 +326,7 @@ describe("Statistics", () => {
       ).toStrictEqual([0, 20, 55, 77.25, 100]);
     });
 
-    it("calculates percentiles of object number types", () => {});
+    it("calculates percentiles of object number types", () => { });
   });
 
   describe("summary", () => {
@@ -438,6 +438,52 @@ describe("Statistics", () => {
         q3: "13/24",
         q4: "5/8",
       });
+    });
+  });
+
+  describe("covariance", () => {
+    it("calculates covariance of primitive numbers", () => {
+      const data: [number, number][] = [
+        [3, 70],
+        [5, 80],
+        [2, 60],
+        [7, 90],
+        [4, 75],
+      ];
+      expect(Statistics.covariance(data)).toBe(21.25);
+    });
+
+    it("calculates covariance of object number types", () => {
+      const data: [Float, Float][] = [
+        [new Float(12.76), new Float(7.06)],
+        [new Float(12.35), new Float(6.81)],
+        [new Float(12.43), new Float(6.88)],
+        [new Float(12.70), new Float(6.98)],
+        [new Float(13.09), new Float(7.35)],
+      ];
+      expect(Statistics.covariance(data)!.valueOf()).toBeCloseTo(0.0604, 4);
+    });
+  });
+
+  describe("pcc", () => {
+    it("calculates Pearson Correlation Coefficient of primitive numbers", () => {
+      const data: [number, number][] = [
+        [2, 1],
+        [4, 3],
+        [6, 7],
+        [8, 13]
+      ];
+      expect(Statistics.pcc(data)).toBeCloseTo(0.976, 3);
+    });
+
+    it("calculates Peason Correlation Coefficient of object number types", () => {
+      const data: [Float, Float][] = [
+        [new Float(20), new Float(1500)],
+        [new Float(30), new Float(3000)],
+        [new Float(40), new Float(5000)],
+        [new Float(50), new Float(7500)],
+      ];
+      expect(Statistics.pcc(data)!.valueOf()).toBeCloseTo(0.994, 3)
     });
   });
 });

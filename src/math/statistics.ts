@@ -1,7 +1,8 @@
 import { Comparator } from "../data";
+import { ArrayTools } from "../data/builtin";
 import type { Add, Sub, Mul, Div, Pow, Abs, Eq } from "./types";
 
-export type ArithmethicObject<T extends Number> = Add<[T] | [number], T> &
+export type ArithmeticObject<T extends Number> = Add<[T] | [number], T> &
   Sub<[T] | [number], T> &
   Mul<[T] | [number], T> &
   Div<[T] | [number], T> &
@@ -9,7 +10,7 @@ export type ArithmethicObject<T extends Number> = Add<[T] | [number], T> &
   Eq<[T] | [number]> &
   Abs<T>;
 
-export type Arithmetic<T extends Number> = number | ArithmethicObject<T>;
+export type Arithmetic<T extends Number> = number | ArithmeticObject<T>;
 
 export type FiveNumberSummary<T extends Number> = {
   q0: T;
@@ -83,9 +84,9 @@ export class Statistics {
       return ((data as number[]).reduce((acc, curr) => acc + curr, 0) /
         data.length) as T;
     } else {
-      let sum = data[0] as ArithmethicObject<T>;
+      let sum = data[0] as ArithmeticObject<T>;
       for (let i = 1; i < data.length; i++) {
-        sum = sum.add(data[i]) as ArithmethicObject<T>;
+        sum = sum.add(data[i]) as ArithmeticObject<T>;
       }
       return sum.div(data.length);
     }
@@ -191,14 +192,14 @@ export class Statistics {
     const sqdv = (
       typeof mean === "number"
         ? data.map((v) => {
-            return Math.pow((v as number) - mean, 2);
-          })
+          return Math.pow((v as number) - mean, 2);
+        })
         : data.map((v) => {
-            const dv = (v as ArithmethicObject<T>).sub(
-              mean as T
-            ) as ArithmethicObject<T>;
-            return dv.mul(dv as T);
-          })
+          const dv = (v as ArithmeticObject<T>).sub(
+            mean as T
+          ) as ArithmeticObject<T>;
+          return dv.mul(dv as T);
+        })
     ) as T[];
 
     return Statistics.mean(sqdv);
@@ -249,7 +250,7 @@ export class Statistics {
     if (typeof min === "number" && typeof max === "number") {
       return (max - min) as T;
     } else {
-      return (max as ArithmethicObject<T>).sub(min as T);
+      return (max as ArithmeticObject<T>).sub(min as T);
     }
   }
 
@@ -269,7 +270,7 @@ export class Statistics {
     if (typeof summary.q1 === "number" && typeof summary.q3 === "number") {
       return (summary.q3 - summary.q1) as T;
     } else {
-      return (summary.q3 as ArithmethicObject<T>).sub(summary.q1 as T);
+      return (summary.q3 as ArithmeticObject<T>).sub(summary.q1 as T);
     }
   }
 
@@ -286,7 +287,7 @@ export class Statistics {
         return Math.abs((med as number) - v) as T;
       } else {
         return (
-          (med as ArithmethicObject<T>).sub(v) as ArithmethicObject<T>
+          (med as ArithmeticObject<T>).sub(v) as ArithmeticObject<T>
         ).abs();
       }
     });
@@ -390,9 +391,9 @@ export class Statistics {
             } else {
               return vi.add(
                 (
-                  (sorted[ri + 1] as ArithmethicObject<T>).sub(
+                  (sorted[ri + 1] as ArithmeticObject<T>).sub(
                     vi
-                  ) as ArithmethicObject<T>
+                  ) as ArithmeticObject<T>
                 ).mul(rf)
               );
             }
@@ -449,5 +450,90 @@ export class Statistics {
       q4: ps[4],
     };
     // }
+  }
+
+  /** Calculate the covariance of two jointly-distributed variables.
+   *
+   * @param data An array of tuples of [x, y] coordinates of numbers or object number types
+   * @returns The covariance, or `undefined` if less than 2 samples
+   */
+  static covariance<T extends Number & Arithmetic<T>>(data: [x: T, y: T][]): T | undefined {
+    const n = data.length;
+    if (n < 2) return;
+
+    const xs: T[] = new Array(n);
+    const ys: T[] = new Array(n);
+    for (let i = 0; i < n; i++) {
+      xs[i] = data[i][0];
+      ys[i] = data[i][1];
+    }
+
+    const mx = Statistics.mean(xs);
+    if (mx === undefined) return;
+    const my = Statistics.mean(ys);
+    if (my === undefined) return;
+
+    const dxs = xs.map((x) => typeof x === "number" ? x - (mx as number) : x.sub(mx));
+    const dys = ys.map((y) => typeof y === "number" ? y - (my as number) : y.sub(my));
+    const psum = dxs.reduce((acc, dx, i) => {
+      const dy = dys[i];
+      const product = typeof dy === "number" ? dy * (dx as number) : dy.mul(dx as typeof dy);
+      return typeof product === "number" ? product + (acc as number) : product.add(acc as typeof product);
+    }, 0);
+
+    return (typeof psum === "number" ? psum / (n - 1) : psum.div(n - 1)) as T;
+  }
+
+  static pcc<T extends Number & Arithmetic<T>>(data: [x: T, y: T][], type: "sample" | "population" = "sample"): T | undefined {
+    if (type === "population") {
+      const cov = Statistics.covariance(data);
+      if (cov === undefined) return;
+
+      const [xsd, ysd] = ArrayTools.unzip(data).map(Statistics.sd);
+      if (xsd === undefined || ysd === undefined) return;
+
+      return typeof cov === "number" ? ((cov / (+xsd * +ysd)) as T) : cov.div((xsd as ArithmeticObject<T>).mul(ysd));
+    } else {
+      const n = data.length;
+      if (n < 2) return;
+
+      const xs: T[] = new Array(n);
+      const ys: T[] = new Array(n);
+      for (let i = 0; i < n; i++) {
+        xs[i] = data[i][0];
+        ys[i] = data[i][1];
+      }
+
+      const mx = Statistics.mean(xs);
+      if (mx === undefined) return;
+      const my = Statistics.mean(ys);
+      if (my === undefined) return;
+
+      if (typeof mx === "number" && typeof my === "number") {
+        const dxs = (xs as number[]).map((x) => x - mx);
+        const sdx = dxs.reduce((acc, d) => (d ** 2) + acc, 0);
+        const dys = (ys as number[]).map((y) => y - my);
+        const sdy = dys.reduce((acc, d) => (d ** 2) + acc, 0);
+        const psum = dxs.reduce((acc, dx, i) => {
+          const dy = dys[i];
+          return acc + (dy * dx);
+        }, 0);
+
+        return psum / (Math.sqrt(sdx) * Math.sqrt(sdy)) as T;
+      } else if (typeof mx !== "number" && typeof my !== "number") {
+        const dxs = (xs as ArithmeticObject<T>[]).map((x) => x.sub(mx)) as ArithmeticObject<T>[];
+        const sdx = dxs.reduce<Arithmetic<T>>((acc, d) => (d.pow(2) as ArithmeticObject<T>).add(acc as number), 0);
+        const dys = (ys as ArithmeticObject<T>[]).map((y) => y.sub(my)) as ArithmeticObject<T>[];
+        const sdy = dys.reduce<Arithmetic<T>>((acc, d) => (d.pow(2) as ArithmeticObject<T>).add(acc as number), 0);
+        const psum = dxs.reduce<Arithmetic<T>>((acc, dx, i) => {
+          const dy = dys[i];
+          return (dy.mul(dx as T) as ArithmeticObject<T>).add(acc as T);
+        }, 0);
+
+        return ((psum as any).div(((sdx as any).pow(1 / 2) as ArithmeticObject<T>).mul((sdy as any).pow(1 / 2))));
+      } else {
+        throw new Error("Unreachable!");
+      }
+    }
   }
 }
