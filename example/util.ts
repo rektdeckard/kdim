@@ -76,8 +76,8 @@ export function saveFrames(
 }
 
 export async function saveVideo(
-  canvas: HTMLCanvasElement,
-  tick: (canvas: HTMLCanvasElement, f: number, dt: number) => void,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
+  tick: (canvas: HTMLCanvasElement | OffscreenCanvas, f: number, dt: number) => void,
   filename?: string,
   options: VideoOptions = {}
 ) {
@@ -89,8 +89,8 @@ export async function saveVideo(
   const fileName = filename ?? `output.${fileType}`;
 
   const ffmpeg = await (async () => {
-    const BASE_URL = "";
-    // const BASE_URL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
+    // const BASE_URL = "/kdim";
+    const BASE_URL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
     const ffmpeg = new FFmpeg();
     await ffmpeg.load({
       coreURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
@@ -102,7 +102,7 @@ export async function saveVideo(
 
   async function writeFrame(): Promise<void> {
     return new Promise((resolve, reject) => {
-      canvas.toBlob(
+      canvas instanceof HTMLCanvasElement ? canvas.toBlob(
         async (blob) => {
           if (!blob) {
             reject(new Error("Unable to create Blob from canvas"));
@@ -110,7 +110,12 @@ export async function saveVideo(
           const data = await fetchFile(blob!);
           await ffmpeg.writeFile(`${f}.png`, data);
           resolve();
-        }, "png", frameOptions.quality);
+        }, "png", frameOptions.quality) : (async () => {
+          const blob = await canvas.convertToBlob(frameOptions);
+          const data = await fetchFile(blob);
+          await ffmpeg.writeFile(`${f}.png`, data);
+          resolve();
+        })();
     });
   }
 

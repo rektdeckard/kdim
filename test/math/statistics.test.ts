@@ -326,7 +326,7 @@ describe("Statistics", () => {
       ).toStrictEqual([0, 20, 55, 77.25, 100]);
     });
 
-    it("calculates percentiles of object number types", () => { });
+    it("calculates percentiles of object number types", () => {});
   });
 
   describe("summary", () => {
@@ -458,7 +458,7 @@ describe("Statistics", () => {
         [new Float(12.76), new Float(7.06)],
         [new Float(12.35), new Float(6.81)],
         [new Float(12.43), new Float(6.88)],
-        [new Float(12.70), new Float(6.98)],
+        [new Float(12.7), new Float(6.98)],
         [new Float(13.09), new Float(7.35)],
       ];
       expect(Statistics.covariance(data)!.valueOf()).toBeCloseTo(0.0604, 4);
@@ -471,7 +471,7 @@ describe("Statistics", () => {
         [2, 1],
         [4, 3],
         [6, 7],
-        [8, 13]
+        [8, 13],
       ];
       expect(Statistics.pcc(data)).toBeCloseTo(0.976, 3);
     });
@@ -483,7 +483,7 @@ describe("Statistics", () => {
         [new Float(40), new Float(5000)],
         [new Float(50), new Float(7500)],
       ];
-      expect(Statistics.pcc(data)!.valueOf()).toBeCloseTo(0.994, 3)
+      expect(Statistics.pcc(data)!.valueOf()).toBeCloseTo(0.994, 3);
     });
   });
 });

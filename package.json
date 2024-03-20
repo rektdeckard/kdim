@@ -1,6 +1,6 @@
 {
   "name": "kdim",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "Utility data stuctures, math, and types for JS",
   "author": {
     "name": "Tobias Fried",
@@ -38,9 +38,10 @@
     "build": "vite build && tsc --emitDeclarationOnly",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "ex": "vite serve ./example",
+    "ex": "vite serve --force ./example",
     "ex:serve": "pnpm ex",
     "ex:build": "vite build ./example",
+    "ex:preview": "pnpm ex:build && vite preview ./example",
     "ex:deploy": "pnpm ex:build && gh-pages -d ./example/dist"
   },
   "devDependencies": {

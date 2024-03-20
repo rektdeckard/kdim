@@ -104,12 +104,12 @@ export function typeHasher(
   };
 
   return {
-    dispatch: function (value: any): string {
+    dispatch: function(value: any): string {
       const type: Type = value === null ? "null" : typeof value;
       // @ts-ignore
       return this[("_" + type) as PropertyHasher](value);
     },
-    _object: function (object: Record<any, any>) {
+    _object: function(object: Record<any, any>) {
       const pattern = /\[object (.*)\]/i;
       const objString = Object.prototype.toString.call(object);
       const test = pattern.exec(objString);
@@ -160,7 +160,7 @@ export function typeHasher(
 
         write("object:" + keys.length + ":");
         const self = this;
-        return keys.forEach(function (key) {
+        return keys.forEach(function(key) {
           self.dispatch(key);
           write(":");
           self.dispatch(object[key]);
@@ -168,7 +168,7 @@ export function typeHasher(
         });
       }
     },
-    _array: function (arr: Array<any>, unordered: boolean = false): any {
+    _array: function(arr: Array<any>, unordered: boolean = false): any {
       const self = this;
       write("array:" + arr.length + ":");
       if (!unordered || arr.length <= 1) {
@@ -202,95 +202,95 @@ export function typeHasher(
       entries.sort();
       return this._array(entries, false);
     },
-    _date: function (date: Date) {
+    _date: function(date: Date) {
       return write("date:" + date.toJSON());
     },
-    _symbol: function (sym: Symbol) {
+    _symbol: function(sym: Symbol) {
       return write("symbol:" + sym.toString());
     },
-    _error: function (err: Error) {
+    _error: function(err: Error) {
       return write("error:" + err.toString());
     },
-    _boolean: function (bool: boolean) {
+    _boolean: function(bool: boolean) {
       return write("bool:" + bool.toString());
     },
-    _string: function (string: string) {
+    _string: function(string: string) {
       write("string:" + string.length + ":");
       write(string.toString());
     },
-    _function: function (fn: Function) {
+    _function: function(fn: Function) {
       write("fn:");
       this.dispatch(fn.toString());
     },
-    _number: function (number: number) {
+    _number: function(number: number) {
       return write("number:" + number.toString());
     },
-    _xml: function (xml: string) {
+    _xml: function(xml: string) {
       return write("xml:" + xml.toString());
     },
-    _null: function () {
+    _null: function() {
       return write("Null");
     },
-    _undefined: function () {
+    _undefined: function() {
       return write("Undefined");
     },
-    _regexp: function (regex: RegExp) {
+    _regexp: function(regex: RegExp) {
       return write("regex:" + regex.toString());
     },
-    _uint8array: function (arr: Array<unknown>) {
+    _uint8array: function(arr: Array<unknown>) {
       write("uint8array:");
       return this.dispatch(Array.prototype.slice.call(arr));
     },
-    _uint8clampedarray: function (arr: Uint8ClampedArray) {
+    _uint8clampedarray: function(arr: Uint8ClampedArray) {
       write("uint8clampedarray:");
       return this.dispatch(Array.prototype.slice.call(arr));
     },
-    _int8array: function (arr: Int8Array) {
+    _int8array: function(arr: Int8Array) {
       write("int8array:");
       return this.dispatch(Array.prototype.slice.call(arr));
     },
-    _uint16array: function (arr: Uint16Array) {
+    _uint16array: function(arr: Uint16Array) {
       write("uint16array:");
       return this.dispatch(Array.prototype.slice.call(arr));
     },
-    _int16array: function (arr: Int16Array) {
+    _int16array: function(arr: Int16Array) {
       write("int16array:");
       return this.dispatch(Array.prototype.slice.call(arr));
     },
-    _uint32array: function (arr: Uint32Array) {
+    _uint32array: function(arr: Uint32Array) {
       write("uint32array:");
       return this.dispatch(Array.prototype.slice.call(arr));
     },
-    _int32array: function (arr: Int32Array) {
+    _int32array: function(arr: Int32Array) {
       write("int32array:");
       return this.dispatch(Array.prototype.slice.call(arr));
     },
-    _float32array: function (arr: Float32Array) {
+    _float32array: function(arr: Float32Array) {
       write("float32array:");
       return this.dispatch(Array.prototype.slice.call(arr));
     },
-    _float64array: function (arr: Float64Array) {
+    _float64array: function(arr: Float64Array) {
       write("float64array:");
       return this.dispatch(Array.prototype.slice.call(arr));
     },
-    _arraybuffer: function (arr: ArrayBuffer) {
+    _arraybuffer: function(arr: ArrayBuffer) {
       write("arraybuffer:");
       return this.dispatch(new Uint8Array(arr));
     },
-    _url: function (url: URL) {
+    _url: function(url: URL) {
       return write("url:" + url.toString());
     },
-    _map: function (map: Map<unknown, unknown>) {
+    _map: function(map: Map<unknown, unknown>) {
       write("map:");
       var arr = Array.from(map);
       return this._array(arr, options.unorderedSets !== false);
     },
-    _set: function (set: Set<unknown>) {
+    _set: function(set: Set<unknown>) {
       write("set:");
       var arr = Array.from(set);
       return this._array(arr, options.unorderedSets !== false);
     },
-    _file: function (file: File) {
+    _file: function(file: File) {
       write("file:");
       return this.dispatch([
         file.name,
@@ -299,65 +299,65 @@ export function typeHasher(
         file.lastModified,
       ]);
     },
-    _blob: function () {
+    _blob: function() {
       throw Error("Hashing Blob objects is currently not supported.");
     },
-    _domwindow: function () {
+    _domwindow: function() {
       return write("domwindow");
     },
-    _bigint: function (number: BigInt) {
+    _bigint: function(number: BigInt) {
       return write("bigint:" + number.toString());
     },
     /* Node.js standard native objects */
-    _process: function () {
+    _process: function() {
       return write("process");
     },
-    _timer: function () {
+    _timer: function() {
       return write("timer");
     },
-    _pipe: function () {
+    _pipe: function() {
       return write("pipe");
     },
-    _tcp: function () {
+    _tcp: function() {
       return write("tcp");
     },
-    _udp: function () {
+    _udp: function() {
       return write("udp");
     },
-    _tty: function () {
+    _tty: function() {
       return write("tty");
     },
-    _statwatcher: function () {
+    _statwatcher: function() {
       return write("statwatcher");
     },
-    _securecontext: function () {
+    _securecontext: function() {
       return write("securecontext");
     },
-    _connection: function () {
+    _connection: function() {
       return write("connection");
     },
-    _zlib: function () {
+    _zlib: function() {
       return write("zlib");
     },
-    _context: function () {
+    _context: function() {
       return write("context");
     },
-    _nodescript: function () {
+    _nodescript: function() {
       return write("nodescript");
     },
-    _httpparser: function () {
+    _httpparser: function() {
       return write("httpparser");
     },
-    _dataview: function () {
+    _dataview: function() {
       return write("dataview");
     },
-    _signal: function () {
+    _signal: function() {
       return write("signal");
     },
-    _fsevent: function () {
+    _fsevent: function() {
       return write("fsevent");
     },
-    _tlswrap: function () {
+    _tlswrap: function() {
       return write("tlswrap");
     },
   } as const;
