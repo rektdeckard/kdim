@@ -6,7 +6,7 @@ import { INTERPOLATORS } from "./color";
 import { saveFrames, saveVideo } from "./util.ts";
 import { Complex } from "../src";
 
-const ENABLE_CAPTURE = true;
+const ENABLE_CAPTURE = false;
 
 const { canvas, p, h2, h3 } = van.tags;
 const { math, msup, mrow, mo, mi, mn } = van.tagsNS(
@@ -56,7 +56,7 @@ function Mandelbrot() {
   };
   const PARAMS = { ...DEFAULT_PARAMS };
 
-  const canv = canvas({
+  let canv: HTMLCanvasElement | OffscreenCanvas = canvas({
     width: WIDTH,
     height: HEIGHT,
     class: "grabbable",
@@ -87,10 +87,12 @@ function Mandelbrot() {
         zoom: PARAMS.zoom,
         stride: PARAMS.stride,
         iterations: PARAMS.iterations,
+        exponent: PARAMS.mandel_exponent,
+        c: PARAMS.julia_c,
       });
     },
   });
-  const ctx = canv.getContext("2d")!;
+  let ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D = canv.getContext("2d")!;
 
   const pane = new Pane({ title: "Parameters" });
   const tab = pane.addTab({
@@ -100,13 +102,13 @@ function Mandelbrot() {
     label: "c",
     x: { min: -1, max: 1 },
     y: { min: -1, max: 1 },
-  });
+  }).on("change", draw);
   tab.pages[1].addBinding(PARAMS, "mandel_exponent", {
     label: "exponent",
     min: 2,
     max: 10,
     step: 1,
-  });
+  }).on("change", draw);
   tab.on("select", draw);
   pane.addBlade({ view: "separator" });
   pane.addBinding(PARAMS, "iterations", {
@@ -114,20 +116,20 @@ function Mandelbrot() {
     max: 100,
     step: 1,
     format: (v) => v.toFixed(0),
-  });
+  }).on("change", draw);
   pane.addBinding(PARAMS, "stride", {
     min: 1,
     max: 100,
     step: 1,
     format: (v) => v.toFixed(0),
-  });
+  }).on("change", draw);
   pane.addBinding(PARAMS, "scale", {
     options: Object.keys(INTERPOLATORS).reduce(
       (acc, key) => ({ ...acc, [key]: key }),
       {}
     ),
-  });
-  pane.addBinding(PARAMS, "invert");
+  }).on("change", draw);
+  pane.addBinding(PARAMS, "invert").on("change", draw);
   pane.addBlade({ view: "separator" });
   pane.addButton({ title: "Reset" }).on("click", reset);
 
@@ -148,65 +150,104 @@ function Mandelbrot() {
       //   PARAMS.julia_c = { x: -0.1838235, y: -0.6681985 };
       // }
 
+      // {
+      //   tab.pages[1].selected = true;
+      //   tab.pages[0].selected = false;
+      //   PARAMS.iterations = 100;
+      //   PARAMS.stride = 1;
+      //   PARAMS.offset = { x: -19.754255103824594, y: 22.3536824833637 };
+      //   PARAMS.zoom = 0.18129028535257674;
+      //   PARAMS.mandel_exponent = 2;
+      //   PARAMS.scale = "Spectral";
+      //   PARAMS.invert = true;
+      // }
+
+      // {
+      //   tab.pages[0].selected = true;
+      //   tab.pages[1].selected = false;
+      //   PARAMS.iterations = 100;
+      //   PARAMS.stride = 1;
+      //   PARAMS.offset = { x: -3.1557671462338437, y: 0.45462455886752356 };
+      //   PARAMS.zoom = 0.04624599826929624;
+      //   PARAMS.scale = "RdYlBu";
+      //   PARAMS.invert = true;
+      //   PARAMS.julia_c = { x: -0.22058823529411764, y: -0.7270220588235294 };
+      // }
+
       {
-        tab.pages[1].selected = true;
-        tab.pages[0].selected = false;
-        PARAMS.iterations = 100;
+        tab.pages[0].selected = true;
+        tab.pages[1].selected = false;
+        PARAMS.iterations = 200;
         PARAMS.stride = 1;
-        PARAMS.offset = { x: -19.754255103824594, y: 22.3536824833637 };
-        PARAMS.zoom = 0.18129028535257674;
-        PARAMS.mandel_exponent = 2;
-        PARAMS.scale = "Magma";
+        PARAMS.offset = { x: -0.08185745207194693, y: 0.02633283452359185 };
+        PARAMS.zoom = 0.002475803738526237;
+        PARAMS.scale = "Earthen";
+        PARAMS.invert = true;
+        PARAMS.julia_c = { x: -0.20588235294117652, y: 0.8318014705882353 };
       }
+
 
       draw();
 
+      canv = new OffscreenCanvas(WIDTH, HEIGHT);
+      ctx = canv.getContext("2d")!;
       saveVideo(canv, () => {
         draw();
         const { x, y } = PARAMS.offset;
         PARAMS.zoom *= ZOOM_SCALE;
         PARAMS.offset = { x: x * ZOOM_SCALE, y: y * ZOOM_SCALE };
-      }, undefined, { fps: 10, quality: 1 });
+      }, undefined, { fps: 30, count: 600, quality: 1 });
     });
   }
 
-  pane.on("change", draw);
+  function mandelbrot(iterations: number, scale: number, exponent: number) {
+    return function(x: number, y: number) {
+      const c = new Complex(
+        (x / WIDTH) * scale - scale / 2,
+        (y / HEIGHT) * scale - scale / 2
+      );
+      let z = Complex.from(c);
 
-  function divergesIn(x: number, y: number) {
-    const scale = 4 / PARAMS.zoom;
-    const c = new Complex(
-      (x / WIDTH) * scale - scale / 2,
-      (y / HEIGHT) * scale - scale / 2
-    );
-    let z = Complex.from(c);
-
-    if (tab.pages[1].selected) {
-      // MANDELBROT
-      for (let i = 0; i < PARAMS.iterations; i++) {
-        z = z.pow(PARAMS.mandel_exponent).add(c);
+      for (let i = 0; i < iterations; i++) {
+        z = z.pow(exponent).add(c);
         if (Math.sqrt(z.real ** 2 + z.imaginary ** 2) > 2) {
           return i;
         }
       }
-    } else {
-      // JULIA
-      for (let i = 0; i < PARAMS.iterations; i++) {
-        z = z.pow(2).add(new Complex(PARAMS.julia_c.x, PARAMS.julia_c.y));
-        if (Math.sqrt(z.real ** 2 + z.imaginary ** 2) > 2) {
-          return i;
-        }
-      }
+
+      return iterations;
     }
-    return PARAMS.iterations;
+  }
+
+  function julia(iterations: number, scale: number, c: Complex) {
+    return function(x: number, y: number) {
+      let z = new Complex(
+        (x / WIDTH) * scale - scale / 2,
+        (y / HEIGHT) * scale - scale / 2
+      );
+
+      for (let i = 0; i < PARAMS.iterations; i++) {
+        z = z.pow(2).add(c);
+        if (Math.sqrt(z.real ** 2 + z.imaginary ** 2) > 2) {
+          return i;
+        }
+      }
+      return iterations;
+    }
   }
 
   function draw() {
     const { x: offsetX, y: offsetY } = PARAMS.offset;
     const interpolate = INTERPOLATORS[PARAMS.scale];
+    const scale = 4 / PARAMS.zoom;
+    const algo = tab.pages[0].selected
+      ? julia(PARAMS.iterations, scale, new Complex(PARAMS.julia_c.x, PARAMS.julia_c.y))
+      : mandelbrot(PARAMS.iterations, scale, PARAMS.mandel_exponent);
 
+    let i: number;
     for (let y = 0; y < HEIGHT; y += PARAMS.stride) {
       for (let x = 0; x < WIDTH; x += PARAMS.stride) {
-        const i = divergesIn(
+        i = algo(
           x + offsetX + PARAMS.stride / 2,
           y + offsetY + PARAMS.stride / 2
         );

@@ -5,6 +5,6 @@ export default defineConfig({
   //   dynamicImportVarsOptions: {
   //     exclude: []
   //   } },
-  // optimizeDeps: { exclude: ["worker.js"] },
+  optimizeDeps: { exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"] },
   base: "https://rektdeckard.github.io/kdim/",
 });
