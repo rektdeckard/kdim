@@ -70,9 +70,7 @@ export class KDTree<K extends number> implements Iterable<Vec<K>> {
       this.#dimensions = point.length;
     } else if (this.#dimensions !== point.length) {
       throw new TypeError(
-        `Point [${point}] has ${point.length} dimensions, but should have ${
-          this.#dimensions
-        }`
+        `Point [${point}] has ${point.length} dimensions, but should have ${this.#dimensions}`
       );
     }
 

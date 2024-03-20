@@ -24,10 +24,10 @@ type MatrixResult<
 > = I extends number
   ? Matrix<M, N>
   : I extends MatrixOperand<infer O, infer P>
-  ? N extends O
-    ? Matrix<M, P>
-    : never
-  : never;
+    ? N extends O
+      ? Matrix<M, P>
+      : never
+    : never;
 
 export type MTXOptions = {
   format?: "coordinate" | "array";
@@ -390,8 +390,8 @@ export class Matrix<M extends number = number, N extends number = number>
       other instanceof Matrix
         ? other
         : Matrix.isMatrixLike<M, O>(other)
-        ? new Matrix<M, O>(other)
-        : null;
+          ? new Matrix<M, O>(other)
+          : null;
 
     if (!otherMatrix) {
       throw new Error("Argument is not matrix-like.");

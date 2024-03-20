@@ -12,20 +12,12 @@ export class Complex
     Abs<Complex>,
     Eq<[Complex | Number]>
 {
-  #r: number;
-  #i: number;
+  real: number;
+  imaginary: number;
 
   constructor(real: number = 0, imaginary: number = 0) {
-    this.#r = real;
-    this.#i = imaginary;
-  }
-
-  get real() {
-    return this.#r;
-  }
-
-  get imaginary(): number {
-    return this.#i;
+    this.real = real;
+    this.imaginary = imaginary;
   }
 
   static from<N extends Complex | Number>(init: N): Complex {
@@ -91,8 +83,8 @@ export class Complex
   }
 
   abs(): Complex {
-    if (Math.sign(this.#r) === Math.sign(this.#i)) return this;
-    return new Complex(Math.abs(this.#r), Math.abs(this.#i));
+    if (Math.sign(this.real) === Math.sign(this.imaginary)) return this;
+    return new Complex(Math.abs(this.real), Math.abs(this.imaginary));
   }
 
   eq(...other: [Number | Complex]): boolean {

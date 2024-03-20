@@ -86,8 +86,8 @@ export class Rational
     return base instanceof Rational
       ? base
       : typeof base === "string"
-      ? Rational.parse(base)
-      : new Rational(base, opt);
+        ? Rational.parse(base)
+        : new Rational(base, opt);
   }
 
   static parse(fraction: string): Rational {
@@ -275,8 +275,8 @@ export class Rational
       format === "nospace"
         ? "/"
         : format === "unicode"
-        ? FRACTION_SLASH
-        : " / ";
+          ? FRACTION_SLASH
+          : " / ";
 
     if (!mixed) {
       return `${this.numerator}${separator}${this.denominator}`;
