@@ -2,15 +2,15 @@ import type { Add, Sub, Mul, Div, Pow, Trig, Abs, Eq } from "./types";
 
 export class Complex
   implements
-  Number,
-  Add<[Complex | Number], Complex>,
-  Sub<[Complex | Number], Complex>,
-  Mul<[Complex | Number], Complex>,
-  Div<[Complex | Number], Complex>,
-  Pow<[Number], Complex>,
-  Trig<Complex>,
-  Abs<number>,
-  Eq<[Complex | Number]>
+    Number,
+    Add<[Complex | Number], Complex>,
+    Sub<[Complex | Number], Complex>,
+    Mul<[Complex | Number], Complex>,
+    Div<[Complex | Number], Complex>,
+    Pow<[Number], Complex>,
+    Trig<Complex>,
+    Abs<number>,
+    Eq<[Complex | Number]>
 {
   real: number;
   imaginary: number;
@@ -112,14 +112,15 @@ export class Complex
   }
 
   toString(_radix?: number | undefined): string {
-    return `${this.real === 0 && this.imaginary !== 0 ? "" : this.real}${this.imaginary !== 0
-      ? (this.imaginary === 1
-        ? "+"
-        : this.imaginary.toLocaleString("en-US", {
-          signDisplay: this.real === 0 ? "auto" : "always",
-        })) + "i"
-      : ""
-      }`;
+    return `${this.real === 0 && this.imaginary !== 0 ? "" : this.real}${
+      this.imaginary !== 0
+        ? (this.imaginary === 1
+            ? "+"
+            : this.imaginary.toLocaleString("en-US", {
+                signDisplay: this.real === 0 ? "auto" : "always",
+              })) + "i"
+        : ""
+    }`;
   }
 
   toLocaleString(locales?: unknown, options?: unknown): string;

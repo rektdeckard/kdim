@@ -18,11 +18,11 @@ import type { Add, Sub, Eq, Bounded, BoundedOptions } from "./types";
  */
 export class Wrapping
   implements
-  Bounded,
-  Number,
-  Add<[Number], Wrapping>,
-  Sub<[Number], Wrapping>,
-  Eq<[Number]>
+    Bounded,
+    Number,
+    Add<[Number], Wrapping>,
+    Sub<[Number], Wrapping>,
+    Eq<[Number]>
 {
   private _max: number;
   private _min: number;

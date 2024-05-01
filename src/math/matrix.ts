@@ -7,15 +7,15 @@ export type MatrixOperand<M extends number, N extends number> =
 
 export type SubmatrixOptions =
   | {
-    removeRows: number[];
-    removeCols: number[];
-    xywh?: never;
-  }
+      removeRows: number[];
+      removeCols: number[];
+      xywh?: never;
+    }
   | {
-    xywh: [number, number] | [number, number, number, number];
-    removeRows?: never;
-    removeCols?: never;
-  };
+      xywh: [number, number] | [number, number, number, number];
+      removeRows?: never;
+      removeCols?: never;
+    };
 
 type MatrixResult<
   M extends number,
@@ -24,10 +24,10 @@ type MatrixResult<
 > = I extends number
   ? Matrix<M, N>
   : I extends MatrixOperand<infer O, infer P>
-  ? N extends O
-  ? Matrix<M, P>
-  : never
-  : never;
+    ? N extends O
+      ? Matrix<M, P>
+      : never
+    : never;
 
 export type MTXOptions = {
   format?: "coordinate" | "array";

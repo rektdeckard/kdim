@@ -44,53 +44,53 @@ function fillConfig(
 } {
   return "ImageData" in globalThis && target instanceof ImageData
     ? {
-      width: target.width,
-      height: target.height,
-      freq,
-      typedArray: target.data,
-      setCell:
-        set ??
-        (({ x, y, v }) => {
-          const cell = (x + y * target.width) * 4;
-          target.data[cell] =
-            target.data[cell + 1] =
-            target.data[cell + 2] =
-            v;
-          target.data[cell + 3] = 255; // alpha
-        }),
-    }
-    : Array.isArray(target)
-      ? {
-        width: target[0].length,
-        height: target.length,
-        freq,
-        setCell:
-          set ??
-          (({ x, y, v }) => {
-            target[y][x] = v; // FIXME
-          }),
-      }
-      : {
         width: target.width,
-        height:
-          target.data.length /
-          target.width /
-          (target as TypedArrayNoiseTarget).stride,
+        height: target.height,
         freq,
-        typedArray: (target as TypedArrayNoiseTarget).data,
+        typedArray: target.data,
         setCell:
           set ??
           (({ x, y, v }) => {
-            const cell =
-              (x + y * target.width) *
-              (target as TypedArrayNoiseTarget).stride;
+            const cell = (x + y * target.width) * 4;
             target.data[cell] =
               target.data[cell + 1] =
               target.data[cell + 2] =
-              v;
+                v;
             target.data[cell + 3] = 255; // alpha
           }),
-      };
+      }
+    : Array.isArray(target)
+      ? {
+          width: target[0].length,
+          height: target.length,
+          freq,
+          setCell:
+            set ??
+            (({ x, y, v }) => {
+              target[y][x] = v; // FIXME
+            }),
+        }
+      : {
+          width: target.width,
+          height:
+            target.data.length /
+            target.width /
+            (target as TypedArrayNoiseTarget).stride,
+          freq,
+          typedArray: (target as TypedArrayNoiseTarget).data,
+          setCell:
+            set ??
+            (({ x, y, v }) => {
+              const cell =
+                (x + y * target.width) *
+                (target as TypedArrayNoiseTarget).stride;
+              target.data[cell] =
+                target.data[cell + 1] =
+                target.data[cell + 2] =
+                  v;
+              target.data[cell + 3] = 255; // alpha
+            }),
+        };
 }
 
 export abstract class NoiseGenerator {

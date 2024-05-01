@@ -1,4 +1,4 @@
-type Constructor<T> = { new(capacity: number): RingBuffer<T> };
+type Constructor<T> = { new (capacity: number): RingBuffer<T> };
 
 export class RingBuffer<T> implements Iterable<T | null> {
   private _data: (T | null)[];

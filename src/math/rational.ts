@@ -36,19 +36,19 @@ export type RationalLike =
  */
 export class Rational
   implements
-  Number,
-  Add<RationalLike, Rational>,
-  Sub<RationalLike, Rational>,
-  Mul<RationalLike, Rational>,
-  Div<RationalLike, Rational>,
-  Pow<[number], Rational>,
-  Mod<[number], Rational>,
-  Abs<Rational>,
-  Eq<RationalLike>,
-  Gt<RationalLike>,
-  Gte<RationalLike>,
-  Lt<RationalLike>,
-  Lte<RationalLike>
+    Number,
+    Add<RationalLike, Rational>,
+    Sub<RationalLike, Rational>,
+    Mul<RationalLike, Rational>,
+    Div<RationalLike, Rational>,
+    Pow<[number], Rational>,
+    Mod<[number], Rational>,
+    Abs<Rational>,
+    Eq<RationalLike>,
+    Gt<RationalLike>,
+    Gte<RationalLike>,
+    Lt<RationalLike>,
+    Lte<RationalLike>
 {
   private _n: number;
   private _d: number;

@@ -2,15 +2,15 @@ import type { Add, Sub, Mul, Div, Pow, Trig, Abs, Eq } from "./types";
 
 export class Float
   implements
-  Number,
-  Add<[Float | Number], Float>,
-  Sub<[Float | Number], Float>,
-  Mul<[Float | Number], Float>,
-  Div<[Float | Number], Float>,
-  Pow<[Float | Number], Float>,
-  Trig<Float>,
-  Abs<Float>,
-  Eq<[Number]>
+    Number,
+    Add<[Float | Number], Float>,
+    Sub<[Float | Number], Float>,
+    Mul<[Float | Number], Float>,
+    Div<[Float | Number], Float>,
+    Pow<[Float | Number], Float>,
+    Trig<Float>,
+    Abs<Float>,
+    Eq<[Number]>
 {
   private _value: number;
 

@@ -20,13 +20,13 @@ import type { Add, Sub, Mul, Div, Eq, Bounded, BoundedOptions } from "./types";
  */
 export class Saturating
   implements
-  Number,
-  Bounded,
-  Add<[Number], Saturating>,
-  Sub<[Number], Saturating>,
-  Mul<[Number], Saturating>,
-  Div<[Number], Saturating>,
-  Eq<[Number]>
+    Number,
+    Bounded,
+    Add<[Number], Saturating>,
+    Sub<[Number], Saturating>,
+    Mul<[Number], Saturating>,
+    Div<[Number], Saturating>,
+    Eq<[Number]>
 {
   private _max: number;
   private _min: number;

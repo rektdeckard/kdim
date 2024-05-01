@@ -192,14 +192,14 @@ export class Statistics {
     const sqdv = (
       typeof mean === "number"
         ? data.map((v) => {
-          return Math.pow((v as number) - mean, 2);
-        })
+            return Math.pow((v as number) - mean, 2);
+          })
         : data.map((v) => {
-          const dv = (v as ArithmeticObject<T>).sub(
-            mean as T
-          ) as ArithmeticObject<T>;
-          return dv.mul(dv as T);
-        })
+            const dv = (v as ArithmeticObject<T>).sub(
+              mean as T
+            ) as ArithmeticObject<T>;
+            return dv.mul(dv as T);
+          })
     ) as T[];
 
     return Statistics.mean(sqdv);
