@@ -3,12 +3,12 @@ import { Pane } from "tweakpane";
 import * as Essentials from "@tweakpane/plugin-essentials";
 
 import { SideBy, Example } from "./components";
-import { INTERPOLATORS, Interpolator, type RGB } from "./color";
+import { INTERPOLATORS, Interpolator } from "./color";
 import { Noise, NoiseGenerator, uncheckedLerp } from "../src";
 
 const { p, h2, h3, canvas } = van.tags;
 
-export default function () {
+export default function() {
   return SideBy(
     {
       left: [
@@ -311,8 +311,8 @@ function Noises() {
       });
       ctx.putImageData(d, 0, 0);
       t += PARAMS.speed * sign;
-      if (t > 1 || t < 0) {
-        t = t > 1 ? 1 : 0;
+      if (t > 1.5 || t < -0.5) {
+        t = t > 1.5 ? 1.5 : -0.5;
         sign *= -1;
       }
       if (PARAMS.run) {

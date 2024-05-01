@@ -58,7 +58,7 @@ function basisImpl(t1: number, v0: number, v1: number, v2: number, v3: number) {
 
 function basis(values: number[]) {
   const n = values.length - 1;
-  return function (t: number) {
+  return function(t: number) {
     let i = t <= 0 ? (t = 0) : t >= 1 ? ((t = 1), n - 1) : Math.floor(t * n),
       v1 = values[i],
       v2 = values[i + 1],
@@ -69,7 +69,7 @@ function basis(values: number[]) {
 }
 
 function rgbSpline(spline: (value: number[]) => (t: number) => number) {
-  return function (colors: RGB[]) {
+  return function(colors: RGB[]) {
     const n = colors.length;
     let r = new Array<number>(n);
     let g = new Array<number>(n);
@@ -87,7 +87,7 @@ function rgbSpline(spline: (value: number[]) => (t: number) => number) {
     const green = spline(g);
     const blue = spline(b);
 
-    return function (t: number) {
+    return function(t: number) {
       color.r = red(t);
       color.g = green(t);
       color.b = blue(t);
@@ -107,27 +107,21 @@ export function hexToRGB(hex: string): RGB {
   let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+    }
     : { r: 0, g: 0, b: 0 };
-}
-
-function colors(specifier: string) {
-  const n = (specifier.length / 6) | 0;
-  const colors = new Array<string>(n);
-  let i = 0;
-  while (i < n) colors[i] = "#" + specifier.slice(i * 6, ++i * 6);
-  return colors;
 }
 
 function ramp<T>(range: T[]) {
   const n = range.length;
-  return function (t: number) {
+  return function(t: number) {
     return range[Math.max(0, Math.min(n - 1, Math.floor(t * n)))];
   };
 }
+
+export const RGB = ramp(["#FF0000", "#00FF00", "#0000FF"]);
 
 export const rgbBasis = rgbSpline(basis);
 
@@ -147,9 +141,9 @@ export const INTERPOLATORS = {
           255,
           Math.round(
             -4.54 -
-              t *
-                (35.34 -
-                  t * (2381.73 - t * (6402.7 - t * (7024.72 - t * 2710.57))))
+            t *
+            (35.34 -
+              t * (2381.73 - t * (6402.7 - t * (7024.72 - t * 2710.57))))
           )
         )
       ),
@@ -159,8 +153,8 @@ export const INTERPOLATORS = {
           255,
           Math.round(
             32.49 +
-              t *
-                (170.73 + t * (52.82 - t * (131.46 - t * (176.58 - t * 67.37))))
+            t *
+            (170.73 + t * (52.82 - t * (131.46 - t * (176.58 - t * 67.37))))
           )
         )
       ),
@@ -170,9 +164,9 @@ export const INTERPOLATORS = {
           255,
           Math.round(
             81.24 +
-              t *
-                (442.36 -
-                  t * (2482.43 - t * (6167.24 - t * (6614.94 - t * 2475.67))))
+            t *
+            (442.36 -
+              t * (2482.43 - t * (6167.24 - t * (6614.94 - t * 2475.67))))
           )
         )
       ),
@@ -998,7 +992,7 @@ export const INTERPOLATORS = {
   RdYlBu: rgbBasis(schemeRdYlBu.at(-1)!.map(hexToRGB)),
   RdYlGn: rgbBasis(schemeRdYlGn.at(-1)!.map(hexToRGB)),
   Reds: rgbBasis(schemeReds.at(-1)!.map(hexToRGB)),
-  Redshift: ramp(
+  Redshift: rgbBasis(
     [
       "#3a4642",
       "#574949",
@@ -1012,7 +1006,7 @@ export const INTERPOLATORS = {
       "#f2eae7",
     ].map(hexToRGB)
   ),
-  Sakura: rgbBasis(
+  Sakura: ramp(
     [
       "#84957d",
       "#9a9691",
@@ -1052,10 +1046,10 @@ export const INTERPOLATORS = {
           255,
           Math.round(
             34.61 +
+            t *
+            (1172.33 -
               t *
-                (1172.33 -
-                  t *
-                    (10793.56 - t * (33300.12 - t * (38394.49 - t * 14825.05))))
+              (10793.56 - t * (33300.12 - t * (38394.49 - t * 14825.05))))
           )
         )
       ),
@@ -1065,9 +1059,9 @@ export const INTERPOLATORS = {
           255,
           Math.round(
             23.31 +
-              t *
-                (557.33 +
-                  t * (1225.33 - t * (3574.96 - t * (1073.77 + t * 707.56))))
+            t *
+            (557.33 +
+              t * (1225.33 - t * (3574.96 - t * (1073.77 + t * 707.56))))
           )
         )
       ),
@@ -1077,9 +1071,9 @@ export const INTERPOLATORS = {
           255,
           Math.round(
             27.2 +
-              t *
-                (3211.1 -
-                  t * (15327.97 - t * (27814 - t * (22569.18 - t * 6838.66))))
+            t *
+            (3211.1 -
+              t * (15327.97 - t * (27814 - t * (22569.18 - t * 6838.66))))
           )
         )
       ),
