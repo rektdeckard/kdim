@@ -44,53 +44,53 @@ function fillConfig(
 } {
   return "ImageData" in globalThis && target instanceof ImageData
     ? {
-        width: target.width,
-        height: target.height,
+      width: target.width,
+      height: target.height,
+      freq,
+      typedArray: target.data,
+      setCell:
+        set ??
+        (({ x, y, v }) => {
+          const cell = (x + y * target.width) * 4;
+          target.data[cell] =
+            target.data[cell + 1] =
+            target.data[cell + 2] =
+            v;
+          target.data[cell + 3] = 255; // alpha
+        }),
+    }
+    : Array.isArray(target)
+      ? {
+        width: target[0].length,
+        height: target.length,
         freq,
-        typedArray: target.data,
         setCell:
           set ??
           (({ x, y, v }) => {
-            const cell = (x + y * target.width) * 4;
+            target[y][x] = v; // FIXME
+          }),
+      }
+      : {
+        width: target.width,
+        height:
+          target.data.length /
+          target.width /
+          (target as TypedArrayNoiseTarget).stride,
+        freq,
+        typedArray: (target as TypedArrayNoiseTarget).data,
+        setCell:
+          set ??
+          (({ x, y, v }) => {
+            const cell =
+              (x + y * target.width) *
+              (target as TypedArrayNoiseTarget).stride;
             target.data[cell] =
               target.data[cell + 1] =
               target.data[cell + 2] =
-                v;
+              v;
             target.data[cell + 3] = 255; // alpha
           }),
-      }
-    : Array.isArray(target)
-      ? {
-          width: target[0].length,
-          height: target.length,
-          freq,
-          setCell:
-            set ??
-            (({ x, y, v }) => {
-              target[y][x] = v; // FIXME
-            }),
-        }
-      : {
-          width: target.width,
-          height:
-            target.data.length /
-            target.width /
-            (target as TypedArrayNoiseTarget).stride,
-          freq,
-          typedArray: (target as TypedArrayNoiseTarget).data,
-          setCell:
-            set ??
-            (({ x, y, v }) => {
-              const cell =
-                (x + y * target.width) *
-                (target as TypedArrayNoiseTarget).stride;
-              target.data[cell] =
-                target.data[cell + 1] =
-                target.data[cell + 2] =
-                  v;
-              target.data[cell + 3] = 255; // alpha
-            }),
-        };
+      };
 }
 
 export abstract class NoiseGenerator {
@@ -155,9 +155,9 @@ const GRAD_3: ReadonlyArray<Gradient> = [
 ];
 
 class Perlin implements NoiseGenerator {
-  #perm: number[];
-  #grads: Gradient[];
-  #ease: EasingFunction = Perlin.quintic;
+  private _perm: number[];
+  private _grads: Gradient[];
+  private _ease: EasingFunction = Perlin.quintic;
 
   static linear(t: number) {
     return t;
@@ -172,13 +172,13 @@ class Perlin implements NoiseGenerator {
   }
 
   constructor(rng: PRNG = Random) {
-    this.#perm = new Array(512);
-    this.#grads = new Array(512);
+    this._perm = new Array(512);
+    this._grads = new Array(512);
     this.seed(rng.float());
   }
 
   ease(easingFn: EasingFunction): this {
-    this.#ease = easingFn;
+    this._ease = easingFn;
     return this;
   }
 
@@ -201,8 +201,8 @@ class Perlin implements NoiseGenerator {
         v = PERMUTATION[i] ^ ((seed >> 8) & 255);
       }
 
-      this.#perm[i] = this.#perm[i + 256] = v;
-      this.#grads[i] = this.#grads[i + 256] = GRAD_3[v % 12];
+      this._perm[i] = this._perm[i + 256] = v;
+      this._grads[i] = this._grads[i + 256] = GRAD_3[v % 12];
     }
 
     return this;
@@ -220,19 +220,19 @@ class Perlin implements NoiseGenerator {
     cy = cy & 255;
 
     // Calculate noise contributions from each of the four corners
-    const n00 = this.#grads[cx + this.#perm[cy]].dot2(dx, dy);
-    const n01 = this.#grads[cx + this.#perm[cy + 1]].dot2(dx, dy - 1);
-    const n10 = this.#grads[cx + 1 + this.#perm[cy]].dot2(dx - 1, dy);
-    const n11 = this.#grads[cx + 1 + this.#perm[cy + 1]].dot2(dx - 1, dy - 1);
+    const n00 = this._grads[cx + this._perm[cy]].dot2(dx, dy);
+    const n01 = this._grads[cx + this._perm[cy + 1]].dot2(dx, dy - 1);
+    const n10 = this._grads[cx + 1 + this._perm[cy]].dot2(dx - 1, dy);
+    const n11 = this._grads[cx + 1 + this._perm[cy + 1]].dot2(dx - 1, dy - 1);
 
     // Compute the fade curve value for x
-    const u = this.#ease(dx);
+    const u = this._ease(dx);
 
     // Interpolate the four results
     return uncheckedLerp(
       uncheckedLerp(n00, n10, u),
       uncheckedLerp(n01, n11, u),
-      this.#ease(dy)
+      this._ease(dy)
     );
   }
 
@@ -251,49 +251,49 @@ class Perlin implements NoiseGenerator {
     cz = cz & 255;
 
     // Calculate noise contributions from each of the eight corners
-    const n000 = this.#grads[cx + this.#perm[cy + this.#perm[cz]]].dot3(
+    const n000 = this._grads[cx + this._perm[cy + this._perm[cz]]].dot3(
       dx,
       dy,
       dz
     );
-    const n001 = this.#grads[cx + this.#perm[cy + this.#perm[cz + 1]]].dot3(
+    const n001 = this._grads[cx + this._perm[cy + this._perm[cz + 1]]].dot3(
       dx,
       dy,
       dz - 1
     );
-    const n010 = this.#grads[cx + this.#perm[cy + 1 + this.#perm[cz]]].dot3(
+    const n010 = this._grads[cx + this._perm[cy + 1 + this._perm[cz]]].dot3(
       dx,
       dy - 1,
       dz
     );
-    const n011 = this.#grads[cx + this.#perm[cy + 1 + this.#perm[cz + 1]]].dot3(
+    const n011 = this._grads[cx + this._perm[cy + 1 + this._perm[cz + 1]]].dot3(
       dx,
       dy - 1,
       dz - 1
     );
-    const n100 = this.#grads[cx + 1 + this.#perm[cy + this.#perm[cz]]].dot3(
+    const n100 = this._grads[cx + 1 + this._perm[cy + this._perm[cz]]].dot3(
       dx - 1,
       dy,
       dz
     );
-    const n101 = this.#grads[cx + 1 + this.#perm[cy + this.#perm[cz + 1]]].dot3(
+    const n101 = this._grads[cx + 1 + this._perm[cy + this._perm[cz + 1]]].dot3(
       dx - 1,
       dy,
       dz - 1
     );
-    const n110 = this.#grads[cx + 1 + this.#perm[cy + 1 + this.#perm[cz]]].dot3(
+    const n110 = this._grads[cx + 1 + this._perm[cy + 1 + this._perm[cz]]].dot3(
       dx - 1,
       dy - 1,
       dz
     );
-    const n111 = this.#grads[
-      cx + 1 + this.#perm[cy + 1 + this.#perm[cz + 1]]
+    const n111 = this._grads[
+      cx + 1 + this._perm[cy + 1 + this._perm[cz + 1]]
     ].dot3(dx - 1, dy - 1, dz - 1);
 
     // Compute the fade curve value for x, y, z
-    const u = this.#ease(dx);
-    const v = this.#ease(dy);
-    const w = this.#ease(dz);
+    const u = this._ease(dx);
+    const v = this._ease(dy);
+    const w = this._ease(dz);
 
     // Interpolate
     return uncheckedLerp(
@@ -332,19 +332,19 @@ class Perlin implements NoiseGenerator {
 }
 
 class Simplex implements NoiseGenerator {
-  #perm: number[];
-  #grads: Gradient[];
+  private _perm: number[];
+  private _grads: Gradient[];
 
   constructor(rng?: PRNG | null) {
-    this.#perm = new Array(512);
-    this.#grads = new Array(512);
+    this._perm = new Array(512);
+    this._grads = new Array(512);
     this.seed((rng || Random).float());
   }
 
-  static #F2 = 0.5 * (Math.sqrt(3) - 1);
-  static #G2 = (3 - Math.sqrt(3)) / 6;
-  static #F3 = 1 / 3;
-  static #G3 = 1 / 6;
+  private static _F2 = 0.5 * (Math.sqrt(3) - 1);
+  private static _G2 = (3 - Math.sqrt(3)) / 6;
+  private static _F3 = 1 / 3;
+  private static _G3 = 1 / 6;
 
   seed(seed: number): this {
     if (seed > 0 && seed < 1) {
@@ -365,8 +365,8 @@ class Simplex implements NoiseGenerator {
         v = PERMUTATION[i] ^ ((seed >> 8) & 255);
       }
 
-      this.#perm[i] = this.#perm[i + 256] = v;
-      this.#grads[i] = this.#grads[i + 256] = GRAD_3[v % 12];
+      this._perm[i] = this._perm[i + 256] = v;
+      this._grads[i] = this._grads[i + 256] = GRAD_3[v % 12];
     }
 
     return this;
@@ -376,10 +376,10 @@ class Simplex implements NoiseGenerator {
     let n0: number, n1: number, n2: number; // Noise contributions from the three corners
 
     // Skew the input space to determine which simplex cell we're in
-    const s = (x + y) * Simplex.#F2; // Hairy factor for 2D
+    const s = (x + y) * Simplex._F2; // Hairy factor for 2D
     let i = Math.floor(x + s);
     let j = Math.floor(y + s);
-    const t = (i + j) * Simplex.#G2;
+    const t = (i + j) * Simplex._G2;
     const x0 = x - i + t; // The x,y distances from the cell origin, unskewed.
     const y0 = y - j + t;
 
@@ -399,17 +399,17 @@ class Simplex implements NoiseGenerator {
     // A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
     // a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
     // c = (3-sqrt(3))/6
-    const x1 = x0 - i1 + Simplex.#G2; // Offsets for middle corner in (x,y) unskewed coords
-    const y1 = y0 - j1 + Simplex.#G2;
-    const x2 = x0 - 1 + 2 * Simplex.#G2; // Offsets for last corner in (x,y) unskewed coords
-    const y2 = y0 - 1 + 2 * Simplex.#G2;
+    const x1 = x0 - i1 + Simplex._G2; // Offsets for middle corner in (x,y) unskewed coords
+    const y1 = y0 - j1 + Simplex._G2;
+    const x2 = x0 - 1 + 2 * Simplex._G2; // Offsets for last corner in (x,y) unskewed coords
+    const y2 = y0 - 1 + 2 * Simplex._G2;
 
     // Work out the hashed gradient indices of the three simplex corners
     i &= 255;
     j &= 255;
-    const gi0 = this.#grads[i + this.#perm[j]];
-    const gi1 = this.#grads[i + i1 + this.#perm[j + j1]];
-    const gi2 = this.#grads[i + 1 + this.#perm[j + 1]];
+    const gi0 = this._grads[i + this._perm[j]];
+    const gi1 = this._grads[i + i1 + this._perm[j + j1]];
+    const gi2 = this._grads[i + 1 + this._perm[j + 1]];
 
     // Calculate the contribution from the three corners
     let t0 = 0.5 - x0 * x0 - y0 * y0;
@@ -443,12 +443,12 @@ class Simplex implements NoiseGenerator {
     let n0: number, n1: number, n2: number, n3: number; // Noise contributions from the four corners
 
     // Skew the input space to determine which simplex cell we're in
-    const s = (x + y + z) * Simplex.#F3; // Hairy factor for 2D
+    const s = (x + y + z) * Simplex._F3; // Hairy factor for 2D
     let i = Math.floor(x + s);
     let j = Math.floor(y + s);
     let k = Math.floor(z + s);
 
-    const t = (i + j + k) * Simplex.#G3;
+    const t = (i + j + k) * Simplex._G3;
     const x0 = x - i + t; // The x,y distances from the cell origin, unskewed.
     const y0 = y - j + t;
     const z0 = z - k + t;
@@ -509,26 +509,26 @@ class Simplex implements NoiseGenerator {
     // a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
     // a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
     // c = 1/6.
-    const x1 = x0 - i1 + Simplex.#G3; // Offsets for second corner
-    const y1 = y0 - j1 + Simplex.#G3;
-    const z1 = z0 - k1 + Simplex.#G3;
+    const x1 = x0 - i1 + Simplex._G3; // Offsets for second corner
+    const y1 = y0 - j1 + Simplex._G3;
+    const z1 = z0 - k1 + Simplex._G3;
 
-    const x2 = x0 - i2 + 2 * Simplex.#G3; // Offsets for third corner
-    const y2 = y0 - j2 + 2 * Simplex.#G3;
-    const z2 = z0 - k2 + 2 * Simplex.#G3;
+    const x2 = x0 - i2 + 2 * Simplex._G3; // Offsets for third corner
+    const y2 = y0 - j2 + 2 * Simplex._G3;
+    const z2 = z0 - k2 + 2 * Simplex._G3;
 
-    const x3 = x0 - 1 + 3 * Simplex.#G3; // Offsets for fourth corner
-    const y3 = y0 - 1 + 3 * Simplex.#G3;
-    const z3 = z0 - 1 + 3 * Simplex.#G3;
+    const x3 = x0 - 1 + 3 * Simplex._G3; // Offsets for fourth corner
+    const y3 = y0 - 1 + 3 * Simplex._G3;
+    const z3 = z0 - 1 + 3 * Simplex._G3;
 
     // Work out the hashed gradient indices of the four simplex corners
     i &= 255;
     j &= 255;
     k &= 255;
-    const gi0 = this.#grads[i + this.#perm[j + this.#perm[k]]];
-    const gi1 = this.#grads[i + i1 + this.#perm[j + j1 + this.#perm[k + k1]]];
-    const gi2 = this.#grads[i + i2 + this.#perm[j + j2 + this.#perm[k + k2]]];
-    const gi3 = this.#grads[i + 1 + this.#perm[j + 1 + this.#perm[k + 1]]];
+    const gi0 = this._grads[i + this._perm[j + this._perm[k]]];
+    const gi1 = this._grads[i + i1 + this._perm[j + j1 + this._perm[k + k1]]];
+    const gi2 = this._grads[i + i2 + this._perm[j + j2 + this._perm[k + k2]]];
+    const gi3 = this._grads[i + 1 + this._perm[j + 1 + this._perm[k + 1]]];
 
     // Calculate the contribution from the four corners
     let t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
@@ -585,25 +585,25 @@ class Simplex implements NoiseGenerator {
 }
 
 class Worley implements NoiseGenerator {
-  #tree: KDTree<3>;
-  #rng: PRNG;
+  private _tree: KDTree<3>;
+  private _rng: PRNG;
 
   constructor(rng?: PRNG | null, size: number = 10) {
-    this.#rng = rng || Random;
-    this.#tree = this.#generatePoints(size);
+    this._rng = rng || Random;
+    this._tree = this._generatePoints(size);
   }
 
-  #generatePoints(size: number): KDTree<3> {
+  private _generatePoints(size: number): KDTree<3> {
     const points = Range.of<[number, number, number]>(size + 1, () => [
-      this.#rng.float(),
-      this.#rng.float(),
-      this.#rng.float(),
+      this._rng.float(),
+      this._rng.float(),
+      this._rng.float(),
     ]);
     return new KDTree<3>(points);
   }
 
   seed(size: number): this {
-    this.#tree = this.#generatePoints(size);
+    this._tree = this._generatePoints(size);
     return this;
   }
 
@@ -612,7 +612,7 @@ class Worley implements NoiseGenerator {
   }
 
   xyz(x: number, y: number, z: number): number {
-    const nearest = this.#tree.nearestNeighbor([x, y, z])!.distance!;
+    const nearest = this._tree.nearestNeighbor([x, y, z])!.distance!;
     return nearest;
   }
 
@@ -620,7 +620,7 @@ class Worley implements NoiseGenerator {
     // call into WASM with buffer
 
     const { width, height, freq, setCell } = fillConfig(target, options);
-    if (freq !== this.#tree.size() - 1) {
+    if (freq !== this._tree.size() - 1) {
       this.seed(freq);
     }
     const d = Math.min(width, height);
@@ -642,10 +642,10 @@ class Worley implements NoiseGenerator {
 }
 
 class Color implements NoiseGenerator {
-  #rng: PRNG;
+  _rng: PRNG;
 
   constructor(rng?: PRNG | null) {
-    this.#rng = rng || Random;
+    this._rng = rng || Random;
   }
 
   seed(seed: number): this {
@@ -654,7 +654,7 @@ class Color implements NoiseGenerator {
   }
 
   xy(_x: number, _y: number): number {
-    return this.#rng.float({ min: -1, max: 1 });
+    return this._rng.float({ min: -1, max: 1 });
   }
 
   xyz(x: number, y: number, _z: number): number {

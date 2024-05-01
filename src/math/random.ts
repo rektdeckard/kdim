@@ -95,36 +95,36 @@ export interface PRNG {
 }
 
 export class GenericPRNG implements PRNG {
-  #gen: () => number;
+  private _gen: () => number;
 
   constructor(gen: () => number = Math.random) {
-    this.#gen = gen;
+    this._gen = gen;
   }
 
   bool() {
-    return this.#gen() >= 0.5;
+    return this._gen() >= 0.5;
   }
 
   natural(max: number = U32_MAX - 1) {
     assertNatural(max);
-    return Math.floor(lerp(0, max + 1, this.#gen()));
+    return Math.floor(lerp(0, max + 1, this._gen()));
   }
 
   counting(max: number = U32_MAX - 1) {
     assertCounting(max);
-    return Math.floor(lerp(1, max + 1, this.#gen()));
+    return Math.floor(lerp(1, max + 1, this._gen()));
   }
 
   u8() {
-    return Math.floor(lerp(0, U8_MAX + 1, this.#gen()));
+    return Math.floor(lerp(0, U8_MAX + 1, this._gen()));
   }
 
   u16() {
-    return Math.floor(lerp(0, U16_MAX + 1, this.#gen()));
+    return Math.floor(lerp(0, U16_MAX + 1, this._gen()));
   }
 
   u32() {
-    return Math.floor(lerp(0, U32_MAX + 1, this.#gen()));
+    return Math.floor(lerp(0, U32_MAX + 1, this._gen()));
   }
 
   i8() {
@@ -146,18 +146,18 @@ export class GenericPRNG implements PRNG {
   ) {
     assertInteger(min, max);
     assertValidRange(min, max);
-    return Math.floor(lerp(min, max + 1, this.#gen()));
+    return Math.floor(lerp(min, max + 1, this._gen()));
   }
 
   float({ min, max }: Partial<BoundedOptions> = {}) {
     if ((min === undefined && max === undefined) || (min === 0 && max === 1)) {
-      return this.#gen();
+      return this._gen();
     }
 
     const mn = min ?? 0,
       mx = max ?? I32_MAX;
     assertValidRange(mn, mx);
-    return lerp(mn, mx, this.#gen());
+    return lerp(mn, mx, this._gen());
   }
 
   dice(sides: number) {
@@ -166,14 +166,14 @@ export class GenericPRNG implements PRNG {
 
   unitVector<N extends number>(n: N = 2 as N): Vec<N> {
     assertCounting(n);
-    const phi = this.#gen() * 2 * Math.PI;
+    const phi = this._gen() * 2 * Math.PI;
 
     if (n === 1) return [1] as Vec<N>;
     if (n === 2) {
       return [Math.cos(phi), Math.sin(phi)] as Vec<N>;
     }
     if (n === 3) {
-      const theta = Math.acos(1 - 2 * this.#gen());
+      const theta = Math.acos(1 - 2 * this._gen());
       return [
         Math.cos(phi) * Math.sin(theta),
         Math.sin(phi) * Math.sin(theta),
@@ -277,7 +277,7 @@ export class GenericPRNG implements PRNG {
         array[j - 1] = array[i - 1];
         array[i - 1] = temp;
 
-        const pivot = this.#gen();
+        const pivot = this._gen();
         if (
           pivot <
           ((u - 1) * this.derangementsOf(u - 2)) / this.derangementsOf(u)
@@ -313,119 +313,119 @@ export class GenericPRNG implements PRNG {
 }
 
 class Mulberry32 extends GenericPRNG {
-  #seed: number;
+  private _seed: number;
   constructor(seed: number) {
     super(() => {
-      this.#seed |= 0;
-      this.#seed = (this.#seed + 0x6d2b79f5) | 0;
-      let t = Math.imul(this.#seed ^ (this.#seed >>> 15), 1 | this.#seed);
+      this._seed |= 0;
+      this._seed = (this._seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(this._seed ^ (this._seed >>> 15), 1 | this._seed);
       t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
       return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
     });
-    this.#seed = seed;
+    this._seed = seed;
   }
 }
 
 class SFC32 extends GenericPRNG {
-  #a: number;
-  #b: number;
-  #c: number;
-  #d: number;
+  private _a: number;
+  private _b: number;
+  private _c: number;
+  private _d: number;
   constructor(a: number, b: number, c: number, d: number) {
     super(() => {
-      this.#a |= 0;
-      this.#b |= 0;
-      this.#c |= 0;
-      this.#d |= 0;
-      const t = (((this.#a + this.#b) | 0) + this.#d) | 0;
-      this.#d = (this.#d + 1) | 0;
-      this.#a = this.#b ^ (this.#b >>> 9);
-      this.#b = (this.#c + (this.#c << 3)) | 0;
-      this.#c = (this.#c << 21) | (this.#c >>> 11);
-      this.#c = (this.#c + t) | 0;
+      this._a |= 0;
+      this._b |= 0;
+      this._c |= 0;
+      this._d |= 0;
+      const t = (((this._a + this._b) | 0) + this._d) | 0;
+      this._d = (this._d + 1) | 0;
+      this._a = this._b ^ (this._b >>> 9);
+      this._b = (this._c + (this._c << 3)) | 0;
+      this._c = (this._c << 21) | (this._c >>> 11);
+      this._c = (this._c + t) | 0;
       return (t >>> 0) / 0x100000000;
     });
-    this.#a = a;
-    this.#b = b;
-    this.#c = c;
-    this.#d = d;
+    this._a = a;
+    this._b = b;
+    this._c = c;
+    this._d = d;
   }
 }
 
 class SplitMix32 extends GenericPRNG {
-  #seed: number;
+  private _seed: number;
   constructor(seed: number) {
     super(() => {
-      this.#seed |= 0;
-      this.#seed = (this.#seed + 0x9e3779b9) | 0;
-      let t = this.#seed ^ (this.#seed >>> 16);
+      this._seed |= 0;
+      this._seed = (this._seed + 0x9e3779b9) | 0;
+      let t = this._seed ^ (this._seed >>> 16);
       t = Math.imul(t, 0x21f0aaad);
       t = t ^ (t >>> 15);
       t = Math.imul(t, 0x735a2d97);
       return ((t = t ^ (t >>> 15)) >>> 0) / 0x100000000;
     });
-    this.#seed = seed;
+    this._seed = seed;
   }
 }
 
 class JSF32B extends GenericPRNG {
-  #a: number;
-  #b: number;
-  #c: number;
-  #d: number;
+  private _a: number;
+  private _b: number;
+  private _c: number;
+  private _d: number;
   constructor(a: number, b: number, c: number, d: number) {
     super(() => {
-      this.#a |= 0;
-      this.#b |= 0;
-      this.#c |= 0;
-      this.#d |= 0;
-      let t = (this.#a - ((this.#b << 27) | (this.#b >>> 5))) | 0;
-      this.#a = this.#b ^ ((this.#c << 17) | (c >>> 15));
-      this.#b = (this.#c + this.#d) | 0;
-      this.#c = (this.#d + t) | 0;
-      this.#d = (this.#a + t) | 0;
-      return (this.#d >>> 0) / 0x100000000;
+      this._a |= 0;
+      this._b |= 0;
+      this._c |= 0;
+      this._d |= 0;
+      let t = (this._a - ((this._b << 27) | (this._b >>> 5))) | 0;
+      this._a = this._b ^ ((this._c << 17) | (c >>> 15));
+      this._b = (this._c + this._d) | 0;
+      this._c = (this._d + t) | 0;
+      this._d = (this._a + t) | 0;
+      return (this._d >>> 0) / 0x100000000;
     });
-    this.#a = a;
-    this.#b = b;
-    this.#c = c;
-    this.#d = d;
+    this._a = a;
+    this._b = b;
+    this._c = c;
+    this._d = d;
   }
 }
 
 class GJRand32 extends GenericPRNG {
-  #a: number;
-  #b: number;
-  #c: number;
-  #d: number;
+  private _a: number;
+  private _b: number;
+  private _c: number;
+  private _d: number;
   constructor(a: number, b: number, c: number, d: number) {
     super(() => {
-      this.#a |= 0;
-      this.#b |= 0;
-      this.#c |= 0;
-      this.#d |= 0;
-      this.#a = (this.#a << 16) | (this.#a >>> 16);
-      this.#b = (this.#b + this.#c) | 0;
-      this.#a = (this.#a + this.#b) | 0;
-      this.#c = this.#c ^ this.#b;
-      this.#c = (this.#c << 11) | (this.#c >>> 21);
-      this.#b = this.#b ^ this.#a;
-      this.#a = (this.#a + this.#c) | 0;
-      this.#b = (this.#c << 19) | (this.#c >>> 13);
-      this.#c = (this.#c + this.#a) | 0;
-      this.#d = (this.#d + 0x96a5) | 0;
-      this.#b = (this.#b + this.#d) | 0;
-      return (this.#a >>> 0) / 0x100000000;
+      this._a |= 0;
+      this._b |= 0;
+      this._c |= 0;
+      this._d |= 0;
+      this._a = (this._a << 16) | (this._a >>> 16);
+      this._b = (this._b + this._c) | 0;
+      this._a = (this._a + this._b) | 0;
+      this._c = this._c ^ this._b;
+      this._c = (this._c << 11) | (this._c >>> 21);
+      this._b = this._b ^ this._a;
+      this._a = (this._a + this._c) | 0;
+      this._b = (this._c << 19) | (this._c >>> 13);
+      this._c = (this._c + this._a) | 0;
+      this._d = (this._d + 0x96a5) | 0;
+      this._b = (this._b + this._d) | 0;
+      return (this._a >>> 0) / 0x100000000;
     });
-    this.#a = a;
-    this.#b = b;
-    this.#c = c;
-    this.#d = d;
+    this._a = a;
+    this._b = b;
+    this._c = c;
+    this._d = d;
   }
 }
 
 export class Random {
-  static #prng = new GenericPRNG(Math.random);
+  private static _prng = new GenericPRNG(Math.random);
 
   constructor(..._: never) {
     throw new Error(
@@ -441,63 +441,63 @@ export class Random {
   static GJRand32 = GJRand32;
 
   static bool() {
-    return Random.#prng.bool();
+    return Random._prng.bool();
   }
 
   static natural(max: number = U32_MAX) {
-    return Random.#prng.natural(max);
+    return Random._prng.natural(max);
   }
 
   static counting(max: number = U32_MAX) {
-    return Random.#prng.counting(max);
+    return Random._prng.counting(max);
   }
 
   static u8() {
-    return Random.#prng.u8();
+    return Random._prng.u8();
   }
 
   static u16() {
-    return Random.#prng.u16();
+    return Random._prng.u16();
   }
 
   static u32() {
-    return Random.#prng.u32();
+    return Random._prng.u32();
   }
 
   static i8() {
-    return Random.#prng.i8();
+    return Random._prng.i8();
   }
 
   static i16() {
-    return Random.#prng.i16();
+    return Random._prng.i16();
   }
 
   static i32() {
-    return Random.#prng.i32();
+    return Random._prng.i32();
   }
 
   static integer(opts?: Partial<BoundedOptions>) {
-    return Random.#prng.integer(opts);
+    return Random._prng.integer(opts);
   }
 
   static float(opts?: Partial<BoundedOptions>) {
-    return Random.#prng.float(opts);
+    return Random._prng.float(opts);
   }
 
   static dice(sides: number) {
-    return Random.#prng.dice(sides);
+    return Random._prng.dice(sides);
   }
 
   static unitVector<N extends number = 2>(n: N = 2 as N): Vec<N> {
-    return Random.#prng.unitVector<N>(n);
+    return Random._prng.unitVector<N>(n);
   }
 
   static sample<T>(options: T[] | Set<T>): T | undefined {
-    return Random.#prng.sample(options);
+    return Random._prng.sample(options);
   }
 
   static take<T>(options: T[] | Set<T>): T | undefined {
-    return Random.#prng.take(options);
+    return Random._prng.take(options);
   }
 
   /**
@@ -507,7 +507,7 @@ export class Random {
    * @param array an array of values
    */
   static permute<T>(array: T[]) {
-    return Random.#prng.permute(array);
+    return Random._prng.permute(array);
   }
 
   /**
@@ -517,7 +517,7 @@ export class Random {
    * @param array array an array of values
    */
   static permutation<T>(array: T[]): T[] {
-    return Random.#prng.permutation(array);
+    return Random._prng.permutation(array);
   }
 
   /**
@@ -526,7 +526,7 @@ export class Random {
    * @param set an {@link Array} or {@link Set}, or number representing its size
    */
   static permutationsOf(set: number | Array<unknown> | Set<unknown>) {
-    return Random.#prng.permutationsOf(set);
+    return Random._prng.permutationsOf(set);
   }
 
   /**
@@ -538,7 +538,7 @@ export class Random {
    * @param array an array of values
    */
   static derange<T>(array: T[]) {
-    return Random.#prng.derange(array);
+    return Random._prng.derange(array);
   }
 
   /**
@@ -550,7 +550,7 @@ export class Random {
    * @param array an array of values
    */
   static derangement<T>(array: T[]): T[] {
-    return Random.#prng.derangement(array);
+    return Random._prng.derangement(array);
   }
 
   /**
@@ -559,6 +559,6 @@ export class Random {
    * @param set an {@link Array} or {@link Set}, or number representing its size
    */
   static derangementsOf(set: number | Array<unknown> | Set<unknown>) {
-    return Random.#prng.derangementsOf(set);
+    return Random._prng.derangementsOf(set);
   }
 }

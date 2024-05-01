@@ -45,7 +45,7 @@ export class Statistics {
     );
   }
 
-  static #sorted<T extends Number & Arithmetic<T>>(data: T[]): T[] {
+  private static _sorted<T extends Number & Arithmetic<T>>(data: T[]): T[] {
     const sorted = [...data];
     sorted.sort(Comparator.numericCompare);
     return sorted;
@@ -58,7 +58,7 @@ export class Statistics {
    * @returns A number or object number type
    */
   static min<T extends Number & Arithmetic<T>>(data: T[]): T | undefined {
-    return Statistics.#sorted(data)[0];
+    return Statistics._sorted(data)[0];
   }
 
   /**
@@ -68,7 +68,7 @@ export class Statistics {
    * @returns A number or object number type
    */
   static max<T extends Number & Arithmetic<T>>(data: T[]): T | undefined {
-    return Statistics.#sorted(data)[data.length - 1];
+    return Statistics._sorted(data)[data.length - 1];
   }
 
   /**
@@ -102,7 +102,7 @@ export class Statistics {
   static median<T extends Number & Arithmetic<T>>(data: T[]): T | undefined {
     if (data.length === 0) return;
 
-    const sorted = this.#sorted(data);
+    const sorted = this._sorted(data);
     const centerpoints = (
       sorted.length % 2 === 0
         ? [sorted.length / 2 - 1, sorted.length / 2]
@@ -121,7 +121,7 @@ export class Statistics {
   static mode<T extends Number & Arithmetic<T>>(data: T[]) {
     if (data.length === 0) return;
 
-    const sorted = this.#sorted(data);
+    const sorted = this._sorted(data);
 
     // const countss = sorted.reduce((acc, curr) => {
     //     if (typeof curr === "number") {
@@ -192,14 +192,14 @@ export class Statistics {
     const sqdv = (
       typeof mean === "number"
         ? data.map((v) => {
-            return Math.pow((v as number) - mean, 2);
-          })
+          return Math.pow((v as number) - mean, 2);
+        })
         : data.map((v) => {
-            const dv = (v as ArithmeticObject<T>).sub(
-              mean as T
-            ) as ArithmeticObject<T>;
-            return dv.mul(dv as T);
-          })
+          const dv = (v as ArithmeticObject<T>).sub(
+            mean as T
+          ) as ArithmeticObject<T>;
+          return dv.mul(dv as T);
+        })
     ) as T[];
 
     return Statistics.mean(sqdv);
@@ -315,7 +315,7 @@ export class Statistics {
       throw new Error(`Invalid percentiles ${ps}`);
     }
 
-    const sorted = Statistics.#sorted(data);
+    const sorted = Statistics._sorted(data);
 
     switch (method) {
       case "midpoint": {
@@ -419,7 +419,7 @@ export class Statistics {
     if (data.length === 0) return;
 
     // if (options?.method === "outer") {
-    //   const sorted = this.#sorted(data);
+    //   const sorted = this._sorted(data);
     //   const [lh, uh] =
     //     sorted.length % 2 === 0
     //       ? [

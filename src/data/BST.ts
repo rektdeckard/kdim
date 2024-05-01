@@ -17,16 +17,16 @@ export class BSTNode<V> {
 }
 
 export class BST<V> implements Iterable<V> {
-  #root: BSTNode<V> | null = null;
-  #comparator: Comparator<V>;
+  private _root: BSTNode<V> | null = null;
+  private _comparator: Comparator<V>;
 
   constructor(compareFn?: CompareFunction<V>) {
-    this.#comparator = new Comparator(compareFn);
+    this._comparator = new Comparator(compareFn);
   }
 
   static fromNode<V>(node: BSTNode<V>) {
     const tree = new BST<V>();
-    tree.#root = node;
+    tree._root = node;
     return tree;
   }
 
@@ -35,31 +35,31 @@ export class BST<V> implements Iterable<V> {
       subtree: BSTNode<V> | null | undefined
     ): BSTNode<V> | null => {
       if (!subtree) return null;
-      if (this.#comparator.eq(subtree.value, value)) return subtree;
+      if (this._comparator.eq(subtree.value, value)) return subtree;
 
-      if (this.#comparator.lt(subtree.value, value)) {
+      if (this._comparator.lt(subtree.value, value)) {
         return searchImpl(subtree.left);
       } else {
         return searchImpl(subtree.right);
       }
     };
 
-    return searchImpl(this.#root);
+    return searchImpl(this._root);
   }
 
   insert(value: V): boolean {
-    if (!this.#root) {
-      this.#root = new BSTNode(value);
+    if (!this._root) {
+      this._root = new BSTNode(value);
       return false;
     }
 
     const insertImpl = (subtree: BSTNode<V>): boolean => {
-      if (this.#comparator.eq(subtree.value, value)) {
+      if (this._comparator.eq(subtree.value, value)) {
         subtree.value = value;
         return true;
       }
 
-      if (this.#comparator.lt(subtree.value, value)) {
+      if (this._comparator.lt(subtree.value, value)) {
         if (!subtree.left) {
           subtree.left = new BSTNode(value, subtree);
           return false;
@@ -74,7 +74,7 @@ export class BST<V> implements Iterable<V> {
       }
     };
 
-    return insertImpl(this.#root);
+    return insertImpl(this._root);
   }
 
   has(value: V): boolean {
@@ -87,7 +87,7 @@ export class BST<V> implements Iterable<V> {
       descendant: BSTNode<V> | null | undefined = null
     ) => {
       if (!subtree.parent) {
-        this.#root = descendant;
+        this._root = descendant;
       } else if (subtree === subtree.parent.left) {
         subtree.parent.left = descendant;
       } else {
@@ -137,7 +137,7 @@ export class BST<V> implements Iterable<V> {
   }
 
   max(node?: BSTNode<V>): BSTNode<V> | null {
-    let current = node ?? this.#root;
+    let current = node ?? this._root;
     while (current?.right) {
       current = current.right;
     }
@@ -146,7 +146,7 @@ export class BST<V> implements Iterable<V> {
   }
 
   min(node?: BSTNode<V>): BSTNode<V> | null {
-    let current = node ?? this.#root;
+    let current = node ?? this._root;
     while (current?.left) {
       current = current.left;
     }
@@ -194,7 +194,7 @@ export class BST<V> implements Iterable<V> {
       inOrderImpl(subtree.right);
     };
 
-    inOrderImpl(this.#root);
+    inOrderImpl(this._root);
 
     return arr;
   }
@@ -209,7 +209,7 @@ export class BST<V> implements Iterable<V> {
       preOrderImpl(subtree.right);
     };
 
-    preOrderImpl(this.#root);
+    preOrderImpl(this._root);
 
     return arr;
   }
@@ -224,7 +224,7 @@ export class BST<V> implements Iterable<V> {
       arr.push(subtree.value);
     };
 
-    postOrderImpl(this.#root);
+    postOrderImpl(this._root);
 
     return arr;
   }
@@ -239,6 +239,6 @@ export class BST<V> implements Iterable<V> {
       yield* inOrderImpl(subtree.right);
     }
 
-    yield* inOrderImpl(this.#root);
+    yield* inOrderImpl(this._root);
   }
 }

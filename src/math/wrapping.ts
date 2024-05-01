@@ -18,15 +18,15 @@ import type { Add, Sub, Eq, Bounded, BoundedOptions } from "./types";
  */
 export class Wrapping
   implements
-    Bounded,
-    Number,
-    Add<[Number], Wrapping>,
-    Sub<[Number], Wrapping>,
-    Eq<[Number]>
+  Bounded,
+  Number,
+  Add<[Number], Wrapping>,
+  Sub<[Number], Wrapping>,
+  Eq<[Number]>
 {
-  #max: number;
-  #min: number;
-  #value: number;
+  private _max: number;
+  private _min: number;
+  private _value: number;
 
   constructor({ max, min = 0 }: BoundedOptions, value?: number) {
     if (
@@ -39,9 +39,9 @@ export class Wrapping
 
     assertValidRange(min, max, value);
 
-    this.#max = max;
-    this.#min = min;
-    this.#value = value ?? min;
+    this._max = max;
+    this._min = min;
+    this._value = value ?? min;
   }
 
   static from(bounded: Bounded) {
@@ -52,22 +52,22 @@ export class Wrapping
     const addend = castInteger(n);
     if (addend === 0) return this;
 
-    let v = this.#value;
-    if (v + addend <= this.#max && v + addend >= this.#min) {
+    let v = this._value;
+    if (v + addend <= this._max && v + addend >= this._min) {
       v += addend;
     } else {
-      const modAddend = addend % (Math.abs(this.#max - this.#min) + 1);
+      const modAddend = addend % (Math.abs(this._max - this._min) + 1);
 
-      if (v + modAddend <= this.#max && v + modAddend >= this.#min) {
+      if (v + modAddend <= this._max && v + modAddend >= this._min) {
         v += modAddend;
       } else if (modAddend > 0) {
-        v = modAddend - (this.#max - v) + (this.#min - 1);
+        v = modAddend - (this._max - v) + (this._min - 1);
       } else if (modAddend < 0) {
-        v = modAddend - (this.#min - v) + (this.#max + 1);
+        v = modAddend - (this._min - v) + (this._max + 1);
       }
     }
 
-    return new Wrapping({ min: this.#min, max: this.#max }, v);
+    return new Wrapping({ min: this._min, max: this._max }, v);
   }
 
   sub<N extends Number>(n: N) {
@@ -75,39 +75,39 @@ export class Wrapping
   }
 
   eq(other: Number): boolean {
-    return this.#value === other.valueOf();
+    return this._value === other.valueOf();
   }
 
   get value() {
-    return this.#value;
+    return this._value;
   }
 
   get min() {
-    return this.#min;
+    return this._min;
   }
 
   get max() {
-    return this.#max;
+    return this._max;
   }
 
   valueOf(): number {
-    return this.#value;
+    return this._value;
   }
 
   toFixed(fractionDigits?: number | undefined): string {
-    return this.#value.toFixed(fractionDigits);
+    return this._value.toFixed(fractionDigits);
   }
 
   toExponential(fractionDigits?: number | undefined): string {
-    return this.#value.toExponential(fractionDigits);
+    return this._value.toExponential(fractionDigits);
   }
 
   toPrecision(precision?: number | undefined): string {
-    return this.#value.toPrecision(precision);
+    return this._value.toPrecision(precision);
   }
 
   toString(radix?: number | undefined): string {
-    return this.#value.toString(radix);
+    return this._value.toString(radix);
   }
 
   toLocaleString(locales?: unknown, options?: unknown): string;
@@ -119,12 +119,12 @@ export class Wrapping
     locales?: string | string[] | undefined,
     options?: Intl.NumberFormatOptions | undefined
   ): string {
-    return this.#value.toLocaleString(locales, options);
+    return this._value.toLocaleString(locales, options);
   }
 
   [Symbol.toPrimitive](hint: string) {
     if (hint === "string") return this.toString();
-    return this.#value;
+    return this._value;
   }
 
   get [Symbol.toStringTag]() {

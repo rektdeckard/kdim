@@ -7,15 +7,15 @@ export type MatrixOperand<M extends number, N extends number> =
 
 export type SubmatrixOptions =
   | {
-      removeRows: number[];
-      removeCols: number[];
-      xywh?: never;
-    }
+    removeRows: number[];
+    removeCols: number[];
+    xywh?: never;
+  }
   | {
-      xywh: [number, number] | [number, number, number, number];
-      removeRows?: never;
-      removeCols?: never;
-    };
+    xywh: [number, number] | [number, number, number, number];
+    removeRows?: never;
+    removeCols?: never;
+  };
 
 type MatrixResult<
   M extends number,
@@ -24,10 +24,10 @@ type MatrixResult<
 > = I extends number
   ? Matrix<M, N>
   : I extends MatrixOperand<infer O, infer P>
-    ? N extends O
-      ? Matrix<M, P>
-      : never
-    : never;
+  ? N extends O
+  ? Matrix<M, P>
+  : never
+  : never;
 
 export type MTXOptions = {
   format?: "coordinate" | "array";
@@ -44,18 +44,18 @@ export type MTXOptions = {
 export class Matrix<M extends number = number, N extends number = number>
   implements Iterable<Tuple<number, N>>
 {
-  #data: MatrixLike<M, N>;
+  private _data: MatrixLike<M, N>;
 
   constructor(data: MatrixLike<M, N>) {
-    this.#data = data;
+    this._data = data;
   }
 
   get rows(): M {
-    return this.#data.length as M;
+    return this._data.length as M;
   }
 
   get cols(): N {
-    return this.#data[0].length as N;
+    return this._data[0].length as N;
   }
 
   get size() {
@@ -63,7 +63,7 @@ export class Matrix<M extends number = number, N extends number = number>
   }
 
   get data(): MatrixLike<M, N> {
-    return this.#data;
+    return this._data;
   }
 
   static zero<N extends number>(n: N): Matrix<N, N> {
@@ -118,7 +118,7 @@ export class Matrix<M extends number = number, N extends number = number>
 
     const m = Matrix.zero(d);
     for (let i = 0; i < d; i++) {
-      (m.#data[i][i] as number) = diagonal[i];
+      (m._data[i][i] as number) = diagonal[i];
     }
 
     return m;
@@ -233,7 +233,7 @@ export class Matrix<M extends number = number, N extends number = number>
         }
       }
 
-      (matrix.#data[i - 1][j - 1] as number) = value;
+      (matrix._data[i - 1][j - 1] as number) = value;
     }
 
     return matrix;
@@ -269,7 +269,7 @@ export class Matrix<M extends number = number, N extends number = number>
   }
 
   at(i: number, j: number) {
-    return this.#data.at(i)?.at(j);
+    return this._data.at(i)?.at(j);
   }
 
   row(i: number) {
@@ -282,7 +282,7 @@ export class Matrix<M extends number = number, N extends number = number>
   }
 
   clone(): Matrix<M, N> {
-    const data = this.#data.map((row) => [...row]) as MatrixLike<M, N>;
+    const data = this._data.map((row) => [...row]) as MatrixLike<M, N>;
     return new Matrix<M, N>(data);
   }
 
@@ -293,12 +293,12 @@ export class Matrix<M extends number = number, N extends number = number>
   }: SubmatrixOptions) {
     if (!!xywh) {
       const [x, y, w, h] = xywh;
-      const data = this.#data
+      const data = this._data
         .slice(y, h ? h + y : h)
         .map((r) => r.slice(x, w ? w + x : w)) as MatrixLike<M, N>;
       return new Matrix<M, N>(data);
     } else {
-      const data = this.#data.reduce<number[][]>((data, row, i) => {
+      const data = this._data.reduce<number[][]>((data, row, i) => {
         if (!removeRows.includes(i)) {
           const newRow = row.reduce<number[]>((curr, col, j) => {
             if (!removeCols.includes(j)) {
@@ -403,7 +403,7 @@ export class Matrix<M extends number = number, N extends number = number>
       );
     }
 
-    const newData = this.#data.map((row, i) => row.concat(otherMatrix.row(i)!));
+    const newData = this._data.map((row, i) => row.concat(otherMatrix.row(i)!));
     return new Matrix(newData as MatrixLike<M, P>);
   }
 
@@ -467,7 +467,7 @@ export class Matrix<M extends number = number, N extends number = number>
 
     for (let j = 0; j < this.cols; j++) {
       for (let i = 0; i < this.rows; i++) {
-        (m.#data[j][i] as number) = this.#data[i][j];
+        (m._data[j][i] as number) = this._data[i][j];
       }
     }
 
@@ -475,7 +475,7 @@ export class Matrix<M extends number = number, N extends number = number>
   }
 
   vectorize(): number[] {
-    return (this.#data as number[][]).flat();
+    return (this._data as number[][]).flat();
   }
 
   add(other: MatrixOperand<M, N>): Matrix<M, N> {
@@ -587,7 +587,7 @@ export class Matrix<M extends number = number, N extends number = number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < other.cols; j++) {
-          (data[i][j] as number) = this.#data[i].reduce((acc, curr, n) => {
+          (data[i][j] as number) = this._data[i].reduce((acc, curr, n) => {
             const it = curr * other.at(n, j)!;
             return acc + it;
           }, 0);
@@ -610,7 +610,7 @@ export class Matrix<M extends number = number, N extends number = number>
 
       for (let i = 0; i < this.rows; i++) {
         for (let j = 0; j < other[0].length; j++) {
-          (data[i][j] as number) = this.#data[i].reduce((acc, curr, n) => {
+          (data[i][j] as number) = this._data[i].reduce((acc, curr, n) => {
             const it = curr * other[n][j];
             return acc + it;
           }, 0);
@@ -628,7 +628,7 @@ export class Matrix<M extends number = number, N extends number = number>
       // c is scalar
       // @ts-ignore
       return new Matrix<M, N>(
-        this.#data.map((i) =>
+        this._data.map((i) =>
           i.map((j) => j * (other as number))
         ) as MatrixLike<M, N>
       );
@@ -695,6 +695,6 @@ export class Matrix<M extends number = number, N extends number = number>
   }
 
   [Symbol.iterator]() {
-    return this.#data[Symbol.iterator]();
+    return this._data[Symbol.iterator]();
   }
 }

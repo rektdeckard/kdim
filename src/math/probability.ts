@@ -6,21 +6,21 @@ export type ProbabilityEvent<T> = {
 };
 
 export class Probability<T> {
-  #events: Array<ProbabilityEvent<T>> = [];
-  #rng: PRNG;
-  #alias: number[] = [];
-  #prob: number[] = [];
-  #initialized = false;
+  private _events: Array<ProbabilityEvent<T>> = [];
+  private _rng: PRNG;
+  private _alias: number[] = [];
+  private _prob: number[] = [];
+  private _initialized = false;
 
   constructor(events: ProbabilityEvent<T>[] = [], rng?: PRNG | null) {
-    this.#rng = rng ?? Random;
+    this._rng = rng ?? Random;
     if (!!events.length) {
-      this.#events = events;
+      this._events = events;
     }
   }
 
-  #init() {
-    const events = this.#events;
+  private _init() {
+    const events = this._events;
 
     // Assign default probabilities if omitted
     let t = 0;
@@ -39,7 +39,7 @@ export class Probability<T> {
       throw new Error("invalid total p");
     }
 
-    this.#events = events.map((event) =>
+    this._events = events.map((event) =>
       typeof event.p === "number" ? event : { ...event, p: rem / d }
     );
 
@@ -109,45 +109,45 @@ export class Probability<T> {
       prob[l] = 1;
     }
 
-    this.#alias = alias;
-    this.#prob = prob;
-    this.#initialized = true;
+    this._alias = alias;
+    this._prob = prob;
+    this._initialized = true;
   }
 
   event(event: ProbabilityEvent<T>): this {
-    this.#events.push(event);
-    this.#initialized = false;
+    this._events.push(event);
+    this._initialized = false;
     return this;
   }
 
   sample(): ProbabilityEvent<T> {
-    if (!this.#initialized) this.#init();
-    if (!this.#events.length) throw new RangeError("No events");
-    if (this.#events.length === 1) return this.#events[0];
+    if (!this._initialized) this._init();
+    if (!this._events.length) throw new RangeError("No events");
+    if (this._events.length === 1) return this._events[0];
 
     // Algorithm: Vose’s Alias Method
     // Generation:
 
     // 1. Generate a fair die roll from an n-sided die; call the side i.
-    const i = this.#rng.dice(this.#events.length) - 1;
+    const i = this._rng.dice(this._events.length) - 1;
 
     // 2. Flip a biased coin that comes up heads with probability Prob[i].
-    const heads = this.#rng.float() < this.#prob[i];
+    const heads = this._rng.float() < this._prob[i];
 
     // 3. If the coin comes up “heads”, return i.
     if (heads) {
-      return this.#events[i];
+      return this._events[i];
     } else {
       // 4. Otherwise, return Alias[i].
-      return this.#events[this.#alias[i]];
+      return this._events[this._alias[i]];
     }
   }
 
   take(): ProbabilityEvent<T> {
-    if (!this.#initialized) this.#init();
+    if (!this._initialized) this._init();
     const event = this.sample();
-    this.#events = this.#events.filter((e) => e !== event);
-    this.#initialized = false;
+    this._events = this._events.filter((e) => e !== event);
+    this._initialized = false;
     return event;
   }
 }

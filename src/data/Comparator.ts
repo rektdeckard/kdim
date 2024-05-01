@@ -13,10 +13,10 @@ export type CompareFunction<V> = (a: V, b: V) => number;
  * object types and other special orderings.
  */
 export class Comparator<V> {
-  #compareFn: CompareFunction<V>;
+  private _compareFn: CompareFunction<V>;
 
   constructor(compareFn?: CompareFunction<V>) {
-    this.#compareFn = compareFn ?? Comparator.lexicalCompare<V>;
+    this._compareFn = compareFn ?? Comparator.lexicalCompare<V>;
   }
 
   static lexicalCompare<V>(a: V, b: V) {
@@ -36,22 +36,22 @@ export class Comparator<V> {
   }
 
   eq(a: V, b: V): boolean {
-    return this.#compareFn(a, b) === 0;
+    return this._compareFn(a, b) === 0;
   }
 
   gt(a: V, b: V): boolean {
-    return this.#compareFn(a, b) < 0;
+    return this._compareFn(a, b) < 0;
   }
 
   gte(a: V, b: V): boolean {
-    return this.#compareFn(a, b) <= 0;
+    return this._compareFn(a, b) <= 0;
   }
 
   lt(a: V, b: V): boolean {
-    return this.#compareFn(a, b) > 0;
+    return this._compareFn(a, b) > 0;
   }
 
   lte(a: V, b: V): boolean {
-    return this.#compareFn(a, b) >= 0;
+    return this._compareFn(a, b) >= 0;
   }
 }

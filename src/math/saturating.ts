@@ -20,17 +20,17 @@ import type { Add, Sub, Mul, Div, Eq, Bounded, BoundedOptions } from "./types";
  */
 export class Saturating
   implements
-    Number,
-    Bounded,
-    Add<[Number], Saturating>,
-    Sub<[Number], Saturating>,
-    Mul<[Number], Saturating>,
-    Div<[Number], Saturating>,
-    Eq<[Number]>
+  Number,
+  Bounded,
+  Add<[Number], Saturating>,
+  Sub<[Number], Saturating>,
+  Mul<[Number], Saturating>,
+  Div<[Number], Saturating>,
+  Eq<[Number]>
 {
-  #max: number;
-  #min: number;
-  #value: number;
+  private _max: number;
+  private _min: number;
+  private _value: number;
 
   constructor({ max, min = 0 }: BoundedOptions, value?: number) {
     if (
@@ -43,9 +43,9 @@ export class Saturating
 
     assertValidRange(min, max);
 
-    this.#max = max;
-    this.#min = min;
-    this.#value = value !== undefined ? uncheckedClamp(min, max, value) : min;
+    this._max = max;
+    this._min = min;
+    this._value = value !== undefined ? uncheckedClamp(min, max, value) : min;
   }
 
   static from(bounded: Bounded) {
@@ -60,8 +60,8 @@ export class Saturating
     if (addend === 0) return this;
 
     return new Saturating(
-      { min: this.#min, max: this.#max },
-      this.#value + addend
+      { min: this._min, max: this._max },
+      this._value + addend
     );
   }
 
@@ -74,8 +74,8 @@ export class Saturating
     if (multiplier === 1) return this;
 
     return new Saturating(
-      { min: this.#min, max: this.#max },
-      this.#value * multiplier
+      { min: this._min, max: this._max },
+      this._value * multiplier
     );
   }
 
@@ -84,45 +84,45 @@ export class Saturating
     if (divisor === 0) throw new Error("Cannot divide by zero");
 
     return new Saturating(
-      { min: this.#min, max: this.#max },
-      Math.trunc(this.#value / divisor)
+      { min: this._min, max: this._max },
+      Math.trunc(this._value / divisor)
     );
   }
 
   eq(other: Number): boolean {
-    return this.#value === other.valueOf();
+    return this._value === other.valueOf();
   }
 
   get value() {
-    return this.#value;
+    return this._value;
   }
 
   get min() {
-    return this.#min;
+    return this._min;
   }
 
   get max() {
-    return this.#max;
+    return this._max;
   }
 
   valueOf(): number {
-    return this.#value;
+    return this._value;
   }
 
   toFixed(fractionDigits?: number | undefined): string {
-    return this.#value.toFixed(fractionDigits);
+    return this._value.toFixed(fractionDigits);
   }
 
   toExponential(fractionDigits?: number | undefined): string {
-    return this.#value.toExponential(fractionDigits);
+    return this._value.toExponential(fractionDigits);
   }
 
   toPrecision(precision?: number | undefined): string {
-    return this.#value.toPrecision(precision);
+    return this._value.toPrecision(precision);
   }
 
   toString(radix?: number | undefined): string {
-    return this.#value.toString(radix);
+    return this._value.toString(radix);
   }
 
   toLocaleString(locales?: unknown, options?: unknown): string;
@@ -134,12 +134,12 @@ export class Saturating
     locales?: string | string[] | undefined,
     options?: Intl.NumberFormatOptions | undefined
   ): string {
-    return this.#value.toLocaleString(locales, options);
+    return this._value.toLocaleString(locales, options);
   }
 
   [Symbol.toPrimitive](hint: string) {
     if (hint === "string") return this.toString();
-    return this.#value;
+    return this._value;
   }
 
   get [Symbol.toStringTag]() {
