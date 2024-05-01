@@ -1,48 +1,54 @@
 import { isConstructor } from "../helper";
 import type { Constructor, Factory } from "../helper";
 
+export type RangeOptions = {
+  from?: number;
+  to: number;
+  step?: number;
+};
+
 /**
  * Produce lists and iterators over values in discrete ranges.
  *
  * @throws an {@link Error} when attemping to construct. All methods are static.
  */
 export class Range implements Iterable<number> {
-  #from: number;
-  #to: number;
-  #step: number;
+  private _from: number;
+  private _to: number;
+  private _step: number;
 
-  constructor(where: number | { from?: number; to: number; step?: number }) {
-    const { from, to, step } = Range.#config(where);
-    this.#from = from;
-    this.#to = to;
-    this.#step = step;
+  constructor(where: number | RangeOptions) {
+    const { from, to, step } = Range._config(where);
+    this._from = from;
+    this._to = to;
+    this._step = step;
   }
 
   *[Symbol.iterator]() {
     for (
-      let i = this.#from;
-      this.#from < this.#to ? i <= this.#to : i >= this.#to;
-      i += this.#step
+      let i = this._from;
+      this._from < this._to ? i <= this._to : i >= this._to;
+      i += this._step
     ) {
       yield i;
     }
   }
 
   contains(value: number | Range): boolean {
-    const mmin = this.#step > 0 ? this.#from : this.#to;
-    const mmax = this.#step > 0 ? this.#to : this.#from;
+    const mmin = this._step > 0 ? this._from : this._to;
+    const mmax = this._step > 0 ? this._to : this._from;
 
     if (value instanceof Range) {
-      const vmin = value.#step > 0 ? value.#from : value.#to;
-      const vmax = value.#step > 0 ? value.#to : value.#from;
+      const vmin = value._step > 0 ? value._from : value._to;
+      const vmax = value._step > 0 ? value._to : value._from;
       return mmin <= vmin && mmax >= vmax;
     }
 
     return value >= mmin && value <= mmax;
   }
 
-  static #config<N = number>(
-    where: number | { from?: number; to: number; step?: number },
+  private static _config<N = number>(
+    where: number | RangeOptions,
     factory?:
       | Constructor<N, [n: number, index: number]>
       | Factory<N, [n: number, index: number]>
@@ -71,7 +77,7 @@ export class Range implements Iterable<number> {
       ? (n) => n as N
       : isConstructor<N, [number, number]>(factory, from, 0)
         ? (n, i) => new factory(n, i)
-        : (n, i) => factory(n, i);
+        : factory;
 
     return { from, to, step, produce };
   }
@@ -109,12 +115,12 @@ export class Range implements Iterable<number> {
    * // ]
    */
   static of<N = number>(
-    where: number | { from?: number; to: number; step?: number },
+    where: number | RangeOptions,
     factory?:
       | Constructor<N, [n: number, index?: number]>
       | Factory<N, [n: number, index?: number]>
   ): N[] {
-    const { from, to, step, produce } = Range.#config(where, factory);
+    const { from, to, step, produce } = Range._config(where, factory);
 
     const values: N[] = [];
     for (let i = from, j = 0; from < to ? i <= to : i >= to; i += step, j++) {
@@ -158,12 +164,12 @@ export class Range implements Iterable<number> {
    * // -3
    */
   static *lazy<N = number>(
-    where: number | { from?: number; to: number; step?: number },
+    where: number | RangeOptions,
     factory?:
       | Constructor<N, [n: number, index?: number]>
       | Factory<N, [n: number, index?: number]>
   ): Generator<N, void, void> {
-    const { from, to, step, produce } = Range.#config(where, factory);
+    const { from, to, step, produce } = Range._config(where, factory);
 
     for (let i = from, j = 0; from < to ? i <= to : i >= to; i += step, j++) {
       yield produce(i, j);

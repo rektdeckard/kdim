@@ -185,6 +185,13 @@ describe("Complex", () => {
     });
   });
 
+  describe("abs", () => {
+    it("can comupute the modulus (absolute value) of a complex number", () => {
+      const a = new Complex(3, -4);
+      expect(a.abs()).toBe(5);
+    });
+  });
+
   describe("eq", () => {
     it("considers complex numbers with identical real and imaginary parts equal", () => {
       const a = new Complex(369, 50);

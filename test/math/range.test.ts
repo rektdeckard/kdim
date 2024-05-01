@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Range, Complex } from "../../src";
+import { Range, Complex, Random } from "../../src";
 
 describe("Range", () => {
   describe("simple range", () => {
@@ -107,6 +107,16 @@ describe("Range", () => {
         { i: 5, n: 12.5 },
         { i: 6, n: 10 },
       ]);
+    });
+
+    it("can use a function reference", () => {
+      const bools = Range.of(5, Random.bool);
+      expect(bools.length).toBe(5);
+      expect(bools.every((b) => typeof b === "boolean")).toBe(true);
+
+      const rng = new Random.Seedable(69);
+      const sbools = Range.of(5, rng.bool.bind(rng));
+      expect(sbools).toStrictEqual([true, false, true, true, true]);
     });
 
     it("can generate other things", () => {
